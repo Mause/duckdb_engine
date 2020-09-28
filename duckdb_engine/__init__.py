@@ -92,7 +92,7 @@ class Dialect(dialect):
         return DBAPI
 
     def create_connect_args(self, u):
-        return (), {"database": str(u).split("///")[1]}
+        return (), {"database": u.__to_string__(hide_password=False).split("///")[1]}
 
     def initialize(self, connection):
         pass
