@@ -1,5 +1,5 @@
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List
 
 import duckdb
@@ -19,6 +19,8 @@ DNE = re.compile(r"Catalog: ([^ ]+) with name ([^ ]+) does not exist!")
 @dataclass
 class ConnectionWrapper:
     c: duckdb.DuckDBPyConnection
+    description: List[str] = field(default_factory=list)
+    notices: List[str] = field(default_factory=list)
 
     def cursor(self):
         return self
@@ -51,10 +53,6 @@ class ConnectionWrapper:
 
     def commit(self):
         self.c.commit()
-
-    description: List[str] = []
-
-    notices: List[str] = []
 
 
 class Dialect(dialect):
