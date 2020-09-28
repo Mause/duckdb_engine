@@ -51,6 +51,9 @@ class ConnectionWrapper:
     def fetchone(self):
         return self.c.fetchone()
 
+    def fetchall(self):
+        return self.c.fetchall()
+
     def commit(self):
         self.c.commit()
 
