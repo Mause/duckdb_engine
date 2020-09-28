@@ -1,0 +1,49 @@
+exclude: .*\.snap
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.1.0
+    hooks:
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: debug-statements
+      - id: check-case-conflict
+      - id: check-toml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+  - repo: https://github.com/timothycrosley/isort
+    rev: 5.4.2
+    hooks:
+      - id: isort
+        args:
+          - --float-to-top
+  - repo: https://github.com/humitos/mirrors-autoflake
+    rev: v1.3
+    hooks:
+      - id: autoflake
+        args:
+          - --in-place
+          - --remove-all-unused-imports
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v2.7.0
+    hooks:
+      - id: pyupgrade
+        args:
+          - --py3-plus
+  - repo: https://github.com/psf/black
+    rev: b59a524
+    hooks:
+      - id: black
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v0.782
+    hooks:
+     - id: mypy
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: ''  # pick a git hash / tag to point to
+    hooks:
+    - id: flake8
+      additional_dependencies:
+        - flake8-aaa
+      args:
+        - --jobs=1
+        - --extend-ignore=W503,E203,E501
