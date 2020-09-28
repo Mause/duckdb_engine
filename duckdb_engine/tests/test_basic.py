@@ -9,9 +9,9 @@ from sqlalchemy.orm import relationship, sessionmaker
 def engine():
     registry.register("duckdb", "duckdb_engine", "Dialect")
 
-    ewng = create_engine("duckdb:///:memory:")
-    Base.metadata.create_all(ewng)
-    return ewng
+    eng = create_engine("duckdb:///:memory:")
+    Base.metadata.create_all(eng)
+    return eng
 
 
 Base = declarative_base()
