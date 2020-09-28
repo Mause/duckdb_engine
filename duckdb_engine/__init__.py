@@ -76,19 +76,12 @@ class Dialect(postgres_dialect):
     def on_connect(self):
         pass
 
-    def statement_compiler(self, *args, **kwargs):
+    def ddl_compiler(self, dialect, ddl, **kwargs):
         # TODO: enforce no `serial` type
-        return postgres_dialect.statement_compiler(*args, **kwargs)
+        ddl.include_foreign_key_constraints = {}
+        return postgres_dialect.ddl_compiler(dialect, ddl, **kwargs)
 
     def do_execute(self, cursor, statement, parameters, context):
-        if "FOREIGN" in statement:
-            # TODO: implement this in the compiler instead
-            # doesn't support foreign key constraints
-            statement = statement.strip().splitlines()
-            statement = [line for line in statement if "FOREIGN" not in line]
-            statement[-2] = statement[-2].strip().strip(",")
-            statement = "\n".join(statement)
-
         cursor.execute(statement, parameters, context)
 
     def has_table(self, connection, table_name, schema=None):
