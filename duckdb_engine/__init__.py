@@ -54,6 +54,18 @@ class ConnectionWrapper:
         self.c.commit()
 
 
+def check_existance(connection, function, name, type_):
+    try:
+        connection.execute(f"{function}('{name}');")
+    except RuntimeError as e:
+        if e.args[0] == f"Catalog: {type_} with name {name} does not exist!":
+            return False
+        else:
+            raise
+    else:
+        return True
+
+
 class Dialect(postgres_dialect):
     _has_events = False
     identifier_preparer = None
@@ -80,10 +92,10 @@ class Dialect(postgres_dialect):
         cursor.execute(statement, parameters, context)
 
     def has_table(self, connection, table_name, schema=None):
-        return False
+        return check_existance(connection, "PRAGMA show", table_name, "Table")
 
     def has_sequence(self, connection, sequence_name, schema=None):
-        return False
+        return check_existance(connection, "SELECT nextval", sequence_name, "Sequence")
 
     def has_type(self, connection, type_name, schema=None):
         return False
