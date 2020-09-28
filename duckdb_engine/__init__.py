@@ -36,19 +36,15 @@ class ConnectionWrapper:
     def rowcount(self):
         return self.c.rowcount
 
-    def execute(self, statement, parameters):
-        try:
-            self.c.execute(statement, parameters)
-            self.c.commit()
-            return self
-
-        except Exception as e:
-            m = DNE.match(e.args[0])
-            if m:
-                raise Exception(m.groups())
-            raise e
+    def execute(self, statement, parameters, context):
+        self.c.execute(statement, parameters)
+        if context.result_column_struct:
+            self.description = context.result_column_struct[0]
+        else:
+            self.description = []
 
     def fetchone(self):
+        self.description = [(None, None)]
         return self.c.fetchone()
 
     def fetchall(self):
@@ -76,7 +72,7 @@ class Dialect(dialect):
             statement[-2] = statement[-2].strip().strip(",")
             statement = "\n".join(statement)
 
-        super().do_execute(cursor, statement, parameters, context)
+        cursor.execute(statement, parameters, context)
 
         # if "CREATE SEQUENCE" in statement:
         #     seque = statement.split(" ")[2].strip('"')
