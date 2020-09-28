@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from typing import List
 
 import duckdb
-from sqlalchemy.dialects.postgresql import dialect
+from sqlalchemy.dialects.postgresql import dialect as postgres_dialect
 
 
 class DBAPI:
@@ -54,7 +54,7 @@ class ConnectionWrapper:
         self.c.commit()
 
 
-class Dialect(dialect):
+class Dialect(postgres_dialect):
     _has_events = False
     identifier_preparer = None
 
@@ -103,3 +103,6 @@ class Dialect(dialect):
     @classmethod
     def get_dialect_cls(cls, u):
         return cls
+
+
+dialect = Dialect

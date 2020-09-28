@@ -14,6 +14,9 @@ sqlalchemy = "^1.3.19"
 pytest = "^6.1.0"
 pre-commit = "^2.7.1"
 
+[tool.poetry.plugins."sqlalchemy.dialects"]
+duckdb = "duckdb_engine"
+
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
