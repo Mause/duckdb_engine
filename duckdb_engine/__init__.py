@@ -64,8 +64,13 @@ class Dialect(postgres_dialect):
     def on_connect(self):
         pass
 
+    def statement_compiler(self, *args, **kwargs):
+        # TODO: enforce no `serial` type
+        return postgres_dialect.statement_compiler(*args, **kwargs)
+
     def do_execute(self, cursor, statement, parameters, context):
         if "FOREIGN" in statement:
+            # TODO: implement this in the compiler instead
             # doesn't support foreign key constraints
             statement = statement.strip().splitlines()
             statement = [line for line in statement if "FOREIGN" not in line]
@@ -73,10 +78,6 @@ class Dialect(postgres_dialect):
             statement = "\n".join(statement)
 
         cursor.execute(statement, parameters, context)
-
-        # if "CREATE SEQUENCE" in statement:
-        #     seque = statement.split(" ")[2].strip('"')
-        #     print(cursor.execute(f"SELECT nextval('{seque}');", ()).fetchone())
 
     def has_table(self, connection, table_name, schema=None):
         return False
