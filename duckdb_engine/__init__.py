@@ -69,6 +69,7 @@ def check_existance(connection, function, name, type_):
 class Dialect(postgres_dialect):
     _has_events = False
     identifier_preparer = None
+    # colspecs TODO: remap types to duckdb types
 
     def connect(self, *args, **kwargs):
         return ConnectionWrapper(duckdb.connect(*args, **kwargs))
