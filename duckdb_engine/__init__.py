@@ -32,13 +32,14 @@ class ConnectionWrapper:
         return self
 
     def close(self):
+        # duckdb doesn't support 'soft closes'
         pass
 
     def execute(self, statement, parameters, context):
         self.c.execute(statement, parameters)
 
 
-def check_existance(connection, function, name, type_):
+def check_existance(connection, function: str, name: str, type_: str) -> bool:
     try:
         connection.execute(f"{function}('{name}');")
     except RuntimeError as e:
