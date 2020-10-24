@@ -24,9 +24,8 @@ class ConnectionWrapper:
     def cursor(self):
         return self
 
-    @property
-    def description(self):
-        return self.c.description
+    def __getattr__(self, name):
+        return getattr(self.c, name)
 
     @property
     def connection(self):
@@ -35,21 +34,8 @@ class ConnectionWrapper:
     def close(self):
         pass
 
-    @property
-    def rowcount(self):
-        return self.c.rowcount
-
     def execute(self, statement, parameters, context):
         self.c.execute(statement, parameters)
-
-    def fetchone(self):
-        return self.c.fetchone()
-
-    def fetchall(self):
-        return self.c.fetchall()
-
-    def commit(self):
-        self.c.commit()
 
 
 def check_existance(connection, function, name, type_):
