@@ -19,11 +19,13 @@ DNE = re.compile(r"Catalog: ([^ ]+) with name ([^ ]+) does not exist!")
 @dataclass
 class ConnectionWrapper:
     c: duckdb.DuckDBPyConnection
-    description: List[str] = field(default_factory=list)
     notices: List[str] = field(default_factory=list)
 
     def cursor(self):
         return self
+
+    def __getattr__(self, name):
+        return getattr(self.c, name)
 
     @property
     def connection(self):
@@ -32,26 +34,8 @@ class ConnectionWrapper:
     def close(self):
         pass
 
-    @property
-    def rowcount(self):
-        return self.c.rowcount
-
     def execute(self, statement, parameters, context):
         self.c.execute(statement, parameters)
-        if context.result_column_struct:
-            self.description = context.result_column_struct[0]
-        else:
-            self.description = []
-
-    def fetchone(self):
-        self.description = [(None, None)]
-        return self.c.fetchone()
-
-    def fetchall(self):
-        return self.c.fetchall()
-
-    def commit(self):
-        self.c.commit()
 
 
 def check_existance(connection, function, name, type_):
