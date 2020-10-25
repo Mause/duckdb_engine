@@ -1,4 +1,3 @@
-import re
 from dataclasses import dataclass, field
 from typing import List
 
@@ -11,9 +10,6 @@ class DBAPI:
 
     class Error(Exception):
         pass
-
-
-DNE = re.compile(r"Catalog: ([^ ]+) with name ([^ ]+) does not exist!")
 
 
 @dataclass
@@ -43,7 +39,9 @@ def check_existance(connection, function: str, name: str, type_: str) -> bool:
     try:
         connection.execute(f"{function}('{name}');")
     except RuntimeError as e:
-        if e.args[0] == f"Catalog: {type_} with name {name} does not exist!":
+        if e.args[0].startswith(
+            f"Catalog Error: {type_} with name {name} does not exist!"
+        ):
             return False
         else:
             raise
