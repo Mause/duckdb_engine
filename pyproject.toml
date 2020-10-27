@@ -9,7 +9,7 @@ repository = "https://github.com/Mause/duckdb_engine"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-duckdb = "0.2.2.dev655"
+duckdb = "0.2.2.dev717"
 sqlalchemy = "^1.3.19"
 
 [tool.poetry.dev-dependencies]
