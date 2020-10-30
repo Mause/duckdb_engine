@@ -54,7 +54,7 @@ python-versions = "*"
 
 [[package]]
 name = "duckdb"
-version = "0.2.2.dev721"
+version = "0.2.2.dev727"
 description = "DuckDB embedded database"
 category = "main"
 optional = false
@@ -349,7 +349,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "1d156d6eb86824ef1a0d46b2d253d4bb9673277b930d6eb64ef8cbb3c5272623"
+content-hash = "b8e7500dd6f1b7de605f9e67ad3183b7511c5054a85d7175eeab5f8285d672fc"
 
 [metadata.files]
 appdirs = [
@@ -377,15 +377,15 @@ distlib = [
     {file = "distlib-0.3.1.zip", hash = "sha256:edf6116872c863e1aa9d5bb7cb5e05a022c519a4594dc703843343a9ddd9bff1"},
 ]
 duckdb = [
-    {file = "duckdb-0.2.2.dev721-cp36-cp36m-manylinux1_i686.whl", hash = "sha256:2bb25069ed504286c0ed51cad5486bc5c26b24c2a45515924b47afecfa68b9a4"},
-    {file = "duckdb-0.2.2.dev721-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:36f444cd31361fa5b48b151861ed50888a70f969e5cd153da70730bf3651735d"},
-    {file = "duckdb-0.2.2.dev721-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:c4d8fda620f79855e7dbbba1c047edae56a3bb0f7636f0f65eeb82d7032bfbea"},
-    {file = "duckdb-0.2.2.dev721-cp37-cp37m-manylinux2010_i686.whl", hash = "sha256:47ffcad749b74f371628dc95a0d09be03955d485a925d0bab223a972adfad2ba"},
-    {file = "duckdb-0.2.2.dev721-cp37-cp37m-manylinux2010_x86_64.whl", hash = "sha256:6bd1f17facef76cfbdf5dfdda8bafd2b61c9ef184d35cfbb5704be14135bd7c8"},
-    {file = "duckdb-0.2.2.dev721-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:650afa254d02d1e7ff85149df379ba91049dd654469f470ad6d94a69f89508b0"},
-    {file = "duckdb-0.2.2.dev721-cp38-cp38-manylinux2010_i686.whl", hash = "sha256:10f1221f6ce8057bd5bd10ebb4b9984058227f6af944ac13ee4de10b69576af7"},
-    {file = "duckdb-0.2.2.dev721-cp38-cp38-manylinux2010_x86_64.whl", hash = "sha256:759dca7cb88aeb2cc85fea5a3fbdc012cc14e9f30f57b58f52be47e0ca2dc417"},
-    {file = "duckdb-0.2.2.dev721.tar.gz", hash = "sha256:fef01403ca4a83dfcb801cdc3c239ed0c1be5e6372769eb6a9ab20e78a4b42b8"},
+    {file = "duckdb-0.2.2.dev727-cp36-cp36m-manylinux1_i686.whl", hash = "sha256:3cb0d11ed01658fa269409540a8110dc776fd51d8b7e6b305743db913f300eb5"},
+    {file = "duckdb-0.2.2.dev727-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:1e369c22ef6bc4ab2b4e79aa8515427deabe4ee51af7f21ffa1f8c8277d9a0cb"},
+    {file = "duckdb-0.2.2.dev727-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:c19487cc661e077f5864013b907cd6e803541e5bab7117e9ad18fda44abf015a"},
+    {file = "duckdb-0.2.2.dev727-cp37-cp37m-manylinux2010_i686.whl", hash = "sha256:f8924945e27b980196edc2964981489dcecf74b3f2782a0d6d03b4d567382082"},
+    {file = "duckdb-0.2.2.dev727-cp37-cp37m-manylinux2010_x86_64.whl", hash = "sha256:b1a6b82e6c48fcbc43df4301fb16f5d0a9be3c8c1ec53c0884a0308a579642cf"},
+    {file = "duckdb-0.2.2.dev727-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:575e62aefd3672ce9979366d27b766d5f8eeabf8017bf6ee546145cd444a36f2"},
+    {file = "duckdb-0.2.2.dev727-cp38-cp38-manylinux2010_i686.whl", hash = "sha256:bf4b0619e49d449c367c9b5394b5303e1d673ecc1ea4802e095248b7c1cd165b"},
+    {file = "duckdb-0.2.2.dev727-cp38-cp38-manylinux2010_x86_64.whl", hash = "sha256:6876d7fafef2ef6c30425ccfe61e6ea64f857d9e8f8c1dd86bb9d6e11d760074"},
+    {file = "duckdb-0.2.2.dev727.tar.gz", hash = "sha256:07b5e2e6e07700b66ff93e2a34d005976656c8dc3518f3d30371ff8027c6f4f0"},
 ]
 fancycompleter = [
     {file = "fancycompleter-0.9.1-py3-none-any.whl", hash = "sha256:dd076bca7d9d524cc7f25ec8f35ef95388ffef9ef46def4d3d25e9b044ad7080"},
