@@ -1,4 +1,4 @@
-from hypothesis import given
+from hypothesis import assume, given
 from hypothesis.strategies import text
 from pytest import fixture
 from sqlalchemy import Column, ForeignKey, Integer, Sequence, String, create_engine
@@ -68,6 +68,7 @@ def test_foreign(session):
 
 @given(text())
 def test_simple_string(s):
+    assume("\x00" not in s)
     eng = create_engine("duckdb:///:memory:")
     Base.metadata.create_all(eng)
     session = sessionmaker(bind=eng)()
