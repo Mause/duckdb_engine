@@ -17,6 +17,7 @@ pytest = "^6.2.1"
 pre-commit = "^2.9.3"
 pdbpp = "^0.10.2"
 mypy = "^0.800"
+hypothesis = "^6.0.4"
 
 [tool.poetry.plugins."sqlalchemy.dialects"]
 duckdb = "duckdb_engine"

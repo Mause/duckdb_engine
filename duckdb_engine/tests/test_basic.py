@@ -1,3 +1,5 @@
+from hypothesis import given
+from hypothesis.strategies import text
 from pytest import fixture
 from sqlalchemy import Column, ForeignKey, Integer, Sequence, String, create_engine
 from sqlalchemy.engine.url import registry
@@ -62,3 +64,18 @@ def test_foreign(session):
     owner = session.query(Owner).one()  # act
 
     assert owner.owned.name == "Walter"
+
+
+@given(text())
+def test_simple_string(s):
+    eng = create_engine("duckdb:///:memory:")
+    Base.metadata.create_all(eng)
+    session = sessionmaker(bind=eng)()
+    model = FakeModel(name=s)
+    session.add(model)
+    session.add(Owner(owned=model))
+    session.commit()
+
+    owner = session.query(Owner).one()  # act
+
+    assert owner.owned.name == s
