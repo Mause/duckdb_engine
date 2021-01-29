@@ -22,6 +22,9 @@ hypothesis = "^6.0.4"
 [tool.poetry.plugins."sqlalchemy.dialects"]
 duckdb = "duckdb_engine"
 
+[tool.pytest.ini_options]
+addopts = "--hypothesis-show-statistics"
+
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
