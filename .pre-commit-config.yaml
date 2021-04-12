@@ -18,14 +18,14 @@ repos:
         args:
           - --float-to-top
   - repo: https://github.com/humitos/mirrors-autoflake
-    rev: v1.3
+    rev: v1.1
     hooks:
       - id: autoflake
         args:
           - --in-place
           - --remove-all-unused-imports
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.11.0
+    rev: v2.12.0
     hooks:
       - id: pyupgrade
         args:
