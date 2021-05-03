@@ -18,20 +18,20 @@ repos:
         args:
           - --float-to-top
   - repo: https://github.com/humitos/mirrors-autoflake
-    rev: v1.3
+    rev: v1.1
     hooks:
       - id: autoflake
         args:
           - --in-place
           - --remove-all-unused-imports
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.13.0
+    rev: v2.14.0
     hooks:
       - id: pyupgrade
         args:
           - --py3-plus
   - repo: https://github.com/psf/black
-    rev: 21.4b0
+    rev: 21.4b2
     hooks:
       - id: black
   - repo: https://github.com/pre-commit/mirrors-mypy
