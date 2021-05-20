@@ -48,6 +48,7 @@ The following example demonstrates how to create an auto-incrementing ID column 
 ...     'users',
 ...     metadata,
 ...     sqlalchemy.Column(
+...         'id',
 ...         sqlalchemy.Integer,
 ...         user_id_seq,
 ...         server_default=user_id_seq.next_value(),
