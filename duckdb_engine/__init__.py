@@ -62,6 +62,8 @@ class Dialect(postgres_dialect):
 
     def ddl_compiler(self, dialect, ddl, **kwargs):
         # TODO: enforce no `serial` type
+
+        # duckdb doesn't support foreign key constraints (yet)
         ddl.include_foreign_key_constraints = {}
         return postgres_dialect.ddl_compiler(dialect, ddl, **kwargs)
 
@@ -72,9 +74,11 @@ class Dialect(postgres_dialect):
         return check_existance(connection, "PRAGMA show", table_name, "Table")
 
     def has_sequence(self, connection, sequence_name, schema=None):
+        # TODO: use better lookup method
         return check_existance(connection, "SELECT nextval", sequence_name, "Sequence")
 
     def has_type(self, connection, type_name, schema=None):
+        # duckdb doesn't support custom types
         return False
 
     @staticmethod
