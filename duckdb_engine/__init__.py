@@ -61,7 +61,7 @@ class Dialect(postgres_dialect):
         return DBAPI
 
     def create_connect_args(self, u):
-        return (), {"database": u.__to_string__(hide_password=False).split("///")[1]}
+        return (), {"database": u.render_as_string(hide_password=False).split("///")[1]}
 
     def initialize(self, connection):
         pass
