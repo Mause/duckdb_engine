@@ -230,7 +230,7 @@ dev = ["pre-commit", "tox"]
 
 [[package]]
 name = "pre-commit"
-version = "2.12.1"
+version = "2.13.0"
 description = "A framework for managing and maintaining multi-language pre-commit hooks."
 category = "dev"
 optional = false
@@ -422,8 +422,8 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 
 [metadata]
 lock-version = "1.1"
-python-versions = "^3.6"
-content-hash = "6e9d95a217b6fdb77cb0ba30ee010b0fce60bdaccac4a64766e9a643aadf3562"
+python-versions = ">=3.6.1"
+content-hash = "3bc883fc086221675ed8211de99cad3e692a523ae0bbd13e5d7ea8bf2eaf0a28"
 
 [metadata.files]
 appdirs = [
@@ -451,18 +451,24 @@ distlib = [
     {file = "distlib-0.3.1.zip", hash = "sha256:edf6116872c863e1aa9d5bb7cb5e05a022c519a4594dc703843343a9ddd9bff1"},
 ]
 duckdb = [
+    {file = "duckdb-0.2.7-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:b32bace5b33e5d0785579c9bd5734ab7fd04ab91b30692f9d014e1a810254af5"},
     {file = "duckdb-0.2.7-cp36-cp36m-manylinux2010_i686.whl", hash = "sha256:e07e60b27e0944d3436a771e089cb419ad488d0eeed3831b51aad2eef5cc2e76"},
     {file = "duckdb-0.2.7-cp36-cp36m-manylinux2010_x86_64.whl", hash = "sha256:4e5208316a04555e9150dba49dfa01ba11301d6dc301b88dc30ef1f9c4c07a2f"},
     {file = "duckdb-0.2.7-cp36-cp36m-win32.whl", hash = "sha256:1ef2561adcc1522966be7eba86f52de051c14c62034f60c7b702bb9a84797857"},
     {file = "duckdb-0.2.7-cp36-cp36m-win_amd64.whl", hash = "sha256:69608a501ac7c5db1fc04b5fce02e84f4b3d6252d781dedeaf94a421b9261ab8"},
+    {file = "duckdb-0.2.7-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:455fe4ff95946036d4746c37346f92c79329051bec24fbb4e0d6ab5b7ef23c35"},
     {file = "duckdb-0.2.7-cp37-cp37m-manylinux2010_i686.whl", hash = "sha256:74386eeb9df2c381e228fe46ccbcc75872f8844379d2d67d3634c88df0d14578"},
     {file = "duckdb-0.2.7-cp37-cp37m-manylinux2010_x86_64.whl", hash = "sha256:88e130c6229e6924925f7360bdeae2a7cf2a8c3bfb210396990e44705117fa46"},
     {file = "duckdb-0.2.7-cp37-cp37m-win32.whl", hash = "sha256:ae42a0272994d5b6fe5090c5ae12b2231ec88cd0b148d742ed3ee2c0341a44ea"},
     {file = "duckdb-0.2.7-cp37-cp37m-win_amd64.whl", hash = "sha256:f7618b2f1adbd8b744a90dd1868e2302b6163eb087aa99cabf3e5fb18a6dc7bb"},
+    {file = "duckdb-0.2.7-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:7b6a3b5207d943284800bc5e88328b2ca594b17af9e471b51525567ec58dc5f7"},
     {file = "duckdb-0.2.7-cp38-cp38-manylinux2010_i686.whl", hash = "sha256:d4859e61df1c1138e805b9e63ce8f1eb698229f5c6406d94aa0ad26ab7008b25"},
     {file = "duckdb-0.2.7-cp38-cp38-manylinux2010_x86_64.whl", hash = "sha256:fba516d06baf9ae5867fb9db22c73250158b2518ab8361272175aaf2f045fa80"},
     {file = "duckdb-0.2.7-cp38-cp38-win32.whl", hash = "sha256:2be98795def60e39388bb74965db6503f73a61f50b3b18c24885531cc19aad28"},
     {file = "duckdb-0.2.7-cp38-cp38-win_amd64.whl", hash = "sha256:2eaa7f772129ab34eabc79672049f56da5f6b8f857800e7a8b39321e273e01a6"},
+    {file = "duckdb-0.2.7-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:3e9a907d75dd8a21277be399ba7596bd29535a0d76f643755eeda11ca42e4fa3"},
+    {file = "duckdb-0.2.7-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:b00bb56c74625aec699f19a765a0393f84e84f62cca5672a92116b9fea9ce3bd"},
+    {file = "duckdb-0.2.7-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:74133801a295fc8f77e4e7d34aab231ee87f054920737575eb3d9547dc36601c"},
     {file = "duckdb-0.2.7-cp39-cp39-manylinux2010_i686.whl", hash = "sha256:70fb3ace0ef7f49753f03aef619fb955867d151e8cfd8efdeb7d7a35d53b091e"},
     {file = "duckdb-0.2.7-cp39-cp39-manylinux2010_x86_64.whl", hash = "sha256:3caaf166e6ccf9a13f3e6cdf9085e8991323530d54460fb5be0c9663b5ef4716"},
     {file = "duckdb-0.2.7-cp39-cp39-win32.whl", hash = "sha256:3f885bf1f35f5b3e40133e04b947e77b04d1b25466aee28314d71dd1b9cfa6bc"},
@@ -619,8 +625,8 @@ pluggy = [
     {file = "pluggy-0.13.1.tar.gz", hash = "sha256:15b2acde666561e1298d71b523007ed7364de07029219b604cf808bfa1c765b0"},
 ]
 pre-commit = [
-    {file = "pre_commit-2.12.1-py2.py3-none-any.whl", hash = "sha256:70c5ec1f30406250b706eda35e868b87e3e4ba099af8787e3e8b4b01e84f4712"},
-    {file = "pre_commit-2.12.1.tar.gz", hash = "sha256:900d3c7e1bf4cf0374bb2893c24c23304952181405b4d88c9c40b72bda1bb8a9"},
+    {file = "pre_commit-2.13.0-py2.py3-none-any.whl", hash = "sha256:b679d0fddd5b9d6d98783ae5f10fd0c4c59954f375b70a58cbe1ce9bcf9809a4"},
+    {file = "pre_commit-2.13.0.tar.gz", hash = "sha256:764972c60693dc668ba8e86eb29654ec3144501310f7198742a767bec385a378"},
 ]
 py = [
     {file = "py-1.10.0-py2.py3-none-any.whl", hash = "sha256:3b80836aa6d1feeaa108e046da6423ab8f6ceda6468545ae8d02d9d58d18818a"},
