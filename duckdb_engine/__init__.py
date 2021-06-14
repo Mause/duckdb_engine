@@ -35,20 +35,6 @@ class ConnectionWrapper:
         self.c.execute(statement, parameters)
 
 
-def check_existance(connection, function: str, name: str, type_: str) -> bool:
-    try:
-        connection.execute(f"{function}('{name}');")
-    except RuntimeError as e:
-        if e.args[0].startswith(
-            f"Catalog Error: {type_} with name {name} does not exist!"
-        ):
-            return False
-        else:
-            raise
-    else:
-        return True
-
-
 class Dialect(postgres_dialect):
     _has_events = False
     identifier_preparer = None
@@ -69,17 +55,6 @@ class Dialect(postgres_dialect):
 
     def do_execute(self, cursor, statement, parameters, context):
         cursor.execute(statement, parameters, context)
-
-    def has_table(self, connection, table_name, schema=None):
-        return check_existance(connection, "PRAGMA show", table_name, "Table")
-
-    def has_sequence(self, connection, sequence_name, schema=None):
-        # TODO: use better lookup method
-        return check_existance(connection, "SELECT nextval", sequence_name, "Sequence")
-
-    def has_type(self, connection, type_name, schema=None):
-        # duckdb doesn't support custom types
-        return False
 
     @staticmethod
     def dbapi():
