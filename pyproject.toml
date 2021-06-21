@@ -17,9 +17,13 @@ pytest = "^6.2.4"
 pre-commit = "^2.13.0"
 pdbpp = "^0.10.2"
 mypy = "^0.902"
+hypothesis = "^6.0.4"
 
 [tool.poetry.plugins."sqlalchemy.dialects"]
 duckdb = "duckdb_engine"
+
+[tool.pytest.ini_options]
+addopts = "--hypothesis-show-statistics"
 
 [tool.mypy]
 ignore_missing_imports = true

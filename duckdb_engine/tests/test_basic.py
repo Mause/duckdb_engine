@@ -1,8 +1,12 @@
+from __future__ import annotations
+
+from hypothesis import assume, given
+from hypothesis.strategies import text
 from pytest import fixture
 from sqlalchemy import Column, ForeignKey, Integer, Sequence, String, create_engine
 from sqlalchemy.engine.url import registry
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.orm import RelationshipProperty, relationship, sessionmaker
 
 
 @fixture
@@ -23,7 +27,7 @@ class FakeModel(Base):  # type: ignore
     id = Column(Integer, Sequence("fakemodel_id_sequence"), primary_key=True)
     name = Column(String)
 
-    owner = relationship("Owner")
+    owner: RelationshipProperty[Owner] = relationship("Owner")
 
 
 class Owner(Base):  # type: ignore
@@ -31,7 +35,9 @@ class Owner(Base):  # type: ignore
     id = Column(Integer, Sequence("owner_id"), primary_key=True)
 
     fake_id = Column(Integer, ForeignKey("fake.id"))
-    owned = relationship("FakeModel", back_populates="owner")
+    owned: RelationshipProperty[FakeModel] = relationship(
+        FakeModel, back_populates="owner"
+    )
 
 
 @fixture
@@ -62,3 +68,19 @@ def test_foreign(session):
     owner = session.query(Owner).one()  # act
 
     assert owner.owned.name == "Walter"
+
+
+@given(text())
+def test_simple_string(s):
+    assume("\x00" not in s)
+    eng = create_engine("duckdb:///:memory:")
+    Base.metadata.create_all(eng)
+    session = sessionmaker(bind=eng)()
+    model = FakeModel(name=s)
+    session.add(model)
+    session.add(Owner(owned=model))
+    session.commit()
+
+    owner = session.query(Owner).one()  # act
+
+    assert owner.owned.name == s
