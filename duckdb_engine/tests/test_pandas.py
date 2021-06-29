@@ -14,7 +14,6 @@ import pandas as pd
 import pytest
 from sqlalchemy import create_engine
 
-
 #  eng = create_engine("duckdb:///:memory:")
 
 _possible_args = OrderedDict(
