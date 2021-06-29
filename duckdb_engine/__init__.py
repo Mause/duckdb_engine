@@ -20,6 +20,10 @@ class ConnectionWrapper:
     def cursor(self):
         return self
 
+    def fetchmany(self, size=None):
+        # TODO: remove this once duckdb supports fetchmany natively
+        return self.c.fetch_df_chunk().values.tolist()
+
     def __getattr__(self, name):
         return getattr(self.c, name)
 
