@@ -20,6 +20,10 @@ class ConnectionWrapper:
     def cursor(self):
         return self
 
+    def fetchmany(self, size=None):
+        # TODO: remove this once duckdb supports fetchmany natively
+        return self.c.fetch_df_chunk().values.tolist()
+
     def __getattr__(self, name):
         return getattr(self.c, name)
 
@@ -31,8 +35,11 @@ class ConnectionWrapper:
         # duckdb doesn't support 'soft closes'
         pass
 
-    def execute(self, statement, parameters, context):
-        self.c.execute(statement, parameters)
+    def execute(self, statement, parameters=None, context=None):
+        if parameters is None:
+            self.c.execute(statement)
+        else:
+            self.c.execute(statement, parameters)
 
 
 class Dialect(postgres_dialect):
