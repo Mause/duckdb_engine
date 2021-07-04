@@ -38,7 +38,7 @@ class ConnectionWrapper:
     def execute(self, statement, parameters=None, context=None):
         if parameters is None:
             self.c.execute(statement)
-        else:            
+        else:
             self.c.execute(statement, parameters)
 
 
