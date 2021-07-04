@@ -1,4 +1,3 @@
-from dataclasses import dataclass, field
 from typing import List
 
 import duckdb
@@ -12,10 +11,13 @@ class DBAPI:
         pass
 
 
-@dataclass
 class ConnectionWrapper:
     c: duckdb.DuckDBPyConnection
-    notices: List[str] = field(default_factory=list)
+    notices: List[str]
+
+    def __init__(self, c: duckdb.DuckDBPyConnection) -> None:
+        self.c = c
+        self.notices = list()
 
     def cursor(self):
         return self
