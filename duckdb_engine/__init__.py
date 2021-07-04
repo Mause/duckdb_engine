@@ -35,8 +35,11 @@ class ConnectionWrapper:
         # duckdb doesn't support 'soft closes'
         pass
 
-    def execute(self, statement, parameters, context):
-        self.c.execute(statement, parameters)
+    def execute(self, statement, parameters=None, context=None):
+        if parameters is None:
+            self.c.execute(statement)
+        else:            
+            self.c.execute(statement, parameters)
 
 
 class Dialect(postgres_dialect):
