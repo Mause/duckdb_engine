@@ -5,16 +5,14 @@
 Test pandas functionality.
 """
 
-import datetime
-import itertools
 from collections import OrderedDict
+from datetime import datetime
+from itertools import product
 from typing import Optional
 
 import pandas as pd
-import pytest
+from pytest import mark
 from sqlalchemy import create_engine
-
-#  eng = create_engine("duckdb:///:memory:")
 
 _possible_args = OrderedDict(
     {
@@ -23,7 +21,7 @@ _possible_args = OrderedDict(
         "method": [
             None,
             "multi",
-        ],  ### TODO Implement a callable insert method?
+        ],  # TODO Implement a callable insert method?
     }
 )
 
@@ -33,7 +31,7 @@ args = {
 }
 params = {
     k: list(
-        itertools.product(*(_v for _k, _v in _possible_args.items() if _k in args[k]))
+        product(*(_v for _k, _v in _possible_args.items() if _k in args[k]))  # type: ignore
     )
     for k in args
 }
@@ -41,7 +39,7 @@ params_strings = {k: (",".join([str(_k) for _k in args[k]])) for k in args}
 
 sample_df = pd.DataFrame(
     {
-        "datetime": [datetime.datetime.utcnow()],
+        "datetime": [datetime.utcnow()],
         "int": [1],
         "float": [1.01],
         "str": ["foo"],
@@ -49,7 +47,7 @@ sample_df = pd.DataFrame(
 )
 
 
-@pytest.mark.parametrize(params_strings["to_sql"], params["to_sql"])
+@mark.parametrize(params_strings["to_sql"], params["to_sql"])
 def test_to_sql(
     chunksize: Optional[int],
     if_exists: str,
@@ -70,7 +68,7 @@ def test_to_sql(
             raise e
 
 
-@pytest.mark.parametrize(params_strings["read_sql"], params["read_sql"])
+@mark.parametrize(params_strings["read_sql"], params["read_sql"])
 def test_read_sql(
     chunksize: Optional[int],
 ):
@@ -83,4 +81,4 @@ def test_read_sql(
         chunksize=chunksize,
     )
     chunks = [result] if chunksize is None else [chunk for chunk in result]
-    df = pd.concat(chunks).reset_index(drop=True)
+    pd.concat(chunks).reset_index(drop=True)
