@@ -8,7 +8,8 @@ Test pandas functionality.
 from collections import OrderedDict
 from datetime import datetime
 from itertools import product
-from typing import Optional
+from typing import Optional, Dict, Union, List
+import random
 
 import pandas as pd
 from pytest import mark
@@ -16,7 +17,7 @@ from sqlalchemy import create_engine
 
 _possible_args = OrderedDict(
     {
-        "chunksize": [None, 1, 10000],
+        "chunksize": [None, 1, 10, 100],
         "if_exists": ["fail", "replace", "append"],
         "method": [
             None,
@@ -37,14 +38,21 @@ params = {
 }
 params_strings = {k: (",".join([str(_k) for _k in args[k]])) for k in args}
 
-sample_df = pd.DataFrame(
-    {
-        "datetime": [datetime.utcnow()],
-        "int": [1],
-        "float": [1.01],
-        "str": ["foo"],
-    }
-)
+### Generate a DataFrame of 100 rows.
+sample_data: Dict[str, List[Union[datetime, str, int, float]]] = {
+    'datetime': [],
+    'int': [],
+    'str': [],
+    'float': [],
+}
+sample_rowcount = max([cs for cs in _possible_args['chunksize'] if cs is not None])
+for i in range(sample_rowcount):
+    sample_data['datetime'].append(datetime.utcnow())
+    sample_data['int'].append(random.randint(0, 100))
+    sample_data['float'].append(round(random.random(), 5))
+    sample_data['str'].append('foo')
+
+sample_df: pd.DataFrame = pd.DataFrame(sample_data)
 
 
 @mark.parametrize(params_strings["to_sql"], params["to_sql"])
@@ -73,12 +81,23 @@ def test_read_sql(
     chunksize: Optional[int],
 ) -> None:
     eng = create_engine("duckdb:///:memory:")
-    sample_df.to_sql(name="test_read", con=eng, if_exists="replace")
-    query = "SELECT * FROM test_read"
-    result = pd.read_sql(
-        query,
-        eng,
-        chunksize=chunksize,
-    )
-    chunks = [result] if chunksize is None else [chunk for chunk in result]
-    pd.concat(chunks).reset_index(drop=True)
+
+    ### Perform the test twice:
+    ### Once for reading the table name (testing reflection),
+    ### and once for directly executing a SQL query.
+    table_name = "test_read"
+    query = f"SELECT * FROM {table_name}"
+    queries = [table_name, query]
+
+    sample_df.to_sql(name=table_name, con=eng, if_exists="replace")
+
+    for q in queries:
+        result = pd.read_sql(table_name, eng, chunksize=chunksize)
+        chunks = [result] if chunksize is None else list(result)
+        if chunksize is None:
+            assert len(chunks[0]) == sample_rowcount
+        else:
+            ### Assert that the chunks are the size specified.
+            assert len(chunks[0]) == chunksize
+            ### Assert that the expected number of chunks was returned.
+            assert (sample_rowcount / chunksize) == len(chunks)
