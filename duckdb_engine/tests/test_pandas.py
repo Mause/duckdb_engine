@@ -5,11 +5,11 @@
 Test pandas functionality.
 """
 
+import random
 from collections import OrderedDict
 from datetime import datetime
 from itertools import product
-from typing import Optional, Dict, Union, List
-import random
+from typing import Dict, List, Optional, Union
 
 import pandas as pd
 from pytest import mark
@@ -40,17 +40,17 @@ params_strings = {k: (",".join([str(_k) for _k in args[k]])) for k in args}
 
 ### Generate a DataFrame of 100 rows.
 sample_data: Dict[str, List[Union[datetime, str, int, float]]] = {
-    'datetime': [],
-    'int': [],
-    'str': [],
-    'float': [],
+    "datetime": [],
+    "int": [],
+    "str": [],
+    "float": [],
 }
-sample_rowcount = max([cs for cs in _possible_args['chunksize'] if cs is not None])
+sample_rowcount = max(cs for cs in _possible_args["chunksize"] if cs is not None)
 for i in range(sample_rowcount):
-    sample_data['datetime'].append(datetime.utcnow())
-    sample_data['int'].append(random.randint(0, 100))
-    sample_data['float'].append(round(random.random(), 5))
-    sample_data['str'].append('foo')
+    sample_data["datetime"].append(datetime.utcnow())
+    sample_data["int"].append(random.randint(0, 100))
+    sample_data["float"].append(round(random.random(), 5))
+    sample_data["str"].append("foo")
 
 sample_df: pd.DataFrame = pd.DataFrame(sample_data)
 
