@@ -1,7 +1,8 @@
-from typing import List
+from typing import Any, Dict, List, Tuple, Type
 
 import duckdb
 from sqlalchemy.dialects.postgresql import dialect as postgres_dialect
+from sqlalchemy.engine import URL
 
 
 class DBAPI:
@@ -19,25 +20,27 @@ class ConnectionWrapper:
         self.c = c
         self.notices = list()
 
-    def cursor(self):
+    def cursor(self) -> "ConnectionWrapper":
         return self
 
-    def fetchmany(self, size=None):
+    def fetchmany(self, size: int = None) -> List:
         # TODO: remove this once duckdb supports fetchmany natively
         return self.c.fetch_df_chunk().values.tolist()
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Any:
         return getattr(self.c, name)
 
     @property
-    def connection(self):
+    def connection(self) -> "ConnectionWrapper":
         return self
 
-    def close(self):
+    def close(self) -> None:
         # duckdb doesn't support 'soft closes'
         pass
 
-    def execute(self, statement, parameters=None, context=None):
+    def execute(
+        self, statement: str, parameters: Dict = None, context: Any = None
+    ) -> None:
         if parameters is None:
             self.c.execute(statement)
         else:
@@ -49,37 +52,41 @@ class Dialect(postgres_dialect):
     identifier_preparer = None
     # colspecs TODO: remap types to duckdb types
 
-    def connect(self, *args, **kwargs):
+    def connect(self, *args: Any, **kwargs: Any) -> ConnectionWrapper:
         return ConnectionWrapper(duckdb.connect(*args, **kwargs))
 
-    def on_connect(self):
+    def on_connect(self) -> None:
         pass
 
-    def ddl_compiler(self, dialect, ddl, **kwargs):
+    def ddl_compiler(
+        self, dialect: str, ddl: Any, **kwargs: Any
+    ) -> postgres_dialect.ddl_compiler:
         # TODO: enforce no `serial` type
 
         # duckdb doesn't support foreign key constraints (yet)
         ddl.include_foreign_key_constraints = {}
         return postgres_dialect.ddl_compiler(dialect, ddl, **kwargs)
 
-    def do_execute(self, cursor, statement, parameters, context):
+    def do_execute(
+        self, cursor: ConnectionWrapper, statement: str, parameters: Any, context: Any
+    ) -> None:
         cursor.execute(statement, parameters, context)
 
     @staticmethod
-    def dbapi():
+    def dbapi() -> Type[DBAPI]:
         return DBAPI
 
-    def create_connect_args(self, u):
+    def create_connect_args(self, u: URL) -> Tuple[Tuple, Dict]:
         return (), {"database": u.render_as_string(hide_password=False).split("///")[1]}
 
-    def initialize(self, connection):
+    def initialize(self, connection: ConnectionWrapper) -> None:
         pass
 
-    def do_rollback(self, connection):
+    def do_rollback(self, connection: ConnectionWrapper) -> None:
         pass
 
     @classmethod
-    def get_dialect_cls(cls, u):
+    def get_dialect_cls(cls, u: str) -> Type["Dialect"]:
         return cls
 
 

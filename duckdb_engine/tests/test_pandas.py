@@ -53,7 +53,7 @@ def test_to_sql(
     if_exists: str,
     method: Optional[str],
     index: bool = False,
-):
+) -> None:
     eng = create_engine("duckdb:///:memory:")
     try:
         sample_df.to_sql(
@@ -71,7 +71,7 @@ def test_to_sql(
 @mark.parametrize(params_strings["read_sql"], params["read_sql"])
 def test_read_sql(
     chunksize: Optional[int],
-):
+) -> None:
     eng = create_engine("duckdb:///:memory:")
     sample_df.to_sql(name="test_read", con=eng, if_exists="replace")
     query = "SELECT * FROM test_read"
