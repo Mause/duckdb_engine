@@ -42,13 +42,8 @@ class Owner(Base):  # type: ignore
 
 
 @fixture
-def SessionMaker(engine: Engine) -> type[Session]:
-    return sessionmaker(bind=engine)
-
-
-@fixture
-def session(Session: sessionmaker) -> Session:
-    return Session()
+def session(engine: Engine) -> Session:
+    return sessionmaker(bind=engine)()
 
 
 def test_basic(session: Session) -> None:
