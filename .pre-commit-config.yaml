@@ -38,6 +38,9 @@ repos:
     rev: v0.910
     hooks:
      - id: mypy
+       additional_dependencies:
+          - "pytest==6.2.4"
+          - "hypothesis==6.14.1"
   - repo: https://github.com/PyCQA/flake8
     rev: '3.9.2'  # pick a git hash / tag to point to
     hooks:

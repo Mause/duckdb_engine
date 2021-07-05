@@ -4,13 +4,14 @@ from hypothesis import assume, given
 from hypothesis.strategies import text
 from pytest import fixture
 from sqlalchemy import Column, ForeignKey, Integer, Sequence, String, create_engine
+from sqlalchemy.engine import Engine
 from sqlalchemy.engine.url import registry
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import RelationshipProperty, relationship, sessionmaker
+from sqlalchemy.orm import RelationshipProperty, Session, relationship, sessionmaker
 
 
 @fixture
-def engine():
+def engine() -> Engine:
     registry.register("duckdb", "duckdb_engine", "Dialect")
 
     eng = create_engine("duckdb:///:memory:")
@@ -41,16 +42,11 @@ class Owner(Base):  # type: ignore
 
 
 @fixture
-def Session(engine):
-    return sessionmaker(bind=engine)
+def session(engine: Engine) -> Session:
+    return sessionmaker(bind=engine)()
 
 
-@fixture
-def session(Session):
-    return Session()
-
-
-def test_basic(session):
+def test_basic(session: Session) -> None:
     session.add(FakeModel(name="Frank"))
     session.commit()
 
@@ -59,7 +55,7 @@ def test_basic(session):
     assert frank.name == "Frank"
 
 
-def test_foreign(session):
+def test_foreign(session: Session) -> None:
     model = FakeModel(name="Walter")
     session.add(model)
     session.add(Owner(owned=model))
@@ -71,7 +67,7 @@ def test_foreign(session):
 
 
 @given(text())
-def test_simple_string(s):
+def test_simple_string(s: str) -> None:
     assume("\x00" not in s)
     eng = create_engine("duckdb:///:memory:")
     Base.metadata.create_all(eng)
