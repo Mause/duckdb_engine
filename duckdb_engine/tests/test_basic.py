@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from hypothesis import assume, given
 from hypothesis.strategies import text
 from pytest import fixture
@@ -28,7 +26,7 @@ class FakeModel(Base):  # type: ignore
     id = Column(Integer, Sequence("fakemodel_id_sequence"), primary_key=True)
     name = Column(String)
 
-    owner: RelationshipProperty[Owner] = relationship("Owner")
+    owner = relationship("Owner")  # type: RelationshipProperty[Owner]
 
 
 class Owner(Base):  # type: ignore
@@ -36,9 +34,9 @@ class Owner(Base):  # type: ignore
     id = Column(Integer, Sequence("owner_id"), primary_key=True)
 
     fake_id = Column(Integer, ForeignKey("fake.id"))
-    owned: RelationshipProperty[FakeModel] = relationship(
+    owned = relationship(
         FakeModel, back_populates="owner"
-    )
+    )  # type: RelationshipProperty[FakeModel]
 
 
 @fixture
