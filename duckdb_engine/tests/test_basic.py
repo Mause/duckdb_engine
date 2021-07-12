@@ -34,9 +34,9 @@ class Owner(Base):  # type: ignore
     id = Column(Integer, Sequence("owner_id"), primary_key=True)
 
     fake_id = Column(Integer, ForeignKey("fake.id"))
-    owned: RelationshipProperty[FakeModel] = relationship(
+    owned = relationship(
         FakeModel, back_populates="owner"
-    )
+    )  # type: RelationshipProperty[FakeModel]
 
 
 @fixture
