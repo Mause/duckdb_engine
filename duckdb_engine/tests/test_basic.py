@@ -12,6 +12,7 @@ from sqlalchemy import (
     create_engine,
     inspect,
 )
+from sqlalchemy.dialects.postgresql.base import PGInspector
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.url import registry
 from sqlalchemy.ext.declarative import declarative_base
@@ -94,18 +95,35 @@ def test_get_tables(engine: Engine) -> None:
     assert engine.table_names()
 
 
-def test_get_columns(session: Session, engine: Engine) -> None:
+@fixture
+def inspector(engine: Engine, session: Session) -> PGInspector:
     session.execute("create table test (id int);")
     session.commit()
 
     meta = MetaData()
-    user_table = Table("test", meta)
-    insp = inspect(engine)
+    Table("test", meta)
 
-    insp.get_columns(user_table, None)
+    return inspect(engine)
 
 
-@mark.xfail(reason="reflection not yet supported in duckdb")
+def test_get_columns(inspector: PGInspector) -> None:
+    inspector.get_columns("test", None)
+
+
+def test_get_foreign_keys(inspector: PGInspector) -> None:
+    inspector.get_foreign_keys("test", None)
+
+
+@mark.xfail(reason="reflection not yet supported in duckdb", raises=NotImplementedError)
+def test_get_check_constraints(inspector: PGInspector) -> None:
+    inspector.get_check_constraints("test", None)
+
+
+@mark.xfail(reason="reflection not yet supported in duckdb", raises=NotImplementedError)
+def test_get_unique_constraints(inspector: PGInspector) -> None:
+    inspector.get_unique_constraints("test", None)
+
+
 def test_reflect(session: Session, engine: Engine) -> None:
     session.execute("create table test (id int);")
     session.commit()
@@ -114,7 +132,6 @@ def test_reflect(session: Session, engine: Engine) -> None:
     meta.reflect(only=["test"])
 
 
-@mark.xfail(reason="reflection not yet supported in duckdb")
 def test_table_reflect(session: Session, engine: Engine) -> None:
     session.execute("create table test (id int);")
     session.commit()
@@ -122,7 +139,5 @@ def test_table_reflect(session: Session, engine: Engine) -> None:
     meta = MetaData()
     user_table = Table("test", meta)
     insp = inspect(engine)
-
-    insp.get_columns(user_table, None)
 
     insp.reflect_table(user_table, None)
