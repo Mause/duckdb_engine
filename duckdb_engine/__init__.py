@@ -36,6 +36,7 @@ class ConnectionWrapper:
 
     def fetchmany(self, size: int = None) -> List:
         # TODO: remove this once duckdb supports fetchmany natively
+        # TODO: add size parameter here once the next duckdb version is released
         return self.c.fetch_df_chunk().values.tolist()
 
     def __getattr__(self, name: str) -> Any:
