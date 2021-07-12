@@ -50,6 +50,8 @@ class ConnectionWrapper:
 class Dialect(postgres_dialect):
     _has_events = False
     identifier_preparer = None
+    default_schema_name = "main"
+    server_version_info = (8, 0)
     # colspecs TODO: remap types to duckdb types
 
     def connect(self, *args: Any, **kwargs: Any) -> ConnectionWrapper:
