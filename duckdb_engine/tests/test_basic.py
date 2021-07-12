@@ -2,8 +2,18 @@ from __future__ import annotations
 
 from hypothesis import assume, given
 from hypothesis.strategies import text
-from pytest import fixture
-from sqlalchemy import Column, ForeignKey, Integer, Sequence, String, create_engine
+from pytest import fixture, mark
+from sqlalchemy import (
+    Column,
+    ForeignKey,
+    Integer,
+    MetaData,
+    Sequence,
+    String,
+    Table,
+    create_engine,
+    inspect,
+)
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.url import registry
 from sqlalchemy.ext.declarative import declarative_base
@@ -80,3 +90,41 @@ def test_simple_string(s: str) -> None:
     owner = session.query(Owner).one()  # act
 
     assert owner.owned.name == s
+
+
+def test_get_tables(engine: Engine) -> None:
+    assert engine.table_names()
+
+
+def test_get_columns(session: Session, engine: Engine) -> None:
+    session.execute("create table test (id int);")
+    session.commit()
+
+    meta = MetaData()
+    user_table = Table("test", meta)
+    insp = inspect(engine)
+
+    insp.get_columns(user_table, None)
+
+
+@mark.xfail(reason="reflection not yet supported in duckdb")
+def test_reflect(session: Session, engine: Engine) -> None:
+    session.execute("create table test (id int);")
+    session.commit()
+
+    meta = MetaData(engine)
+    meta.reflect(only=["test"])
+
+
+@mark.xfail(reason="reflection not yet supported in duckdb")
+def test_table_reflect(session: Session, engine: Engine) -> None:
+    session.execute("create table test (id int);")
+    session.commit()
+
+    meta = MetaData()
+    user_table = Table("test", meta)
+    insp = inspect(engine)
+
+    insp.get_columns(user_table, None)
+
+    insp.reflect_table(user_table, None)
