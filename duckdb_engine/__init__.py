@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Optional, Tuple, Type
 
 import duckdb
 from sqlalchemy.dialects.postgresql import dialect as postgres_dialect
-from sqlalchemy.dialects.postgresql.base import PGInspector
+from sqlalchemy.dialects.postgresql.base import PGExecutionContext, PGInspector
 from sqlalchemy.engine import URL
 
 
@@ -78,6 +78,11 @@ class ConnectionWrapper:
         except RuntimeError:
             return None
 
+    def executemany(
+        self, statement: str, parameters: List[Dict] = None, context: Any = None
+    ) -> None:
+        self.c.executemany(statement, parameters)
+
     def execute(
         self, statement: str, parameters: Dict = None, context: Any = None
     ) -> None:
@@ -117,9 +122,22 @@ class Dialect(postgres_dialect):
         return postgres_dialect.ddl_compiler(dialect, ddl, **kwargs)
 
     def do_execute(
-        self, cursor: ConnectionWrapper, statement: str, parameters: Any, context: Any
+        self,
+        cursor: ConnectionWrapper,
+        statement: str,
+        parameters: Any,
+        context: PGExecutionContext,
     ) -> None:
         cursor.execute(statement, parameters, context)
+
+    def do_executemany(
+        self,
+        cursor: ConnectionWrapper,
+        statement: str,
+        parameters: List[Any],
+        context: PGExecutionContext = None,
+    ) -> None:
+        cursor.executemany(statement, parameters, context)
 
     @staticmethod
     def dbapi() -> Type[DBAPI]:
