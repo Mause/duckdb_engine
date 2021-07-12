@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Tuple, Type
 
 import duckdb
 from sqlalchemy.dialects.postgresql import dialect as postgres_dialect
+from sqlalchemy.dialects.postgresql.base import PGInspector
 from sqlalchemy.engine import URL
 
 
@@ -10,6 +11,16 @@ class DBAPI:
 
     class Error(Exception):
         pass
+
+
+class DuckDBInspector(PGInspector):
+    def get_check_constraints(
+        self, table_name: str, schema: str = None, **kw: Any
+    ) -> List[Dict[str, Any]]:
+        try:
+            return super().get_check_constraints(table_name, schema, **kw)
+        except Exception as e:
+            raise NotImplementedError() from e
 
 
 class ConnectionWrapper:
@@ -52,6 +63,7 @@ class Dialect(postgres_dialect):
     identifier_preparer = None
     default_schema_name = "main"
     server_version_info = (8, 0)
+    inspector = DuckDBInspector
     # colspecs TODO: remap types to duckdb types
 
     def connect(self, *args: Any, **kwargs: Any) -> ConnectionWrapper:
