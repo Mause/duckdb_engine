@@ -144,7 +144,16 @@ def test_table_reflect(session: Session, engine: Engine) -> None:
 
 
 @mark.xfail(reason="current duckdb release doesnt support size param", raises=TypeError)
-def test_fetch_df_chunks(engine: Engine) -> None:
+def test_fetch_df_chunks() -> None:
     import duckdb
 
     duckdb.connect("").fetch_df_chunks(1)
+
+
+@mark.xfail(
+    reason="current duckdb release doesnt support size param", raises=RuntimeError
+)
+def test_description() -> None:
+    import duckdb
+
+    duckdb.connect("").description
