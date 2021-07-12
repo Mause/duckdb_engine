@@ -9,10 +9,10 @@ import random
 from collections import OrderedDict
 from datetime import datetime
 from itertools import product
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union, cast
 
 import pandas as pd
-from pytest import mark
+from pytest import mark, xfail
 from sqlalchemy import create_engine
 
 _possible_args = OrderedDict(
@@ -38,14 +38,18 @@ params = {
 }
 params_strings = {k: (",".join([str(_k) for _k in args[k]])) for k in args}
 
-### Generate a DataFrame of 100 rows.
+# Generate a DataFrame of 100 rows.
 sample_data: Dict[str, List[Union[datetime, str, int, float]]] = {
     "datetime": [],
     "int": [],
     "str": [],
     "float": [],
 }
-sample_rowcount = max(cs for cs in _possible_args["chunksize"] if cs is not None)
+sample_rowcount = max(
+    cs
+    for cs in cast(List[Optional[int]], _possible_args["chunksize"])
+    if cs is not None
+)
 for i in range(sample_rowcount):
     sample_data["datetime"].append(datetime.utcnow())
     sample_data["int"].append(random.randint(0, 100))
@@ -76,28 +80,40 @@ def test_to_sql(
             raise e
 
 
+table_name = "test_read"
+
+
+# Perform the test twice:
+# Once for reading the table name (testing reflection),
+@mark.xfail(reason="reflection not yet supported in duckdb")
+@mark.parametrize(params_strings["read_sql"], params["read_sql"])
+def test_read_sql_reflection(
+    chunksize: Tuple[Optional[int]],
+) -> None:
+    run_query(table_name, chunksize[0])
+
+
+# and once for directly executing a SQL query.
 @mark.parametrize(params_strings["read_sql"], params["read_sql"])
 def test_read_sql(
-    chunksize: Optional[int],
+    chunksize: Tuple[Optional[int]],
 ) -> None:
-    eng = create_engine("duckdb:///:memory:")
+    run_query(f"SELECT * FROM {table_name}", chunksize[0])
 
-    ### Perform the test twice:
-    ### Once for reading the table name (testing reflection),
-    ### and once for directly executing a SQL query.
-    table_name = "test_read"
-    query = f"SELECT * FROM {table_name}"
-    queries = [table_name, query]
+
+def run_query(query: str, chunksize: Optional[int]) -> None:
+    eng = create_engine("duckdb:///:memory:")
 
     sample_df.to_sql(name=table_name, con=eng, if_exists="replace")
 
-    for q in queries:
-        result = pd.read_sql(table_name, eng, chunksize=chunksize)
-        chunks = [result] if chunksize is None else list(result)
-        if chunksize is None:
-            assert len(chunks[0]) == sample_rowcount
-        else:
-            ### Assert that the chunks are the size specified.
-            assert len(chunks[0]) == chunksize
-            ### Assert that the expected number of chunks was returned.
-            assert (sample_rowcount / chunksize) == len(chunks)
+    result = pd.read_sql(query, eng, chunksize=chunksize)
+    chunks = [result] if chunksize is None else list(result)
+    if chunksize is None:
+        assert len(chunks[0]) == sample_rowcount
+    else:
+        xfail(reason="This will fail until the next duckdb release")
+
+        # Assert that the chunks are the size specified.
+        assert len(chunks[0]) == chunksize
+        # Assert that the expected number of chunks was returned.
+        assert (sample_rowcount / chunksize) == len(chunks)
