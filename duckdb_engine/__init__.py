@@ -52,10 +52,16 @@ class ConnectionWrapper:
     def execute(
         self, statement: str, parameters: Dict = None, context: Any = None
     ) -> None:
-        if parameters is None:
-            self.c.execute(statement)
-        else:
-            self.c.execute(statement, parameters)
+        try:
+            if parameters is None:
+                self.c.execute(statement)
+            else:
+                self.c.execute(statement, parameters)
+        except RuntimeError as e:
+            if e.args[0].startswith("Not implemented Error"):
+                raise NotImplementedError(*e.args) from e
+            else:
+                raise e
 
 
 class Dialect(postgres_dialect):
