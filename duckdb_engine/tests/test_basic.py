@@ -26,7 +26,7 @@ class FakeModel(Base):  # type: ignore
     id = Column(Integer, Sequence("fakemodel_id_sequence"), primary_key=True)
     name = Column(String)
 
-    owner: RelationshipProperty["Owner"] = relationship("Owner")
+    owner = relationship("Owner")  # type: RelationshipProperty[Owner]
 
 
 class Owner(Base):  # type: ignore
