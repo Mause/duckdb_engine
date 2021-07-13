@@ -1,8 +1,8 @@
-from typing import Any, Dict, List, Tuple, Type
+from typing import Any, Dict, List, Optional, Tuple, Type
 
 import duckdb
 from sqlalchemy.dialects.postgresql import dialect as postgres_dialect
-from sqlalchemy.dialects.postgresql.base import PGInspector
+from sqlalchemy.dialects.postgresql.base import PGExecutionContext, PGInspector
 from sqlalchemy.engine import URL
 
 
@@ -36,7 +36,16 @@ class ConnectionWrapper:
 
     def fetchmany(self, size: int = None) -> List:
         # TODO: remove this once duckdb supports fetchmany natively
-        return self.c.fetch_df_chunk().values.tolist()
+        try:
+            # TODO: add size parameter here once the next duckdb version is released
+            return (self.c.fetch_df_chunk()).values.tolist()
+        except RuntimeError as e:
+            if e.args[0].startswith(
+                "Invalid Input Error: Attempting to fetch from an unsuccessful or closed streaming query result"
+            ):
+                return []
+            else:
+                raise e
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self.c, name)
@@ -48,6 +57,31 @@ class ConnectionWrapper:
     def close(self) -> None:
         # duckdb doesn't support 'soft closes'
         pass
+
+    @property
+    def description(
+        self,
+    ) -> Optional[
+        # TODO: remove this override once the next version of duckdb is released
+        Tuple[
+            str,
+            str,
+            Optional[str],
+            Optional[str],
+            Optional[str],
+            Optional[str],
+            Optional[str],
+        ]
+    ]:
+        try:
+            return self.c.description
+        except RuntimeError:
+            return None
+
+    def executemany(
+        self, statement: str, parameters: List[Dict] = None, context: Any = None
+    ) -> None:
+        self.c.executemany(statement, parameters)
 
     def execute(
         self, statement: str, parameters: Dict = None, context: Any = None
@@ -88,9 +122,22 @@ class Dialect(postgres_dialect):
         return postgres_dialect.ddl_compiler(dialect, ddl, **kwargs)
 
     def do_execute(
-        self, cursor: ConnectionWrapper, statement: str, parameters: Any, context: Any
+        self,
+        cursor: ConnectionWrapper,
+        statement: str,
+        parameters: Any,
+        context: PGExecutionContext,
     ) -> None:
         cursor.execute(statement, parameters, context)
+
+    def do_executemany(
+        self,
+        cursor: ConnectionWrapper,
+        statement: str,
+        parameters: List[Any],
+        context: PGExecutionContext = None,
+    ) -> None:
+        cursor.executemany(statement, parameters, context)
 
     @staticmethod
     def dbapi() -> Type[DBAPI]:
