@@ -1,3 +1,10 @@
+
+0.1.7 / 2021-07-13
+==================
+  * Improve support for sqlalchemy reflection
+  * Fix more issues with fetch/executemany
+  * Runs tests across python versions with tox
+
 0.1.6 / 2021-07-05
 ===================
 
