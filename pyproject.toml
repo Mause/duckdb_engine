@@ -25,6 +25,7 @@ duckdb = "duckdb_engine"
 
 [tool.pytest.ini_options]
 addopts = "--hypothesis-show-statistics"
+xfail_strict = true
 
 [tool.mypy]
 ignore_missing_imports = true

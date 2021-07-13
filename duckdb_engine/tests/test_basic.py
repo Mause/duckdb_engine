@@ -147,7 +147,7 @@ def test_table_reflect(session: Session, engine: Engine) -> None:
 def test_fetch_df_chunks() -> None:
     import duckdb
 
-    duckdb.connect("").fetch_df_chunks(1)
+    duckdb.connect(":memory:").execute("select 1").fetch_df_chunk(1)
 
 
 @mark.xfail(
