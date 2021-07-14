@@ -119,7 +119,6 @@ def test_get_check_constraints(inspector: PGInspector) -> None:
     inspector.get_check_constraints("test", None)
 
 
-@mark.xfail(reason="reflection not yet supported in duckdb", raises=NotImplementedError)
 def test_get_unique_constraints(inspector: PGInspector) -> None:
     inspector.get_unique_constraints("test", None)
 
@@ -143,16 +142,12 @@ def test_table_reflect(session: Session, engine: Engine) -> None:
     insp.reflect_table(user_table, None)
 
 
-@mark.xfail(reason="current duckdb release doesnt support size param", raises=TypeError)
 def test_fetch_df_chunks() -> None:
     import duckdb
 
     duckdb.connect(":memory:").execute("select 1").fetch_df_chunk(1)
 
 
-@mark.xfail(
-    reason="current duckdb release doesnt support size param", raises=RuntimeError
-)
 def test_description() -> None:
     import duckdb
 

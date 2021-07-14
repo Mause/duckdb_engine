@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Tuple, Type
+from typing import Any, Dict, List, Tuple, Type
 
 import duckdb
 from sqlalchemy.dialects.postgresql import dialect as postgres_dialect
@@ -57,26 +57,6 @@ class ConnectionWrapper:
     def close(self) -> None:
         # duckdb doesn't support 'soft closes'
         pass
-
-    @property
-    def description(
-        self,
-    ) -> Optional[
-        # TODO: remove this override once the next version of duckdb is released
-        Tuple[
-            str,
-            str,
-            Optional[str],
-            Optional[str],
-            Optional[str],
-            Optional[str],
-            Optional[str],
-        ]
-    ]:
-        try:
-            return self.c.description
-        except RuntimeError:
-            return None
 
     def executemany(
         self, statement: str, parameters: List[Dict] = None, context: Any = None
