@@ -91,8 +91,8 @@ def test_simple_string(s: str) -> None:
     assert owner.owned.name == s
 
 
-def test_get_tables(engine: Engine) -> None:
-    assert engine.table_names()
+def test_get_tables(inspector: PGInspector) -> None:
+    assert inspector.get_table_names()
 
 
 @fixture
