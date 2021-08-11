@@ -11,7 +11,9 @@ from datetime import datetime
 from itertools import product
 from typing import Dict, List, Optional, Tuple, Union, cast
 
+import numpy as np
 import pandas as pd
+from pandas.testing import assert_frame_equal
 from pytest import mark, xfail
 from sqlalchemy import create_engine
 
@@ -117,3 +119,18 @@ def run_query(query: str, chunksize: Optional[int]) -> None:
         assert len(chunks[0]) == chunksize
         # Assert that the expected number of chunks was returned.
         assert (sample_rowcount / chunksize) == len(chunks)
+
+
+def test_read_sql_duckdb_table(tmp_path):
+    import duckdb
+    db = str(tmp_path / "test_db.duckdb")
+    con = duckdb.connect(database=db, read_only=False)
+    df = pd.DataFrame({'a': [1, 2, 3, 4], 'b': [.1, .2, .3, .4], 'c': ["a", "b", "c", "d"]})
+    con.register('df_view', df)
+    con.execute("CREATE TABLE test_data AS SELECT * FROM df_view;")
+    engine = create_engine(f"duckdb:///{db}")
+    
+    result = pd.read_sql("SELECT * FROM test_data", engine)
+    assert_frame_equal(result, df)
+    result = pd.read_sql("test_data", engine)
+    assert_frame_equal(result, df)
