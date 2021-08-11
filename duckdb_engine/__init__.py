@@ -1,11 +1,11 @@
 from typing import Any, Dict, List, Tuple, Type
 
 import duckdb
+from sqlalchemy import types as sqltypes
+from sqlalchemy import util
 from sqlalchemy.dialects.postgresql import dialect as postgres_dialect
 from sqlalchemy.dialects.postgresql.base import PGExecutionContext, PGInspector
 from sqlalchemy.engine import URL
-from sqlalchemy import util
-from sqlalchemy import types as sqltypes
 
 
 class DBAPI:
