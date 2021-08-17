@@ -19,6 +19,7 @@ pdbpp = "^0.10.3"
 mypy = "^0.910"
 hypothesis = "^6.14.7"
 pandas = "^1"
+ipython-sql = "^0.4.0"
 
 [tool.poetry.plugins."sqlalchemy.dialects"]
 duckdb = "duckdb_engine"

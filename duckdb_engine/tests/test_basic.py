@@ -134,6 +134,10 @@ def test_reflect(session: Session, engine: Engine) -> None:
 def test_commit(session: Session, engine: Engine) -> None:
     session.execute("commit;")
 
+    from IPython import get_ipython
+
+    get_ipython().run_line_magic("sql", "select 42;")
+
 
 def test_table_reflect(session: Session, engine: Engine) -> None:
     session.execute("create table test (id int);")
