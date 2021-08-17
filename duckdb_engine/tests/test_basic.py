@@ -138,7 +138,7 @@ def test_commit(session: Session, engine: Engine) -> None:
 
     shell = InteractiveShell()
     assert not shell.run_line_magic("load_ext", "sql")
-    assert not shell.run_line_magic("sql", "duckdb://:memory:")
+    assert not shell.run_line_magic("sql", "duckdb:///:memory:")
     assert not shell.run_line_magic("sql", "select 42;")
 
 
