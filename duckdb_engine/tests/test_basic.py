@@ -139,7 +139,7 @@ def test_commit(session: Session, engine: Engine) -> None:
     shell = InteractiveShell()
     shell.run_line_magic("load_ext", "sql")
     shell.run_line_magic("sql", "duckdb://:memory:")
-    shell.run_line_magic("sql", "select 42;")
+    assert not shell.run_line_magic("sql", "select 42;")
 
 
 def test_table_reflect(session: Session, engine: Engine) -> None:
