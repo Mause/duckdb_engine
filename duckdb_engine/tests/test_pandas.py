@@ -5,6 +5,7 @@
 Test pandas functionality.
 """
 
+import pathlib
 import random
 from collections import OrderedDict
 from datetime import datetime
@@ -120,7 +121,7 @@ def run_query(query: str, chunksize: Optional[int]) -> None:
         assert (sample_rowcount / chunksize) == len(chunks)
 
 
-def test_read_sql_duckdb_table(tmp_path):
+def test_read_sql_duckdb_table(tmp_path: pathlib.Path) -> None:
     import duckdb
 
     db = str(tmp_path / "test_db.duckdb")
