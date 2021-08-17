@@ -136,7 +136,10 @@ def test_commit(session: Session, engine: Engine) -> None:
 
     from IPython.core.interactiveshell import InteractiveShell
 
-    InteractiveShell().run_line_magic("sql", "select 42;")
+    shell = InteractiveShell()
+    shell.run_line_magic("load_ext", "sql")
+    shell.run_line_magic("sql", "duckdb://:memory:")
+    shell.run_line_magic("sql", "select 42;")
 
 
 def test_table_reflect(session: Session, engine: Engine) -> None:
