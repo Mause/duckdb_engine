@@ -130,7 +130,17 @@ class Dialect(postgres_dialect):
         pass
 
     def do_rollback(self, connection: ConnectionWrapper) -> None:
-        pass
+        try:
+            super().do_rollback(connection)
+        except RuntimeError as e:
+            if (
+                e.args[0]
+                != "TransactionContext Error: cannot rollback - no transaction is active"
+            ):
+                raise e
+
+    def do_begin(self, connection: ConnectionWrapper) -> None:
+        connection.execute("begin")
 
     @classmethod
     def get_dialect_cls(cls, u: str) -> Type["Dialect"]:

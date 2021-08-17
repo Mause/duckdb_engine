@@ -131,6 +131,10 @@ def test_reflect(session: Session, engine: Engine) -> None:
     meta.reflect(only=["test"])
 
 
+def test_commit(session: Session, engine: Engine) -> None:
+    session.execute("commit;")
+
+
 def test_table_reflect(session: Session, engine: Engine) -> None:
     session.execute("create table test (id int);")
     session.commit()
