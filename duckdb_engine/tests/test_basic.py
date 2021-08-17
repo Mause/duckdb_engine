@@ -137,8 +137,8 @@ def test_commit(session: Session, engine: Engine) -> None:
     from IPython.core.interactiveshell import InteractiveShell
 
     shell = InteractiveShell()
-    shell.run_line_magic("load_ext", "sql")
-    shell.run_line_magic("sql", "duckdb://:memory:")
+    assert not shell.run_line_magic("load_ext", "sql")
+    assert not shell.run_line_magic("sql", "duckdb://:memory:")
     assert not shell.run_line_magic("sql", "select 42;")
 
 
