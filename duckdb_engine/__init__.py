@@ -1,6 +1,8 @@
 from typing import Any, Dict, List, Tuple, Type
 
 import duckdb
+from sqlalchemy import types as sqltypes
+from sqlalchemy import util
 from sqlalchemy.dialects.postgresql import dialect as postgres_dialect
 from sqlalchemy.dialects.postgresql.base import PGExecutionContext, PGInspector
 from sqlalchemy.engine import URL
@@ -85,6 +87,14 @@ class Dialect(postgres_dialect):
     server_version_info = (8, 0)
     inspector = DuckDBInspector
     # colspecs TODO: remap types to duckdb types
+    colspecs = util.update_copy(
+        postgres_dialect.colspecs,
+        {
+            # the psycopg2 driver registers a _PGNumeric with custom logic for
+            # postgres type_codes (such as 701 for float) that duckdb doesn't have
+            sqltypes.Numeric: sqltypes.Numeric,
+        },
+    )
 
     def connect(self, *args: Any, **kwargs: Any) -> ConnectionWrapper:
         return ConnectionWrapper(duckdb.connect(*args, **kwargs))
