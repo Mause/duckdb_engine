@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "duckdb_engine"
-version = "0.1.7"
+version = "0.1.8-rc.2"
 description = ""
 authors = ["Elliana <me@mause.me>"]
 license = "MIT"
