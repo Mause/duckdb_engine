@@ -131,6 +131,8 @@ def test_read_sql_duckdb_table(tmp_path: pathlib.Path) -> None:
     )
     con.register("df_view", df)
     con.execute("CREATE TABLE test_data AS SELECT * FROM df_view;")
+    con.close()
+
     engine = create_engine(f"duckdb:///{db}")
 
     result = pd.read_sql("SELECT * FROM test_data", engine)
