@@ -83,8 +83,6 @@ class ConnectionWrapper:
 class Dialect(postgres_dialect):
     _has_events = False
     identifier_preparer = None
-    default_schema_name = "main"
-    server_version_info = (8, 0)
     inspector = DuckDBInspector
     # colspecs TODO: remap types to duckdb types
     colspecs = util.update_copy(
@@ -95,6 +93,10 @@ class Dialect(postgres_dialect):
             sqltypes.Numeric: sqltypes.Numeric,
         },
     )
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        kwargs["use_native_hstore"] = False
+        super().__init__(*args, **kwargs)
 
     def connect(self, *args: Any, **kwargs: Any) -> ConnectionWrapper:
         return ConnectionWrapper(duckdb.connect(*args, **kwargs))
@@ -136,8 +138,13 @@ class Dialect(postgres_dialect):
     def create_connect_args(self, u: URL) -> Tuple[Tuple, Dict]:
         return (), {"database": u.render_as_string(hide_password=False).split("///")[1]}
 
-    def initialize(self, connection: ConnectionWrapper) -> None:
-        pass
+    def _get_server_version_info(
+        self, connection: ConnectionWrapper
+    ) -> Tuple[int, int]:
+        return (8, 0)
+
+    def get_default_isolation_level(self, connection: ConnectionWrapper) -> None:
+        raise NotImplementedError()
 
     def do_rollback(self, connection: ConnectionWrapper) -> None:
         try:
