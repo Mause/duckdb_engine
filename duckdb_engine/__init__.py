@@ -60,6 +60,10 @@ class ConnectionWrapper:
         # duckdb doesn't support 'soft closes'
         pass
 
+    @property
+    def rowcount(self) -> int:
+        return self.c.rowcount or -1
+
     def executemany(
         self, statement: str, parameters: List[Dict] = None, context: Any = None
     ) -> None:
@@ -69,13 +73,20 @@ class ConnectionWrapper:
         self, statement: str, parameters: Dict = None, context: Any = None
     ) -> None:
         try:
-            if parameters is None:
+            if statement.lower() == "commit":  # this is largely for ipython-sql
+                self.c.commit()
+            elif parameters is None:
                 self.c.execute(statement)
             else:
                 self.c.execute(statement, parameters)
         except RuntimeError as e:
             if e.args[0].startswith("Not implemented Error"):
                 raise NotImplementedError(*e.args) from e
+            elif (
+                e.args[0]
+                == "TransactionContext Error: cannot commit - no transaction is active"
+            ):
+                return
             else:
                 raise e
 
