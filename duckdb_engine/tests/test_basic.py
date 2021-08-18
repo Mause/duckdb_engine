@@ -134,6 +134,13 @@ def test_reflect(session: Session, engine: Engine) -> None:
 def test_commit(session: Session, engine: Engine) -> None:
     session.execute("commit;")
 
+    from IPython.core.interactiveshell import InteractiveShell
+
+    shell = InteractiveShell()
+    assert not shell.run_line_magic("load_ext", "sql")
+    assert not shell.run_line_magic("sql", "duckdb:///:memory:")
+    assert shell.run_line_magic("sql", "select 42;") == [(42,)]
+
 
 def test_table_reflect(session: Session, engine: Engine) -> None:
     session.execute("create table test (id int);")
