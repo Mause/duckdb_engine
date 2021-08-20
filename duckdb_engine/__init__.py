@@ -75,7 +75,7 @@ class ConnectionWrapper:
         try:
             if statement.lower() == "commit":  # this is largely for ipython-sql
                 self.c.commit()
-            elif statement.lower() == 'register':
+            elif statement.lower() == "register":
                 self.c.register(*parameters)
             elif parameters is None:
                 self.c.execute(statement)
