@@ -31,6 +31,15 @@ frank = session.query(FakeModel).one()
 assert frank.name == "Frank"
 ```
 
+## How to register a pandas DataFrame
+
+```python
+eng = create_engine("duckdb:///:memory:")
+eng.execute("register", "dataframe_name", pd.DataFrame(...))
+
+eng.execute("select * from dataframe_name")
+```
+
 ## Things to keep in mind
 Duckdb's SQL parser is based on the PostgreSQL parser, but not all features in PostgreSQL are supported in duckdb. Because the `duckdb_engine` dialect is derived from the `postgresql` dialect, `sqlalchemy` may try to use PostgreSQL-only features. Below are some caveats to look out for.
 
