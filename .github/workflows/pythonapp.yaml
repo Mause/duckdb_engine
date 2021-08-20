@@ -8,12 +8,12 @@ jobs:
 
     strategy:
       matrix:
-        python: [3.6, 3.7, 3.8, 3.9]
+        python: [3.6, 3.7, 3.8, 3.9, "3.10.0-rc.1"]
 
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python }}
       - name: Cache poetry virtualenv
