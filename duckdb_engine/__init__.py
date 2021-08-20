@@ -70,13 +70,13 @@ class ConnectionWrapper:
         self.c.executemany(statement, parameters)
 
     def execute(
-        self, statement: str, parameters: Dict = None, context: Any = None
+        self, statement: str, parameters: Tuple = None, context: Any = None
     ) -> None:
         try:
             if statement.lower() == "commit":  # this is largely for ipython-sql
                 self.c.commit()
             elif statement.lower() == 'register':
-                self.c.register(parameters['name'], parameters['dataframe'])
+                self.c.register(*parameters)
             elif parameters is None:
                 self.c.execute(statement)
             else:
