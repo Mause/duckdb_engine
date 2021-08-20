@@ -35,7 +35,7 @@ assert frank.name == "Frank"
 
 ```python
 eng = create_engine("duckdb:///:memory:")
-eng.execute("register", "dataframe_name", pd.DataFrame(...))
+eng.execute("register", ("dataframe_name", pd.DataFrame(...)))
 
 eng.execute("select * from dataframe_name")
 ```
