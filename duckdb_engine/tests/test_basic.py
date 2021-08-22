@@ -142,6 +142,17 @@ def test_commit(session: Session, engine: Engine) -> None:
     assert shell.run_line_magic("sql", "select 42;") == [(42,)]
 
 
+def test_ipython_dataframe(session: Session, engine: Engine) -> None:
+    from IPython.core.interactiveshell import InteractiveShell
+
+    shell = InteractiveShell()
+    assert not shell.run_line_magic("load_ext", "sql")
+    assert not shell.run_line_magic("sql", "duckdb:///:memory:")
+    assert not shell.run_line("import pandas")
+    assert not shell.run_line("df = pandas.DataFrame()")
+    assert shell.run_line_magic("sql", "register name :df")
+
+
 def test_table_reflect(session: Session, engine: Engine) -> None:
     session.execute("create table test (id int);")
     session.commit()
