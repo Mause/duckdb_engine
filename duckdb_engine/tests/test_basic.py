@@ -148,8 +148,8 @@ def test_ipython_dataframe(session: Session, engine: Engine) -> None:
     shell = InteractiveShell()
     assert not shell.run_line_magic("load_ext", "sql")
     assert not shell.run_line_magic("sql", "duckdb:///:memory:")
-    assert not shell.run_line("import pandas")
-    assert not shell.run_line("df = pandas.DataFrame()")
+    assert not shell.run_cell("import pandas")
+    assert not shell.run_cell("df = pandas.DataFrame()")
     assert shell.run_line_magic("sql", "register name :df")
 
 
