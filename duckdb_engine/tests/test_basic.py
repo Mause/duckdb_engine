@@ -30,7 +30,7 @@ def engine() -> Engine:
 
 Base = declarative_base()
 
-   
+
 class FakeModel(Base):  # type: ignore
     __tablename__ = "fake"
 
