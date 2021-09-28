@@ -1,6 +1,9 @@
 name: Python application
 
-on: pull_request_target
+on: pull_request
+permissions:
+  checks: write
+  issues: write
 
 jobs:
   build_backend:
