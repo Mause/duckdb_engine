@@ -1,6 +1,9 @@
 name: Python application
 
-on: [push, pull_request]
+on: pull_request
+permissions:
+  checks: write
+  issues: write
 
 jobs:
   build_backend:
@@ -8,7 +11,7 @@ jobs:
 
     strategy:
       matrix:
-        python: [3.6, 3.7, 3.8, 3.9, "3.10.0-rc.1"]
+        python: [3.6, 3.7, 3.8, 3.9] #, "3.10.0-rc.1"]
 
     steps:
       - uses: actions/checkout@v2
@@ -18,7 +21,7 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Cache poetry virtualenv
         id: cache-poetry
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
           path: ~/.local/share/virtualenvs
           key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
