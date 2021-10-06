@@ -41,7 +41,7 @@ params = {
 params_strings = {k: (",".join([str(_k) for _k in args[k]])) for k in args}
 
 # Generate a DataFrame of 100 rows.
-sample_data: Dict[str, List[Union[datetime, str, int, float]]] = {
+sample_data: dict[str, list[datetime | str | int | float]] = {
     "datetime": [],
     "int": [],
     "str": [],
@@ -49,7 +49,7 @@ sample_data: Dict[str, List[Union[datetime, str, int, float]]] = {
 }
 sample_rowcount = max(
     cs
-    for cs in cast(List[Optional[int]], _possible_args["chunksize"])
+    for cs in cast(list[Optional[int]], _possible_args["chunksize"])
     if cs is not None
 )
 for i in range(sample_rowcount):
@@ -63,9 +63,9 @@ sample_df: pd.DataFrame = pd.DataFrame(sample_data)
 
 @mark.parametrize(params_strings["to_sql"], params["to_sql"])
 def test_to_sql(
-    chunksize: Optional[int],
+    chunksize: int | None,
     if_exists: str,
-    method: Optional[str],
+    method: str | None,
     index: bool = False,
 ) -> None:
     eng = create_engine("duckdb:///:memory:")
@@ -90,7 +90,7 @@ table_name = "test_read"
 @mark.xfail(reason="reflection not yet supported in duckdb")
 @mark.parametrize(params_strings["read_sql"], params["read_sql"])
 def test_read_sql_reflection(
-    chunksize: Tuple[Optional[int]],
+    chunksize: tuple[int | None],
 ) -> None:
     run_query(table_name, chunksize[0])
 
@@ -98,12 +98,12 @@ def test_read_sql_reflection(
 # and once for directly executing a SQL query.
 @mark.parametrize(params_strings["read_sql"], params["read_sql"])
 def test_read_sql(
-    chunksize: Tuple[Optional[int]],
+    chunksize: tuple[int | None],
 ) -> None:
     run_query(f"SELECT * FROM {table_name}", chunksize[0])
 
 
-def run_query(query: str, chunksize: Optional[int]) -> None:
+def run_query(query: str, chunksize: int | None) -> None:
     eng = create_engine("duckdb:///:memory:")
 
     sample_df.to_sql(name=table_name, con=eng, if_exists="replace")

@@ -18,7 +18,7 @@ class DBAPI:
 class DuckDBInspector(PGInspector):
     def get_check_constraints(
         self, table_name: str, schema: str = None, **kw: Any
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         try:
             return super().get_check_constraints(table_name, schema, **kw)
         except Exception as e:
@@ -27,7 +27,7 @@ class DuckDBInspector(PGInspector):
 
 class ConnectionWrapper:
     c: duckdb.DuckDBPyConnection
-    notices: List[str]
+    notices: list[str]
 
     def __init__(self, c: duckdb.DuckDBPyConnection) -> None:
         self.c = c
@@ -36,7 +36,7 @@ class ConnectionWrapper:
     def cursor(self) -> "ConnectionWrapper":
         return self
 
-    def fetchmany(self, size: int = None) -> List:
+    def fetchmany(self, size: int = None) -> list:
         # TODO: remove this once duckdb supports fetchmany natively
         try:
             # TODO: add size parameter here once the next duckdb version is released
@@ -65,12 +65,12 @@ class ConnectionWrapper:
         return self.c.rowcount or -1
 
     def executemany(
-        self, statement: str, parameters: List[Dict] = None, context: Any = None
+        self, statement: str, parameters: list[dict] = None, context: Any = None
     ) -> None:
         self.c.executemany(statement, parameters)
 
     def execute(
-        self, statement: str, parameters: Tuple = None, context: Any = None
+        self, statement: str, parameters: tuple = None, context: Any = None
     ) -> None:
         try:
             if statement.lower() == "commit":  # this is largely for ipython-sql
@@ -141,21 +141,21 @@ class Dialect(postgres_dialect):
         self,
         cursor: ConnectionWrapper,
         statement: str,
-        parameters: List[Any],
+        parameters: list[Any],
         context: PGExecutionContext = None,
     ) -> None:
         cursor.executemany(statement, parameters, context)
 
     @staticmethod
-    def dbapi() -> Type[DBAPI]:
+    def dbapi() -> type[DBAPI]:
         return DBAPI
 
-    def create_connect_args(self, u: URL) -> Tuple[Tuple, Dict]:
+    def create_connect_args(self, u: URL) -> tuple[tuple, dict]:
         return (), {"database": u.render_as_string(hide_password=False).split("///")[1]}
 
     def _get_server_version_info(
         self, connection: ConnectionWrapper
-    ) -> Tuple[int, int]:
+    ) -> tuple[int, int]:
         return (8, 0)
 
     def get_default_isolation_level(self, connection: ConnectionWrapper) -> None:
@@ -175,7 +175,7 @@ class Dialect(postgres_dialect):
         connection.execute("begin")
 
     @classmethod
-    def get_dialect_cls(cls, u: str) -> Type["Dialect"]:
+    def get_dialect_cls(cls, u: str) -> type["Dialect"]:
         return cls
 
 
