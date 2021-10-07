@@ -3,6 +3,8 @@ from sqlalchemy.engine import Engine
 
 
 def test_integration(engine: Engine) -> None:
-    engine.execute("register", ("test_df", pd.DataFrame([{"a": 1}])))
+    conn = engine.connect()
 
-    engine.execute("select * from test_df")
+    conn.exec_driver_sql("register('test_df', ?)", ((pd.DataFrame([{"a": 1}]),),))
+
+    conn.exec_driver_sql("select * from test_df")

@@ -143,14 +143,15 @@ def test_commit(session: Session, engine: Engine) -> None:
 
 
 def test_ipython_dataframe(session: Session, engine: Engine) -> None:
+    import pandas
     from IPython.core.interactiveshell import InteractiveShell
 
     shell = InteractiveShell()
     assert not shell.run_line_magic("load_ext", "sql")
     assert not shell.run_line_magic("sql", "duckdb:///:memory:")
-    shell.run_cell("import pandas")
-    shell.run_cell("df = pandas.DataFrame()")
-    assert shell.run_line_magic("sql", "register name :df")
+    shell.push({"df": pandas.DataFrame([{"a": 42}]), "name": "name"})
+    assert shell.run_line_magic("sql", "register(:name, :df)")
+    assert shell.run_line_magic("sql", "select * from name") == [(42,)]
 
 
 def test_table_reflect(session: Session, engine: Engine) -> None:

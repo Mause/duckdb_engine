@@ -7,6 +7,8 @@ from sqlalchemy.dialects.postgresql import dialect as postgres_dialect
 from sqlalchemy.dialects.postgresql.base import PGExecutionContext, PGInspector
 from sqlalchemy.engine import URL
 
+from .sql_parsing import register_dataframe
+
 
 class DBAPI:
     paramstyle = "qmark"
@@ -75,10 +77,8 @@ class ConnectionWrapper:
         try:
             if statement.lower() == "commit":  # this is largely for ipython-sql
                 self.c.commit()
-            elif statement.lower() == "register":
-                assert parameters and len(parameters) == 2, parameters
-                view_name, df = parameters
-                self.c.register(view_name, df)
+            elif statement.lower().startswith("register"):
+                register_dataframe(self.c, statement, parameters)
             elif parameters is None:
                 self.c.execute(statement)
             else:
