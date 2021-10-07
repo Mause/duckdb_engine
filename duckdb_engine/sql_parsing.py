@@ -1,11 +1,10 @@
 from typing import TYPE_CHECKING, Any, Iterable, List, Tuple
 
-import sqlparse
 from sqlalchemy.engine import Connection
 from sqlparse.engine import FilterStack
 from sqlparse.engine.grouping import T_NAME, T_STRING
-from sqlparse.sql import Identifier, Parenthesis
-from sqlparse.tokens import Name, Token
+from sqlparse.sql import Function, Identifier, Parenthesis, Token
+from sqlparse.tokens import Name, Whitespace
 
 if TYPE_CHECKING:
     from pandas import DataFrame
@@ -23,11 +22,11 @@ def prepare(statement: str, parameters: Tuple = None) -> Tuple[str, "DataFrame"]
     stack.preprocess.append(RemoveWhitespace())
     (statement,) = tuple(stack.run(statement))
 
-    (func,) = pattern(statement, sqlparse.sql.Function)
+    (func,) = pattern(statement, Function)
 
     function_name, parens = pattern(func, Identifier, Parenthesis)
 
-    assert function_name.tokens[0].match(sqlparse.tokens.Name, ("register",))
+    assert function_name.tokens[0].match(Name, ("register",))
 
     assert parameters, "You must pass a dataframe as a parameter for this method"
     assert len(parameters) < 3, "Too many parameters"
@@ -61,8 +60,4 @@ def register_dataframe(
 
 class RemoveWhitespace:
     def process(self, tokens: Iterable[Tuple[type, Any]]) -> Iterable[Tuple[type, Any]]:
-        return (
-            (ttype, token)
-            for (ttype, token) in tokens
-            if ttype != sqlparse.tokens.Whitespace
-        )
+        return ((ttype, token) for (ttype, token) in tokens if ttype != Whitespace)
