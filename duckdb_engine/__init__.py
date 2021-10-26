@@ -8,6 +8,8 @@ from sqlalchemy.dialects.postgresql.base import PGExecutionContext, PGInspector
 from sqlalchemy.engine.url import URL
 
 name = "duckdb"
+
+
 class DBAPI:
     paramstyle = "qmark"
 
