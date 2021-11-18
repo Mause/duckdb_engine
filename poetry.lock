@@ -120,7 +120,7 @@ docs = ["sphinx"]
 
 [[package]]
 name = "hypothesis"
-version = "6.23.1"
+version = "6.24.6"
 description = "A library for property-based testing"
 category = "dev"
 optional = false
@@ -680,7 +680,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.6.1"
-content-hash = "5b75263b0d260dfda01381332a3ae04d9587c1784114645eaaa498c55fa4dc48"
+content-hash = "4de17c72e1a3fa098d702a7273f18db29486bc480d5d444a6d8d0a705427a910"
 
 [metadata.files]
 appdirs = [
@@ -806,8 +806,8 @@ greenlet = [
     {file = "greenlet-1.1.0.tar.gz", hash = "sha256:c87df8ae3f01ffb4483c796fe1b15232ce2b219f0b18126948616224d3f658ee"},
 ]
 hypothesis = [
-    {file = "hypothesis-6.23.1-py3-none-any.whl", hash = "sha256:e1c5c4a7e1f9a1a1da03cf6a148703333c468fb036f3cd785da1210c23648a4f"},
-    {file = "hypothesis-6.23.1.tar.gz", hash = "sha256:23a1b0488aec5719e2f9e399342e10f30d497cbb9fd39470ef0975c1b502ae35"},
+    {file = "hypothesis-6.24.6-py3-none-any.whl", hash = "sha256:e69cd63e6af23ad9d94aff0c4b884b6c7689ac7975a9860365124152e944d5e7"},
+    {file = "hypothesis-6.24.6.tar.gz", hash = "sha256:4e432e16f7e5d6a25f35bcd796ccde79f1ba260cab629f47c30a47678c49d0e8"},
 ]
 identify = [
     {file = "identify-2.2.10-py2.py3-none-any.whl", hash = "sha256:18d0c531ee3dbc112fa6181f34faa179de3f57ea57ae2899754f16a7e0ff6421"},
