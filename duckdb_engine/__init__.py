@@ -5,7 +5,9 @@ from sqlalchemy import types as sqltypes
 from sqlalchemy import util
 from sqlalchemy.dialects.postgresql import dialect as postgres_dialect
 from sqlalchemy.dialects.postgresql.base import PGExecutionContext, PGInspector
-from sqlalchemy.engine import URL
+from sqlalchemy.engine.url import URL
+
+name = "duckdb"
 
 from .sql_parsing import register_dataframe
 
@@ -64,7 +66,7 @@ class ConnectionWrapper:
 
     @property
     def rowcount(self) -> int:
-        return self.c.rowcount or -1
+        return -1
 
     def executemany(
         self, statement: str, parameters: List[Dict] = None, context: Any = None
@@ -151,7 +153,7 @@ class Dialect(postgres_dialect):
         return DBAPI
 
     def create_connect_args(self, u: URL) -> Tuple[Tuple, Dict]:
-        return (), {"database": u.render_as_string(hide_password=False).split("///")[1]}
+        return (), {"database": u.__to_string__(hide_password=False).split("///")[1]}
 
     def _get_server_version_info(
         self, connection: ConnectionWrapper

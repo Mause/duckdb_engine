@@ -1,4 +1,6 @@
-from hypothesis import assume, given
+from datetime import timedelta
+
+from hypothesis import assume, given, settings
 from hypothesis.strategies import text
 from pytest import fixture, mark
 from sqlalchemy import (
@@ -76,6 +78,7 @@ def test_foreign(session: Session) -> None:
 
 
 @given(text())
+@settings(deadline=timedelta(seconds=1))
 def test_simple_string(s: str) -> None:
     assume("\x00" not in s)
     eng = create_engine("duckdb:///:memory:")
