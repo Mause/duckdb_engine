@@ -64,7 +64,7 @@ class ConnectionWrapper:
 
     @property
     def rowcount(self) -> int:
-        return self.c.rowcount or -1
+        return -1
 
     def executemany(
         self, statement: str, parameters: List[Dict] = None, context: Any = None
