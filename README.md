@@ -1,6 +1,6 @@
 # duckdb_engine
 
-[![Supported Python Versions](https://img.shields.io/pypi/pyversions/duckdb-engine/0.1.8)](https://pypi.org/project/duckdb-engine/) [![PyPI version](https://badge.fury.io/py/duckdb-engine.svg)](https://badge.fury.io/py/duckdb-engine)
+[![Supported Python Versions](https://img.shields.io/pypi/pyversions/duckdb-engine)](https://pypi.org/project/duckdb-engine/) [![PyPI version](https://badge.fury.io/py/duckdb-engine.svg)](https://badge.fury.io/py/duckdb-engine)
 
 Very very very basic sqlalchemy driver for duckdb
 
@@ -10,7 +10,7 @@ Very very very basic sqlalchemy driver for duckdb
 $ pip install duckdb-engine
 ```
 
-Once you'ved installed this package, you should be able to just use it, as sqlalchemy does a python path search
+Once you've installed this package, you should be able to just use it, as sqlalchemy does a python path search
 
 ```python
 from sqlalchemy import Column, Integer, Sequence, String, create_engine
