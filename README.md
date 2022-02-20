@@ -1,8 +1,16 @@
 # duckdb_engine
 
+[![Supported Python Versions](https://img.shields.io/pypi/pyversions/duckdb-engine/0.1.8)](https://pypi.org/project/duckdb-engine/) [![PyPI version](https://badge.fury.io/py/duckdb-engine.svg)](https://badge.fury.io/py/duckdb-engine)
+
 Very very very basic sqlalchemy driver for duckdb
 
-Once you install this package, you should be able to just use it, as sqlalchemy does a python path search
+## Usage
+
+```sh
+$ pip install duckdb-engine
+```
+
+Once you'ved installed this package, you should be able to just use it, as sqlalchemy does a python path search
 
 ```python
 from sqlalchemy import Column, Integer, Sequence, String, create_engine
@@ -77,3 +85,7 @@ The `pandas.read_sql()` method can read tables from `duckdb_engine` into DataFra
 >>> df = pd.read_sql('users', engine)                ### Works as expected
 >>> df = pd.read_sql('users', engine, chunksize=25)  ### Throws an exception
 ```
+
+## The name
+
+Yes, I'm aware this package should be named `duckdb-driver` or something, I wasn't thinking when I named it and it's too hard to change the name now
