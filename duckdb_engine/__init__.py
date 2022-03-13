@@ -7,8 +7,6 @@ from sqlalchemy.dialects.postgresql import dialect as postgres_dialect
 from sqlalchemy.dialects.postgresql.base import PGExecutionContext, PGInspector
 from sqlalchemy.engine.url import URL
 
-name = "duckdb"
-
 
 class DBAPI:
     paramstyle = "qmark"
@@ -98,6 +96,7 @@ class ConnectionWrapper:
 
 
 class Dialect(postgres_dialect):
+    name = "duckdb"
     _has_events = False
     identifier_preparer = None
     inspector = DuckDBInspector
