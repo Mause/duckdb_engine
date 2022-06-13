@@ -6,6 +6,7 @@ from sqlalchemy import util
 from sqlalchemy.dialects.postgresql import dialect as postgres_dialect
 from sqlalchemy.dialects.postgresql.base import PGExecutionContext, PGInspector
 from sqlalchemy.engine.url import URL
+from sqlalchemy.engine import reflection
 
 
 class DBAPI:
@@ -184,6 +185,12 @@ class Dialect(postgres_dialect):
     @classmethod
     def get_dialect_cls(cls, u: str) -> Type["Dialect"]:
         return cls
+
+    def get_view_names(self, connection: ConnectionWrapper, **kwargs: Any) -> List[str]:
+        s = "SELECT name FROM sqlite_master " "WHERE type='view' ORDER BY name"
+        rs = connection.exec_driver_sql(s)
+
+        return [row[0] for row in rs]
 
 
 dialect = Dialect
