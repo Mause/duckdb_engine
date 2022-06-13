@@ -5,8 +5,8 @@ from sqlalchemy import types as sqltypes
 from sqlalchemy import util
 from sqlalchemy.dialects.postgresql import dialect as postgres_dialect
 from sqlalchemy.dialects.postgresql.base import PGExecutionContext, PGInspector
-from sqlalchemy.engine.url import URL
 from sqlalchemy.engine import reflection
+from sqlalchemy.engine.url import URL
 
 
 class DBAPI:
