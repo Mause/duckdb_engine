@@ -186,7 +186,7 @@ class Dialect(postgres_dialect):
         return cls
 
     def get_view_names(
-        self, connection: ConnectionWrapper, schema=None, **kwargs: Any
+        self, connection: ConnectionWrapper, schema: str=None, **kwargs: Any
     ) -> List[str]:
         s = "SELECT name FROM sqlite_master WHERE type='view' ORDER BY name"
         rs = connection.exec_driver_sql(s)
