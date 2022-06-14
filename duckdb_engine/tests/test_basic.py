@@ -96,6 +96,19 @@ def test_simple_string(s: str) -> None:
 
 def test_get_tables(inspector: PGInspector) -> None:
     assert inspector.get_table_names()
+    assert inspector.get_view_names() == []
+
+
+def test_get_views(engine: Engine) -> None:
+    con = engine.connect()
+    views = engine.dialect.get_view_names(con)
+    assert views == []
+
+    engine.execute("create view test as select 1")
+
+    con = engine.connect()
+    views = engine.dialect.get_view_names(con)
+    assert views == ["test"]
 
 
 @fixture
