@@ -7,8 +7,6 @@ from sqlalchemy.dialects.postgresql import dialect as postgres_dialect
 from sqlalchemy.dialects.postgresql.base import PGExecutionContext, PGInspector
 from sqlalchemy.engine.url import URL
 
-name = "duckdb"
-
 
 class DBAPI:
     paramstyle = "qmark"
@@ -98,6 +96,7 @@ class ConnectionWrapper:
 
 
 class Dialect(postgres_dialect):
+    name = "duckdb"
     _has_events = False
     identifier_preparer = None
     inspector = DuckDBInspector
@@ -153,7 +152,13 @@ class Dialect(postgres_dialect):
         return DBAPI
 
     def create_connect_args(self, u: URL) -> Tuple[Tuple, Dict]:
-        return (), {"database": u.__to_string__(hide_password=False).split("///")[1]}
+        if hasattr(u, "render_as_string"):
+            # Compatible with SQLAlchemy >= 1.4
+            string_representation = u.render_as_string(hide_password=False)
+        else:
+            # Compatible with SQLAlchemy < 1.4
+            string_representation = u.__to_string__(hide_password=False)
+        return (), {"database": string_representation.split("///")[1]}
 
     def _get_server_version_info(
         self, connection: ConnectionWrapper
