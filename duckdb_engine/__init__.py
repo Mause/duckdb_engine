@@ -185,5 +185,13 @@ class Dialect(postgres_dialect):
     def get_dialect_cls(cls, u: str) -> Type["Dialect"]:
         return cls
 
+    def get_view_names(
+        self, connection: ConnectionWrapper, schema: str = None, **kwargs: Any
+    ) -> List[str]:
+        s = "SELECT name FROM sqlite_master WHERE type='view' ORDER BY name"
+        rs = connection.exec_driver_sql(s)
+
+        return [row[0] for row in rs]
+
 
 dialect = Dialect
