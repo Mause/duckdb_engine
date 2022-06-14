@@ -96,6 +96,20 @@ def test_simple_string(s: str) -> None:
 
 def test_get_tables(inspector: PGInspector) -> None:
     assert inspector.get_table_names()
+    assert len(inspector.get_view_names()) == 0
+
+
+def test_get_views(engine: Engine) -> None:
+    con = engine.connect()
+    views = engine.dialect.get_view_names(con)
+    assert len(views) == 0
+
+    engine.execute("create view test as select 1")
+
+    con = engine.connect()
+    views = engine.dialect.get_view_names(con)
+    assert len(views) == 1
+    assert "test" in views
 
 
 @fixture
