@@ -16,7 +16,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql.base import PGInspector
 from sqlalchemy.engine import Engine
-from sqlalchemy.engine.url import registry
+from sqlalchemy.engine.url import registry  # type: ignore
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import RelationshipProperty, Session, relationship, sessionmaker
 
@@ -33,7 +33,7 @@ def engine() -> Engine:
 Base = declarative_base()
 
 
-class FakeModel(Base):  # type: ignore
+class FakeModel(Base):
     __tablename__ = "fake"
 
     id = Column(Integer, Sequence("fakemodel_id_sequence"), primary_key=True)
@@ -42,7 +42,7 @@ class FakeModel(Base):  # type: ignore
     owner = relationship("Owner")  # type: RelationshipProperty[Owner]
 
 
-class Owner(Base):  # type: ignore
+class Owner(Base):
     __tablename__ = "owner"
     id = Column(Integer, Sequence("owner_id"), primary_key=True)
 
