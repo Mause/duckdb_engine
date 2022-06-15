@@ -154,7 +154,7 @@ class Dialect(postgres_dialect):
     def create_connect_args(self, u: URL) -> Tuple[Tuple, Dict]:
         if hasattr(u, "render_as_string"):
             # Compatible with SQLAlchemy >= 1.4
-            string_representation = u.render_as_string(hide_password=False)
+            string_representation = u.render_as_string(hide_password=False)  # type: ignore
         else:
             # Compatible with SQLAlchemy < 1.4
             string_representation = u.__to_string__(hide_password=False)
