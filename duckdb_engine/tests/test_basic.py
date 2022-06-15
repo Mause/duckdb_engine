@@ -14,16 +14,16 @@ from sqlalchemy import (
     create_engine,
     inspect,
 )
+from sqlalchemy.dialects import registry
 from sqlalchemy.dialects.postgresql.base import PGInspector
 from sqlalchemy.engine import Engine
-from sqlalchemy.engine.url import registry  # type: ignore
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import RelationshipProperty, Session, relationship, sessionmaker
 
 
 @fixture
 def engine() -> Engine:
-    registry.register("duckdb", "duckdb_engine", "Dialect")
+    registry.register("duckdb", "duckdb_engine", "Dialect")  # type: ignore
 
     eng = create_engine("duckdb:///:memory:")
     Base.metadata.create_all(eng)
