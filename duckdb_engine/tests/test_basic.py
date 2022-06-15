@@ -7,6 +7,7 @@ from sqlalchemy import (
     Column,
     ForeignKey,
     Integer,
+    Interval,
     MetaData,
     Sequence,
     String,
@@ -50,6 +51,14 @@ class Owner(Base):
     owned = relationship(
         FakeModel, back_populates="owner"
     )  # type: RelationshipProperty[FakeModel]
+
+
+class IntervalModel(Base):
+    __tablename__ = "IntervalModel"
+
+    id = Column(Integer, Sequence("IntervalModel_id_sequence"), primary_key=True)
+
+    field = Column(Interval)
 
 
 @fixture
@@ -179,3 +188,13 @@ def test_description() -> None:
     import duckdb
 
     duckdb.connect("").description
+
+
+@mark.xfail(reason="support not released", raises=RuntimeError)
+def test_intervals(session: Session) -> None:
+    session.add(IntervalModel(field=timedelta(days=1)))
+    session.commit()
+
+    owner = session.query(IntervalModel).one()  # act
+
+    assert owner.field == timedelta(days=1)
