@@ -53,7 +53,7 @@ class Owner(Base):
     )  # type: RelationshipProperty[FakeModel]
 
 
-class IntervalModel(Base):  # type: ignore
+class IntervalModel(Base):
     __tablename__ = "IntervalModel"
 
     id = Column(Integer, Sequence("IntervalModel_id_sequence"), primary_key=True)
