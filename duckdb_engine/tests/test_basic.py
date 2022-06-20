@@ -21,6 +21,8 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import RelationshipProperty, Session, relationship, sessionmaker
 
+from .conftest import duckdb_version
+
 
 @fixture
 def engine() -> Engine:
@@ -190,7 +192,7 @@ def test_description() -> None:
     duckdb.connect("").description
 
 
-@mark.xfail(reason="support not released", raises=RuntimeError)
+@duckdb_version(">0.3.4")
 def test_intervals(session: Session) -> None:
     session.add(IntervalModel(field=timedelta(days=1)))
     session.commit()
