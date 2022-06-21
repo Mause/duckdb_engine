@@ -1,14 +1,12 @@
-from functools import wraps
-from typing import Any, Callable, TypeVar, cast
+from typing import Any, Callable, Protocol, TypeVar
 
 import duckdb
 from packaging.specifiers import SpecifierSet
-from pytest import fixture, xfail
+from pytest import fixture, mark
 from sqlalchemy import create_engine
 from sqlalchemy.dialects import registry
 from sqlalchemy.engine import Engine
 
-T = TypeVar("T")
 FuncT = TypeVar("FuncT", bound=Callable[..., Any])
 
 
@@ -19,26 +17,32 @@ def engine() -> Engine:
     return create_engine("duckdb:///:memory:")
 
 
-def duckdb_version(
+class HasVersion(Protocol):
+    __version__: str
+
+
+def library_version(
+    library: HasVersion,
     specifiers: str,
 ) -> Callable[[FuncT], FuncT]:
     """
-    Specify which version of duckdb a test should run against
+    Specify which versions of a library a test should run against
     """
 
     def decorator(func: FuncT) -> FuncT:
-        @wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
-            if not has_version:
-                xfail(
-                    f"duckdb version not desired - desired {specifiers}, found {installed}"
-                )
+        if not has_version:
+            func = mark.xfail(
+                f"{library} version not desired - desired {specifiers}, found {installed}"
+            )(func)
 
-            return func(*args, **kwargs)
+        return func
 
-        return cast(FuncT, wrapper)
-
-    installed = duckdb.__version__
+    installed = library.__version__
     has_version = SpecifierSet(specifiers).contains(installed, prereleases=True)
 
     return decorator
+
+
+def duckdb_version(specifiers: str) -> Callable[[FuncT], FuncT]:
+    "Specify which versions of duckdb a test should run against"
+    return library_version(duckdb, specifiers)
