@@ -194,4 +194,3 @@ class Dialect(postgres_dialect):
         rs = connection.exec_driver_sql(s)
 
         return [row[0] for row in rs]
-
