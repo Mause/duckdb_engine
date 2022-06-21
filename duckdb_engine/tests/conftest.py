@@ -31,12 +31,10 @@ def library_version(
     """
 
     def decorator(func: FuncT) -> FuncT:
-        if not has_version:
-            func = mark.xfail(
-                f"{library} version not desired - desired {specifiers}, found {installed}"
-            )(func)
-
-        return func
+        return mark.xfail(
+            not has_version,
+            reason=f"{library} version not desired - desired {specifiers}, found {installed}",
+        )(func)
 
     installed = library.__version__
     has_version = SpecifierSet(specifiers).contains(installed, prereleases=True)
