@@ -7,6 +7,7 @@ from sqlalchemy import (
     Column,
     ForeignKey,
     Integer,
+    Interval,
     MetaData,
     Sequence,
     String,
@@ -14,16 +15,16 @@ from sqlalchemy import (
     create_engine,
     inspect,
 )
+from sqlalchemy.dialects import registry
 from sqlalchemy.dialects.postgresql.base import PGInspector
 from sqlalchemy.engine import Engine
-from sqlalchemy.engine.url import registry
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import RelationshipProperty, Session, relationship, sessionmaker
 
 
 @fixture
 def engine() -> Engine:
-    registry.register("duckdb", "duckdb_engine", "Dialect")
+    registry.register("duckdb", "duckdb_engine", "Dialect")  # type: ignore
 
     eng = create_engine("duckdb:///:memory:")
     Base.metadata.create_all(eng)
@@ -33,7 +34,7 @@ def engine() -> Engine:
 Base = declarative_base()
 
 
-class FakeModel(Base):  # type: ignore
+class FakeModel(Base):
     __tablename__ = "fake"
 
     id = Column(Integer, Sequence("fakemodel_id_sequence"), primary_key=True)
@@ -42,7 +43,7 @@ class FakeModel(Base):  # type: ignore
     owner = relationship("Owner")  # type: RelationshipProperty[Owner]
 
 
-class Owner(Base):  # type: ignore
+class Owner(Base):
     __tablename__ = "owner"
     id = Column(Integer, Sequence("owner_id"), primary_key=True)
 
@@ -50,6 +51,14 @@ class Owner(Base):  # type: ignore
     owned = relationship(
         FakeModel, back_populates="owner"
     )  # type: RelationshipProperty[FakeModel]
+
+
+class IntervalModel(Base):
+    __tablename__ = "IntervalModel"
+
+    id = Column(Integer, Sequence("IntervalModel_id_sequence"), primary_key=True)
+
+    field = Column(Interval)
 
 
 @fixture
@@ -179,3 +188,13 @@ def test_description() -> None:
     import duckdb
 
     duckdb.connect("").description
+
+
+@mark.xfail(reason="support not released", raises=RuntimeError)
+def test_intervals(session: Session) -> None:
+    session.add(IntervalModel(field=timedelta(days=1)))
+    session.commit()
+
+    owner = session.query(IntervalModel).one()  # act
+
+    assert owner.field == timedelta(days=1)
