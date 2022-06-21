@@ -1,4 +1,4 @@
-from typing import Any, Callable, Protocol, TypeVar
+from typing import Any, Callable, TypeVar
 
 import duckdb
 from packaging.specifiers import SpecifierSet
@@ -6,6 +6,7 @@ from pytest import fixture, mark
 from sqlalchemy import create_engine
 from sqlalchemy.dialects import registry
 from sqlalchemy.engine import Engine
+from typing_extensions import Protocol
 
 FuncT = TypeVar("FuncT", bound=Callable[..., Any])
 
