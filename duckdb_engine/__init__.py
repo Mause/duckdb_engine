@@ -7,8 +7,6 @@ from sqlalchemy.dialects.postgresql import dialect as postgres_dialect
 from sqlalchemy.dialects.postgresql.base import PGExecutionContext, PGInspector
 from sqlalchemy.engine.url import URL
 
-name = "duckdb"  # TODO: find if sqlalchemy documents this field anywhere
-
 
 class DBAPI:
     paramstyle = "qmark"
@@ -197,5 +195,3 @@ class Dialect(postgres_dialect):
 
         return [row[0] for row in rs]
 
-
-dialect = Dialect
