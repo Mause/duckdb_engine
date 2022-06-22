@@ -7,6 +7,10 @@ license = "MIT"
 readme = "README.md"
 repository = "https://github.com/Mause/duckdb_engine"
 
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/Mause/duckdb_engine/issues"
+"Changelog" = "https://github.com/Mause/duckdb_engine/releases"
+
 [tool.poetry.dependencies]
 python = ">=3.6.1"
 duckdb = ">=0.2.8"
