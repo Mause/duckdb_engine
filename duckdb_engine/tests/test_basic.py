@@ -21,8 +21,6 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import RelationshipProperty, Session, relationship, sessionmaker
 
-from .conftest import duckdb_version
-
 
 @fixture
 def engine() -> Engine:
