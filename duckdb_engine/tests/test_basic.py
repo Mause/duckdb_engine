@@ -192,7 +192,6 @@ def test_description() -> None:
     duckdb.connect("").description
 
 
-@duckdb_version(">0.3.4")
 def test_intervals(session: Session) -> None:
     session.add(IntervalModel(field=timedelta(days=1)))
     session.commit()
