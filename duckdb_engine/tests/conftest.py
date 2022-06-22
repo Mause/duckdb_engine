@@ -1,20 +1,19 @@
 from typing import Any, Callable, TypeVar
 
 import duckdb
+import pytest
 from packaging.specifiers import SpecifierSet
 from pytest import fixture, mark
 from sqlalchemy import create_engine
-from sqlalchemy.dialects import registry
 from sqlalchemy.engine import Engine
 from typing_extensions import Protocol
 
+pytest.register_assert_rewrite("sqlalchemy.testing.assertions")
 FuncT = TypeVar("FuncT", bound=Callable[..., Any])
 
 
 @fixture
 def engine() -> Engine:
-    registry.register("duckdb", "duckdb_engine", "Dialect")  # type: ignore
-
     return create_engine("duckdb:///:memory:")
 
 
