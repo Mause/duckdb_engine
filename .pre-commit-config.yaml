@@ -42,6 +42,7 @@ repos:
           - "pytest==6.2.4"
           - "hypothesis==6.14.1"
           - "sqlalchemy-stubs==0.4"
+          - "types-setuptools==57.4.17"
   - repo: https://github.com/PyCQA/flake8
     rev: '4.0.1'  # pick a git hash / tag to point to
     hooks:
