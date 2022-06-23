@@ -28,6 +28,7 @@ sqlalchemy-stubs = "^0.4"
 
 [tool.poetry.plugins."sqlalchemy.dialects"]
 duckdb = "duckdb_engine:Dialect"
+"duckdb.duckdb_engine" = "duckdb_engine:Dialect"
 
 [tool.pytest.ini_options]
 addopts = "--hypothesis-show-statistics"
