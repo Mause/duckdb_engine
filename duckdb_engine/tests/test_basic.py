@@ -190,7 +190,6 @@ def test_description() -> None:
     duckdb.connect("").description
 
 
-@mark.xfail(reason="support not released", raises=RuntimeError)
 def test_intervals(session: Session) -> None:
     session.add(IntervalModel(field=timedelta(days=1)))
     session.commit()

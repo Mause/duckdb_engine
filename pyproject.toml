@@ -1,11 +1,15 @@
 [tool.poetry]
 name = "duckdb_engine"
-version = "0.1.10"
+version = "0.1.12-alpha.0"
 description = ""
 authors = ["Elliana <me@mause.me>"]
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/Mause/duckdb_engine"
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/Mause/duckdb_engine/issues"
+"Changelog" = "https://github.com/Mause/duckdb_engine/releases"
 
 [tool.poetry.dependencies]
 python = ">=3.7,<3.11"
@@ -23,7 +27,7 @@ ipython-sql = "^0.4.1"
 sqlalchemy-stubs = "^0.4"
 
 [tool.poetry.plugins."sqlalchemy.dialects"]
-duckdb = "duckdb_engine"
+duckdb = "duckdb_engine:Dialect"
 
 [tool.pytest.ini_options]
 addopts = "--hypothesis-show-statistics"
