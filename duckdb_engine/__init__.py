@@ -100,12 +100,17 @@ class ConnectionWrapper:
                 raise e
 
 
+class DuckDBEngineWarning(Warning):
+    pass
+
+
 def remove_serial_columns(ddl: CreateTable) -> None:
     for column in ddl.columns:
         el = cast(Column, column.element)
         if el.primary_key:
             warnings.warn(
                 "Generating a named sequence for your table - this is probably very buggy",
+                category=DuckDBEngineWarning,
             )
             seq: Sequence = Sequence(ddl.element.name + "_" + el.name + "_seq")
             el.default = seq
