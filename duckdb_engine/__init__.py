@@ -1,11 +1,14 @@
-from typing import Any, Dict, List, Tuple, Type
+import warnings
+from typing import Any, Dict, List, Tuple, Type, cast
 
 import duckdb
+from sqlalchemy import Column, Sequence
 from sqlalchemy import types as sqltypes
 from sqlalchemy import util
 from sqlalchemy.dialects.postgresql import dialect as postgres_dialect
 from sqlalchemy.dialects.postgresql.base import PGExecutionContext, PGInspector
 from sqlalchemy.engine.url import URL
+from sqlalchemy.sql.ddl import CreateTable
 
 
 class DBAPI:
@@ -95,6 +98,18 @@ class ConnectionWrapper:
                 raise e
 
 
+def remove_serial_columns(ddl: CreateTable) -> None:
+    for column in ddl.columns:
+        el = cast(Column, column.element)
+        if el.primary_key:
+            warnings.warn(
+                "Generating a named sequence for your table - this is probably very buggy",
+            )
+            seq: Sequence = Sequence(ddl.element.name + "_" + el.name + "_seq")
+            el.default = seq
+            el.server_default = seq.next_value()
+
+
 class Dialect(postgres_dialect):
     name = "duckdb"
     driver = "duckdb_engine"
@@ -126,7 +141,9 @@ class Dialect(postgres_dialect):
     def ddl_compiler(
         self, dialect: str, ddl: Any, **kwargs: Any
     ) -> postgres_dialect.ddl_compiler:
-        # TODO: enforce no `serial` type
+
+        if isinstance(ddl, CreateTable):
+            remove_serial_columns(ddl)
 
         # duckdb doesn't support foreign key constraints (yet)
         ddl.include_foreign_key_constraints = {}
