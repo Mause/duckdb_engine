@@ -7,7 +7,8 @@ set -o errexit -o pipefail -o noclobber -o nounset
 version=$1
 
 poetry version $version
-git commit pyproject.yaml -m "feat: $version"
+version=$(poetry version -s)
+git commit pyproject.toml -m "feat: $version"
 git tag $version
 git push --tags
 git push
