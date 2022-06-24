@@ -97,6 +97,7 @@ class ConnectionWrapper:
 
 class Dialect(postgres_dialect):
     name = "duckdb"
+    driver = "duckdb_engine"
     _has_events = False
     identifier_preparer = None
     supports_statement_cache = False
