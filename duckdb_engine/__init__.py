@@ -1,11 +1,16 @@
-from typing import Any, Dict, List, Tuple, Type
+import warnings
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Type, cast
 
 import duckdb
+from sqlalchemy import Column, Sequence
 from sqlalchemy import types as sqltypes
 from sqlalchemy import util
 from sqlalchemy.dialects.postgresql import dialect as postgres_dialect
 from sqlalchemy.dialects.postgresql.base import PGExecutionContext, PGInspector
 from sqlalchemy.engine.url import URL
+
+if TYPE_CHECKING:
+    from sqlalchemy.sql.ddl import CreateTable
 
 __version__ = "0.1.12-alpha.0"
 
@@ -97,6 +102,18 @@ class ConnectionWrapper:
                 raise e
 
 
+def remove_serial_columns(ddl: "CreateTable", generate_sequences: bool) -> None:
+    for column in ddl.columns:
+        el = cast(Column, column.element)
+        if el.primary_key and generate_sequences:
+            warnings.warn(
+                "Generating a named sequence for your table - this is probably very buggy",
+            )
+            seq: Sequence = Sequence(ddl.element.name + "_" + el.name + "_seq")
+            el.default = seq
+            el.server_default = seq.next_value()
+
+
 class Dialect(postgres_dialect):
     name = "duckdb"
     driver = "duckdb_engine"
@@ -115,7 +132,10 @@ class Dialect(postgres_dialect):
         },
     )
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(
+        self, *args: Any, generate_sequences: bool = False, **kwargs: Any
+    ) -> None:
+        self.generate_sequences = generate_sequences
         kwargs["use_native_hstore"] = False
         super().__init__(*args, **kwargs)
 
@@ -128,7 +148,8 @@ class Dialect(postgres_dialect):
     def ddl_compiler(
         self, dialect: str, ddl: Any, **kwargs: Any
     ) -> postgres_dialect.ddl_compiler:
-        # TODO: enforce no `serial` type
+
+        remove_serial_columns(ddl, self.generate_sequences)
 
         # duckdb doesn't support foreign key constraints (yet)
         ddl.include_foreign_key_constraints = {}
