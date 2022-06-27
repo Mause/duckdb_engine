@@ -1,5 +1,5 @@
 import warnings
-from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Type, cast
+from typing import Any, Dict, List, Tuple, Type, cast
 
 import duckdb
 from sqlalchemy import Column, Sequence
@@ -8,9 +8,7 @@ from sqlalchemy import util
 from sqlalchemy.dialects.postgresql import dialect as postgres_dialect
 from sqlalchemy.dialects.postgresql.base import PGExecutionContext, PGInspector
 from sqlalchemy.engine.url import URL
-
-if TYPE_CHECKING:
-    from sqlalchemy.sql.ddl import CreateTable
+from sqlalchemy.sql.ddl import CreateTable
 
 __version__ = "0.1.12-alpha.0"
 
