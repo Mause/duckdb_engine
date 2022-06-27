@@ -86,6 +86,20 @@ def test_foreign(session: Session) -> None:
     assert owner.owned.name == "Walter"
 
 
+def test_generated_sequence() -> None:
+    SBase = declarative_base()
+
+    class TestSequenceModel(SBase):
+        __tablename__ = "TestSequenceModel"
+        id = Column(Integer, primary_key=True)
+
+    eng = create_engine("duckdb:///:memory:", generate_sequences=True)
+    SBase.metadata.create_all(eng)
+    session = sessionmaker(bind=eng)()
+    session.add(TestSequenceModel())
+    session.commit()
+
+
 @given(text())
 @settings(deadline=timedelta(seconds=1))
 def test_simple_string(s: str) -> None:

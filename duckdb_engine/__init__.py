@@ -135,12 +135,10 @@ class Dialect(postgres_dialect):
         },
     )
 
-    def __init__(
-        self, *args: Any, generate_sequences: bool = False, **kwargs: Any
-    ) -> None:
+    def __init__(self, generate_sequences: bool = False, **kwargs: Any) -> None:
         self.generate_sequences = generate_sequences
         kwargs["use_native_hstore"] = False
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
 
     def connect(self, *args: Any, **kwargs: Any) -> ConnectionWrapper:
         return ConnectionWrapper(duckdb.connect(*args, **kwargs))
