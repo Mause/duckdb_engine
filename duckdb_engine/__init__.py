@@ -16,6 +16,10 @@ class DBAPI:
     class Error(Exception):
         pass
 
+    @staticmethod
+    def Binary(x: Any) -> Any:
+        return x
+
 
 class DuckDBInspector(PGInspector):
     def get_check_constraints(
