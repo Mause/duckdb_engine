@@ -152,7 +152,8 @@ class Dialect(postgres_dialect):
         self, dialect: str, ddl: Any, **kwargs: Any
     ) -> postgres_dialect.ddl_compiler:
 
-        remove_serial_columns(ddl, self.generate_sequences)
+        if isinstance(ddl, CreateTable):
+            remove_serial_columns(ddl, self.generate_sequences)
 
         # duckdb doesn't support foreign key constraints (yet)
         ddl.include_foreign_key_constraints = {}
