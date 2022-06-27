@@ -1,20 +1,23 @@
+import zlib
+from typing import Any, Optional
+
 import sqlalchemy
+import sqlalchemy.types as types
 from sqlalchemy import Column, Integer, select
 from sqlalchemy.orm import Session, declarative_base
-import sqlalchemy.types as types
-
-from typing import Optional, Any
-
-import zlib
 
 Base = declarative_base()
 
-id_seq = sqlalchemy.Sequence('id_seq')
+id_seq = sqlalchemy.Sequence("id_seq")
+
 
 def compress(s: str) -> bytes:
     return zlib.compress(s.encode("utf-8"), level=9)
+
+
 def decompress(s: bytes) -> str:
     return zlib.decompress(s).decode("utf-8")
+
 
 class CompressedString(types.TypeDecorator[str]):
 
@@ -28,6 +31,7 @@ class CompressedString(types.TypeDecorator[str]):
     def process_result_value(self, value: bytes, dialect: Any) -> str:
         return decompress(value)
 
+
 class A(Base):
 
     __tablename__ = "table_a"
@@ -35,6 +39,7 @@ class A(Base):
     id = Column(Integer(), id_seq, server_default=id_seq.next_value(), primary_key=True)
 
     text = Column(CompressedString())
+
 
 def test_binary():
     engine = sqlalchemy.create_engine("duckdb:///:memory:", echo=False, future=True)
@@ -50,4 +55,3 @@ def test_binary():
         b: A = session.scalar(select(A))
         assert not (a is b)
         assert b.text == "Hello World!"
-
