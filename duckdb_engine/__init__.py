@@ -15,7 +15,9 @@ if TYPE_CHECKING:
 
 
 class DBAPI:
-    paramstyle = "qmark"
+    paramstyle = duckdb.paramstyle
+    apilevel = duckdb.apilevel
+    threadsafety = duckdb.threadsafety
 
     class Error(Exception):
         pass
