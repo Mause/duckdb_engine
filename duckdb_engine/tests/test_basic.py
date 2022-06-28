@@ -25,6 +25,8 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import RelationshipProperty, Session, relationship, sessionmaker
 
+from .conftest import raises_msg
+
 
 @fixture
 def engine() -> Engine:
@@ -234,3 +236,11 @@ def test_binary(session: Session) -> None:
 
     b: TableWithBinary = session.scalar(select(TableWithBinary))  # type: ignore
     assert b.text == "Hello World!"
+
+
+@raises_msg("syntax error")
+def test_comment_support() -> None:
+    "comments not yet supported by duckdb"
+    import duckdb
+
+    duckdb.default_connection.execute('comment on sqlite_master is "hello world";')

@@ -1,4 +1,5 @@
-from typing import Any, Dict, List, Tuple, Type
+import warnings
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Type
 
 import duckdb
 from sqlalchemy import types as sqltypes
@@ -8,6 +9,9 @@ from sqlalchemy.dialects.postgresql.base import PGExecutionContext, PGInspector
 from sqlalchemy.engine.url import URL
 
 __version__ = "0.1.12-alpha.0"
+
+if TYPE_CHECKING:
+    from sqlalchemy.sql.ddl import ExecutableDDLElement  # type: ignore
 
 
 class DBAPI:
@@ -103,6 +107,33 @@ class ConnectionWrapper:
                 raise e
 
 
+class DuckDBEngineWarning(Warning):
+    pass
+
+
+class DuckDBEngineCommentWarning(DuckDBEngineWarning):
+    pass
+
+
+def remove_comments(ddl: "ExecutableDDLElement") -> None:
+    # TODO: swap these attribute checks for type checks
+    if hasattr(ddl, "element"):
+        remove_comments(ddl.element)
+    elif hasattr(ddl, "elements"):
+        for el in ddl.elements:
+            remove_comments(el)
+    elif hasattr(ddl, "columns"):
+        for col in ddl.columns:
+            remove_comments(col)
+
+    if hasattr(ddl, "comment") and ddl.comment:
+        ddl.comment = None
+        warnings.warn(
+            "Stripping a comment, as duckdb does not support them",
+            category=DuckDBEngineCommentWarning,
+        )
+
+
 class Dialect(postgres_dialect):
     name = "duckdb"
     driver = "duckdb_engine"
@@ -132,9 +163,14 @@ class Dialect(postgres_dialect):
         pass
 
     def ddl_compiler(
-        self, dialect: str, ddl: Any, **kwargs: Any
+        self,
+        dialect: str,
+        ddl: "ExecutableDDLElement",
+        **kwargs: Any,
     ) -> postgres_dialect.ddl_compiler:
         # TODO: enforce no `serial` type
+
+        remove_comments(ddl)
 
         # duckdb doesn't support foreign key constraints (yet)
         ddl.include_foreign_key_constraints = {}
