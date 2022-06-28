@@ -1,3 +1,4 @@
+import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Type
 
 import duckdb
@@ -108,7 +109,12 @@ class DuckDBEngineWarning(Warning):
     pass
 
 
+class DuckDBEngineCommentWarning(DuckDBEngineWarning):
+    pass
+
+
 def remove_comments(ddl: "ExecutableDDLElement") -> None:
+    # TODO: swap these attribute checks for type checks
     if hasattr(ddl, "element"):
         remove_comments(ddl.element)
     elif hasattr(ddl, "elements"):
@@ -118,8 +124,12 @@ def remove_comments(ddl: "ExecutableDDLElement") -> None:
         for col in ddl.columns:
             remove_comments(col)
 
-    if hasattr(ddl, "comment"):
+    if hasattr(ddl, "comment") and ddl.comment:
         ddl.comment = None
+        warnings.warn(
+            "Stripping a comment, as duckdb does not support them",
+            category=DuckDBEngineCommentWarning,
+        )
 
 
 class Dialect(postgres_dialect):
