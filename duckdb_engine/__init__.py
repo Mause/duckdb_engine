@@ -11,7 +11,9 @@ __version__ = "0.1.12-alpha.0"
 
 
 class DBAPI:
-    paramstyle = "qmark"
+    paramstyle = duckdb.paramstyle
+    apilevel = duckdb.apilevel
+    threadsafety = duckdb.threadsafety
 
     class Error(Exception):
         pass
