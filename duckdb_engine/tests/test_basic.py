@@ -234,3 +234,10 @@ def test_binary(session: Session) -> None:
 
     b: TableWithBinary = session.scalar(select(TableWithBinary))  # type: ignore
     assert b.text == "Hello World!"
+
+
+@mark.xfail(reason="comments not yet supported by duckdb", raises=RuntimeError)
+def test_comment_support() -> None:
+    import duckdb
+
+    duckdb.default_connection.execute('comment on sqlite_master is "hello world";')
