@@ -1,4 +1,6 @@
+import zlib
 from datetime import timedelta
+from typing import Any, Optional
 
 from hypothesis import assume, given, settings
 from hypothesis.strategies import text
@@ -14,6 +16,8 @@ from sqlalchemy import (
     Table,
     create_engine,
     inspect,
+    select,
+    types,
 )
 from sqlalchemy.dialects import registry
 from sqlalchemy.dialects.postgresql.base import PGInspector
@@ -32,6 +36,29 @@ def engine() -> Engine:
 
 
 Base = declarative_base()
+
+
+class CompressedString(types.TypeDecorator):
+    """Custom Column Type"""
+
+    impl = types.BLOB
+
+    def process_bind_param(self, value: Optional[str], dialect: Any) -> Optional[bytes]:  # type: ignore
+        if value is None:
+            return None
+        return zlib.compress(value.encode("utf-8"), level=9)
+
+    def process_result_value(self, value: bytes, dialect: Any) -> str:  # type: ignore
+        return zlib.decompress(value).decode("utf-8")
+
+
+class TableWithBinary(Base):
+
+    __tablename__ = "table_with_binary"
+
+    id = Column(Integer(), Sequence("id_seq"), primary_key=True)
+
+    text = Column(CompressedString())
 
 
 class FakeModel(Base):
@@ -197,3 +224,13 @@ def test_intervals(session: Session) -> None:
     owner = session.query(IntervalModel).one()  # act
 
     assert owner.field == timedelta(days=1)
+
+
+def test_binary(session: Session) -> None:
+
+    a = TableWithBinary(text="Hello World!")
+    session.add(a)
+    session.commit()
+
+    b: TableWithBinary = session.scalar(select(TableWithBinary))  # type: ignore
+    assert b.text == "Hello World!"
