@@ -2,7 +2,7 @@
 
 [![Supported Python Versions](https://img.shields.io/pypi/pyversions/duckdb-engine)](https://pypi.org/project/duckdb-engine/) [![PyPI version](https://badge.fury.io/py/duckdb-engine.svg)](https://badge.fury.io/py/duckdb-engine)
 
-Very very very basic sqlalchemy driver for duckdb
+Basic sqlalchemy driver for [DuckDB](https://duckdb.org/)
 
 ## Installation
 ```sh
