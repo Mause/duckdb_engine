@@ -19,4 +19,3 @@
 * chore(deps): bump duckdb from 0.3.4 to 0.4.0 by @dependabot in https://github.com/Mause/duckdb_engine/pull/273
 * chore(deps): update github/codeql-action action to v1.1.13 by @renovate in https://github.com/Mause/duckdb_engine/pull/279
 * chore(deps): update github/codeql-action action to v1.1.14 by @renovate in https://github.com/Mause/duckdb_engine/pull/286
-
