@@ -172,8 +172,6 @@ class Dialect(postgres_dialect):
 
         remove_comments(ddl)
 
-        # duckdb doesn't support foreign key constraints (yet)
-        ddl.include_foreign_key_constraints = {}
         return postgres_dialect.ddl_compiler(dialect, ddl, **kwargs)
 
     def do_execute(
