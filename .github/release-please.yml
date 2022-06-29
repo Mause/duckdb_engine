@@ -1,6 +1,0 @@
-branch: master
-handleGHRelease: true
-draft: true
-draftPullRequest: true
-bumpPatchForMinorPreMajor: true
-packageName: duckdb_engine
