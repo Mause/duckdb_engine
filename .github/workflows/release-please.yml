@@ -12,5 +12,3 @@ jobs:
       - uses: google-github-actions/release-please-action@v3
         with:
           release-type: python
-          package-name: duckdb_engine
-          bump-patch-for-minor-pre-major: true
