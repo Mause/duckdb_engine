@@ -140,6 +140,7 @@ class Dialect(postgres_dialect):
     _has_events = False
     identifier_preparer = None
     supports_statement_cache = False
+    supports_sane_rowcount = False
     inspector = DuckDBInspector
     # colspecs TODO: remap types to duckdb types
     colspecs = util.update_copy(
