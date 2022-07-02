@@ -244,3 +244,21 @@ def test_comment_support() -> None:
     import duckdb
 
     duckdb.default_connection.execute('comment on sqlite_master is "hello world";')
+
+
+@mark.xfail(raises=AttributeError)
+def test_rowcount() -> None:
+    import duckdb
+
+    duckdb.default_connection.rowcount
+
+
+def test_sessions(session: Session) -> None:
+    c = IntervalModel(field=timedelta(seconds=5))
+    session.add(c)
+    session.commit()
+
+    c = session.get(IntervalModel, 1)  # type: ignore
+    c.field = timedelta(days=5)
+    session.flush()
+    session.commit()
