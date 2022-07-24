@@ -1,4 +1,5 @@
-from typing import Any, Dict, List, Tuple, Type
+import warnings
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Type
 
 import duckdb
 from sqlalchemy import types as sqltypes
@@ -9,14 +10,23 @@ from sqlalchemy.engine.url import URL
 
 from .sql_parsing import register_dataframe
 
-name = "duckdb"
+__version__ = "0.2.0"
+
+if TYPE_CHECKING:
+    from sqlalchemy.sql.ddl import ExecutableDDLElement  # type: ignore
 
 
 class DBAPI:
-    paramstyle = "qmark"
+    paramstyle = duckdb.paramstyle
+    apilevel = duckdb.apilevel
+    threadsafety = duckdb.threadsafety
 
     class Error(Exception):
         pass
+
+    @staticmethod
+    def Binary(x: Any) -> Any:
+        return x
 
 
 class DuckDBInspector(PGInspector):
@@ -97,9 +107,40 @@ class ConnectionWrapper:
                 raise e
 
 
+class DuckDBEngineWarning(Warning):
+    pass
+
+
+class DuckDBEngineCommentWarning(DuckDBEngineWarning):
+    pass
+
+
+def remove_comments(ddl: "ExecutableDDLElement") -> None:
+    # TODO: swap these attribute checks for type checks
+    if hasattr(ddl, "element"):
+        remove_comments(ddl.element)
+    elif hasattr(ddl, "elements"):
+        for el in ddl.elements:
+            remove_comments(el)
+    elif hasattr(ddl, "columns"):
+        for col in ddl.columns:
+            remove_comments(col)
+
+    if hasattr(ddl, "comment") and ddl.comment:
+        ddl.comment = None
+        warnings.warn(
+            "Stripping a comment, as duckdb does not support them",
+            category=DuckDBEngineCommentWarning,
+        )
+
+
 class Dialect(postgres_dialect):
+    name = "duckdb"
+    driver = "duckdb_engine"
     _has_events = False
     identifier_preparer = None
+    supports_statement_cache = False
+    supports_sane_rowcount = False
     inspector = DuckDBInspector
     # colspecs TODO: remap types to duckdb types
     colspecs = util.update_copy(
@@ -108,6 +149,7 @@ class Dialect(postgres_dialect):
             # the psycopg2 driver registers a _PGNumeric with custom logic for
             # postgres type_codes (such as 701 for float) that duckdb doesn't have
             sqltypes.Numeric: sqltypes.Numeric,
+            sqltypes.Interval: sqltypes.Interval,
         },
     )
 
@@ -122,12 +164,15 @@ class Dialect(postgres_dialect):
         pass
 
     def ddl_compiler(
-        self, dialect: str, ddl: Any, **kwargs: Any
+        self,
+        dialect: str,
+        ddl: "ExecutableDDLElement",
+        **kwargs: Any,
     ) -> postgres_dialect.ddl_compiler:
         # TODO: enforce no `serial` type
 
-        # duckdb doesn't support foreign key constraints (yet)
-        ddl.include_foreign_key_constraints = {}
+        remove_comments(ddl)
+
         return postgres_dialect.ddl_compiler(dialect, ddl, **kwargs)
 
     def do_execute(
@@ -153,7 +198,13 @@ class Dialect(postgres_dialect):
         return DBAPI
 
     def create_connect_args(self, u: URL) -> Tuple[Tuple, Dict]:
-        return (), {"database": u.__to_string__(hide_password=False).split("///")[1]}
+        if hasattr(u, "render_as_string"):
+            # Compatible with SQLAlchemy >= 1.4
+            string_representation = u.render_as_string(hide_password=False)  # type: ignore
+        else:
+            # Compatible with SQLAlchemy < 1.4
+            string_representation = u.__to_string__(hide_password=False)
+        return (), {"database": string_representation.split("///")[1]}
 
     def _get_server_version_info(
         self, connection: ConnectionWrapper
@@ -180,5 +231,10 @@ class Dialect(postgres_dialect):
     def get_dialect_cls(cls, u: str) -> Type["Dialect"]:
         return cls
 
+    def get_view_names(
+        self, connection: ConnectionWrapper, schema: str = None, **kwargs: Any
+    ) -> List[str]:
+        s = "SELECT name FROM sqlite_master WHERE type='view' ORDER BY name"
+        rs = connection.exec_driver_sql(s)
 
-dialect = Dialect
+        return [row[0] for row in rs]

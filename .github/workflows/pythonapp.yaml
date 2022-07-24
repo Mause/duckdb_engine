@@ -14,14 +14,14 @@ jobs:
         python: [3.6, 3.7, 3.8, 3.9] #, "3.10.0-rc.1"]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
       - name: Cache poetry virtualenv
         id: cache-poetry
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.local/share/virtualenvs
           key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
@@ -38,7 +38,7 @@ jobs:
       - name: Test with tox
         run: tox
       - name: Publish Unit Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v1
+        uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
           files: results.xml

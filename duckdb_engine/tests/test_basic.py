@@ -1,4 +1,6 @@
+import zlib
 from datetime import timedelta
+from typing import Any, Optional
 
 from hypothesis import assume, given, settings
 from hypothesis.strategies import text
@@ -7,23 +9,28 @@ from sqlalchemy import (
     Column,
     ForeignKey,
     Integer,
+    Interval,
     MetaData,
     Sequence,
     String,
     Table,
     create_engine,
     inspect,
+    select,
+    types,
 )
+from sqlalchemy.dialects import registry
 from sqlalchemy.dialects.postgresql.base import PGInspector
 from sqlalchemy.engine import Engine
-from sqlalchemy.engine.url import registry
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import RelationshipProperty, Session, relationship, sessionmaker
+
+from .conftest import raises_msg
 
 
 @fixture
 def engine() -> Engine:
-    registry.register("duckdb", "duckdb_engine", "Dialect")
+    registry.register("duckdb", "duckdb_engine", "Dialect")  # type: ignore
 
     eng = create_engine("duckdb:///:memory:")
     Base.metadata.create_all(eng)
@@ -33,7 +40,30 @@ def engine() -> Engine:
 Base = declarative_base()
 
 
-class FakeModel(Base):  # type: ignore
+class CompressedString(types.TypeDecorator):
+    """Custom Column Type"""
+
+    impl = types.BLOB
+
+    def process_bind_param(self, value: Optional[str], dialect: Any) -> Optional[bytes]:  # type: ignore
+        if value is None:
+            return None
+        return zlib.compress(value.encode("utf-8"), level=9)
+
+    def process_result_value(self, value: bytes, dialect: Any) -> str:  # type: ignore
+        return zlib.decompress(value).decode("utf-8")
+
+
+class TableWithBinary(Base):
+
+    __tablename__ = "table_with_binary"
+
+    id = Column(Integer(), Sequence("id_seq"), primary_key=True)
+
+    text = Column(CompressedString())
+
+
+class FakeModel(Base):
     __tablename__ = "fake"
 
     id = Column(Integer, Sequence("fakemodel_id_sequence"), primary_key=True)
@@ -42,7 +72,7 @@ class FakeModel(Base):  # type: ignore
     owner = relationship("Owner")  # type: RelationshipProperty[Owner]
 
 
-class Owner(Base):  # type: ignore
+class Owner(Base):
     __tablename__ = "owner"
     id = Column(Integer, Sequence("owner_id"), primary_key=True)
 
@@ -50,6 +80,14 @@ class Owner(Base):  # type: ignore
     owned = relationship(
         FakeModel, back_populates="owner"
     )  # type: RelationshipProperty[FakeModel]
+
+
+class IntervalModel(Base):
+    __tablename__ = "IntervalModel"
+
+    id = Column(Integer, Sequence("IntervalModel_id_sequence"), primary_key=True)
+
+    field = Column(Interval)
 
 
 @fixture
@@ -96,6 +134,19 @@ def test_simple_string(s: str) -> None:
 
 def test_get_tables(inspector: PGInspector) -> None:
     assert inspector.get_table_names()
+    assert inspector.get_view_names() == []
+
+
+def test_get_views(engine: Engine) -> None:
+    con = engine.connect()
+    views = engine.dialect.get_view_names(con)
+    assert views == []
+
+    engine.execute("create view test as select 1")
+
+    con = engine.connect()
+    views = engine.dialect.get_view_names(con)
+    assert views == ["test"]
 
 
 @fixture
@@ -178,3 +229,48 @@ def test_description() -> None:
     import duckdb
 
     duckdb.connect("").description
+
+
+def test_intervals(session: Session) -> None:
+    session.add(IntervalModel(field=timedelta(days=1)))
+    session.commit()
+
+    owner = session.query(IntervalModel).one()  # act
+
+    assert owner.field == timedelta(days=1)
+
+
+def test_binary(session: Session) -> None:
+
+    a = TableWithBinary(text="Hello World!")
+    session.add(a)
+    session.commit()
+
+    b: TableWithBinary = session.scalar(select(TableWithBinary))  # type: ignore
+    assert b.text == "Hello World!"
+
+
+@raises_msg("syntax error")
+def test_comment_support() -> None:
+    "comments not yet supported by duckdb"
+    import duckdb
+
+    duckdb.default_connection.execute('comment on sqlite_master is "hello world";')
+
+
+@mark.xfail(raises=AttributeError)
+def test_rowcount() -> None:
+    import duckdb
+
+    duckdb.default_connection.rowcount
+
+
+def test_sessions(session: Session) -> None:
+    c = IntervalModel(field=timedelta(seconds=5))
+    session.add(c)
+    session.commit()
+
+    c = session.get(IntervalModel, 1)  # type: ignore
+    c.field = timedelta(days=5)
+    session.flush()
+    session.commit()
