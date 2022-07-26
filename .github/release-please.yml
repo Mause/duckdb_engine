@@ -1,5 +1,0 @@
-branch: master
-handleGHRelease: true
-draft: true
-draftPullRequest: true
-bumpPatchForMinorPreMajor: true

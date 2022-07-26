@@ -2,13 +2,16 @@
 
 [![Supported Python Versions](https://img.shields.io/pypi/pyversions/duckdb-engine)](https://pypi.org/project/duckdb-engine/) [![PyPI version](https://badge.fury.io/py/duckdb-engine.svg)](https://badge.fury.io/py/duckdb-engine)
 
-Very very very basic sqlalchemy driver for duckdb
+Basic sqlalchemy driver for [DuckDB](https://duckdb.org/)
 
-## Usage
-
+## Installation
 ```sh
 $ pip install duckdb-engine
 ```
+
+DuckDB Engine also has a conda feedstock available, the instructions for the use of which are available in it's [repository](https://github.com/conda-forge/duckdb-engine-feedstock).
+
+## Usage
 
 Once you've installed this package, you should be able to just use it, as sqlalchemy does a python path search
 

@@ -1,12 +1,15 @@
+from functools import wraps
 from typing import Any, Callable, TypeVar
 
 import duckdb
 import pytest
 from packaging.specifiers import SpecifierSet
-from pytest import fixture, mark
+from pytest import fixture, mark, raises
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
-from typing_extensions import Protocol
+from typing_extensions import ParamSpec, Protocol
+
+P = ParamSpec("P")
 
 pytest.register_assert_rewrite("sqlalchemy.testing.assertions")
 FuncT = TypeVar("FuncT", bound=Callable[..., Any])
@@ -37,6 +40,18 @@ def library_version(
 
     installed = library.__version__
     has_version = SpecifierSet(specifiers).contains(installed, prereleases=True)
+
+    return decorator
+
+
+def raises_msg(msg: str) -> Callable[[Callable[P, None]], Callable[P, None]]:
+    def decorator(func: Callable[P, None]) -> Callable[P, None]:
+        @wraps(func)
+        def wrapped_test(*args: P.args, **kwargs: P.kwargs) -> None:
+            with raises(RuntimeError, match=msg):
+                func(*args, **kwargs)
+
+        return wrapped_test
 
     return decorator
 
