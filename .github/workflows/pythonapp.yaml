@@ -10,8 +10,13 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
         python: [3.6, 3.7, 3.8, 3.9] #, "3.10.0-rc.1"]
+        bleeding_edge: [false]
+        include:
+        - python: 3.9
+          bleeding_edge: true
 
     steps:
       - uses: actions/checkout@v3
@@ -36,7 +41,11 @@ jobs:
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Test with tox
+        run: tox -e duckdb_master
+        if: matrix.bleeding_edge
+      - name: Test with tox
         run: tox
+        if: "!matrix.bleeding_edge"
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
