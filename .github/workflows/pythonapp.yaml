@@ -15,7 +15,7 @@ jobs:
         bleeding_edge: [false]
         include:
         - python: 3.9
-          bleeding_edge: true      
+          bleeding_edge: true
 
     steps:
       - uses: actions/checkout@v3
