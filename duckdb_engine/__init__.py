@@ -2,6 +2,7 @@ import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Type
 
 import duckdb
+from sqlalchemy import pool
 from sqlalchemy import types as sqltypes
 from sqlalchemy import util
 from sqlalchemy.dialects.postgresql import dialect as postgres_dialect
@@ -183,6 +184,13 @@ class Dialect(postgres_dialect):
         context: PGExecutionContext,
     ) -> None:
         cursor.execute(statement, parameters, context)
+
+    @classmethod
+    def get_pool_class(cls, url: URL) -> Type[pool.Pool]:
+        if url.database == ":memory:":
+            return pool.SingletonThreadPool
+        else:
+            return pool.QueuePool
 
     def do_executemany(
         self,
