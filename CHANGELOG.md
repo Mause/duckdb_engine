@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/Mause/duckdb_engine/compare/v0.2.0...v0.3.0) (2022-08-02)
+
+
+### Features
+
+* use SingletonThreadPool for :memory: connections ([58ef77a](https://github.com/Mause/duckdb_engine/commit/58ef77acb55f3bfbe8be511f79a151a25f54a374))
+
 ## [0.2.0](https://github.com/Mause/duckdb_engine/compare/v0.1.12...v0.2.0) (2022-07-03)
 
 
