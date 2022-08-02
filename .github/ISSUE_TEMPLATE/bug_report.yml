@@ -24,6 +24,8 @@ body:
       label: DuckDB Engine Version
       description: What version of our software are you running?
       options:
+       - "master"
+       - 0.2.0
        - 0.1.11
        - 0.1.10
        - 0.1.9
@@ -39,6 +41,8 @@ body:
       label: DuckDB Version
       description: What version of duckdb are you running?
       options:
+      - "master"
+      - "v0.4.1"
       - "v0.4.0"
       - "v0.3.4"
       - "v0.3.3"
