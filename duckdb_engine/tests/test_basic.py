@@ -4,7 +4,7 @@ from typing import Any, Optional
 
 from hypothesis import assume, given, settings
 from hypothesis.strategies import text
-from pytest import fixture, mark
+from pytest import fixture, importorskip, mark
 from sqlalchemy import (
     Column,
     ForeignKey,
@@ -188,7 +188,7 @@ def test_reflect(session: Session, engine: Engine) -> None:
 def test_commit(session: Session, engine: Engine) -> None:
     session.execute("commit;")
 
-    from IPython.core.interactiveshell import InteractiveShell
+    InteractiveShell = importorskip("IPython.core.interactiveshell").InteractiveShell
 
     shell = InteractiveShell()
     assert not shell.run_line_magic("load_ext", "sql")
@@ -262,3 +262,15 @@ def test_sessions(session: Session) -> None:
     c.field = timedelta(days=5)
     session.flush()
     session.commit()
+
+
+def test_inmemory() -> None:
+    InteractiveShell = importorskip("IPython.core.interactiveshell").InteractiveShell
+
+    shell = InteractiveShell()
+    shell.run_cell("""import sqlalchemy as sa""")
+    shell.run_cell("""eng = sa.create_engine("duckdb:///:memory:")""")
+    shell.run_cell("""eng.execute("CREATE TABLE t (x int)")""")
+    res = shell.run_cell("""eng.execute("SHOW TABLES").fetchall()""")
+
+    assert res.result == [("t",)]
