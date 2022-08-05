@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/Mause/duckdb_engine/compare/v0.3.1...v0.3.2) (2022-08-05)
+
+
+### Bug Fixes
+
+* unpin numpy for python 3.6 ([3e87509](https://github.com/Mause/duckdb_engine/commit/3e875091164c018db6ccfa4e1dd2fd5e6238979c))
+
 ## [0.3.1](https://github.com/Mause/duckdb_engine/compare/v0.3.0...v0.3.1) (2022-08-05)
 
 
