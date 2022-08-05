@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.1](https://github.com/Mause/duckdb_engine/compare/v0.3.0...v0.3.1) (2022-08-05)
+
+
+### Bug Fixes
+
+* add py.typed file ([99e39e4](https://github.com/Mause/duckdb_engine/commit/99e39e4184d3ec5a48cf1eac65641035f5fb79a8))
+* update test for bleeding edge ([ec63594](https://github.com/Mause/duckdb_engine/commit/ec63594dbe99c58ac88870de8d3daea847970302))
+
 ## [0.3.0](https://github.com/Mause/duckdb_engine/compare/v0.2.0...v0.3.0) (2022-08-02)
 
 
