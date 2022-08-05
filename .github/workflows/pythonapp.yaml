@@ -4,6 +4,7 @@ on: pull_request
 permissions:
   checks: write
   issues: write
+  pull-requests: write
 
 jobs:
   build_backend:
@@ -50,4 +51,4 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
-          files: results.xml
+          junit_files: results.xml
