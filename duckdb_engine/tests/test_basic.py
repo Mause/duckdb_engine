@@ -4,7 +4,7 @@ from typing import Any, Optional
 
 from hypothesis import assume, given, settings
 from hypothesis.strategies import text
-from pytest import fixture, importorskip, mark
+from pytest import fixture, importorskip, mark, raises
 from sqlalchemy import (
     Column,
     ForeignKey,
@@ -238,12 +238,14 @@ def test_binary(session: Session) -> None:
     assert b.text == "Hello World!"
 
 
-@raises_msg("syntax error")
 def test_comment_support() -> None:
     "comments not yet supported by duckdb"
     import duckdb
 
-    duckdb.default_connection.execute('comment on sqlite_master is "hello world";')
+    exc = getattr(duckdb, 'StandardException', duckdb.Error)
+
+    with raises(exc, match='syntax error'):
+        duckdb.default_connection.execute('comment on sqlite_master is "hello world";')
 
 
 @mark.xfail(raises=AttributeError)
