@@ -25,8 +25,6 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import RelationshipProperty, Session, relationship, sessionmaker
 
-from .conftest import raises_msg
-
 
 @fixture
 def engine() -> Engine:
@@ -242,9 +240,9 @@ def test_comment_support() -> None:
     "comments not yet supported by duckdb"
     import duckdb
 
-    exc = getattr(duckdb, 'StandardException', duckdb.Error)
+    exc = getattr(duckdb, "StandardException", duckdb.Error)
 
-    with raises(exc, match='syntax error'):
+    with raises(exc, match="syntax error"):
         duckdb.default_connection.execute('comment on sqlite_master is "hello world";')
 
 
