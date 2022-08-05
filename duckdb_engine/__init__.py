@@ -20,8 +20,8 @@ class DBAPI:
     apilevel = duckdb.apilevel
     threadsafety = duckdb.threadsafety
 
-    class Error(Exception):
-        pass
+    # this is being fixed upstream to add a proper exception hierarchy
+    Error = RuntimeError
 
     @staticmethod
     def Binary(x: Any) -> Any:
