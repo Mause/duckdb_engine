@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import dialect as postgres_dialect
 from sqlalchemy.dialects.postgresql.base import PGExecutionContext, PGInspector
 from sqlalchemy.engine.url import URL
 
-__version__ = "0.3.0"
+__version__ = "0.3.2"
 
 if TYPE_CHECKING:
     from sqlalchemy.sql.ddl import ExecutableDDLElement  # type: ignore
@@ -20,8 +20,8 @@ class DBAPI:
     apilevel = duckdb.apilevel
     threadsafety = duckdb.threadsafety
 
-    class Error(Exception):
-        pass
+    # this is being fixed upstream to add a proper exception hierarchy
+    Error = RuntimeError
 
     @staticmethod
     def Binary(x: Any) -> Any:
