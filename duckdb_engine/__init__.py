@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import dialect as postgres_dialect
 from sqlalchemy.dialects.postgresql.base import PGExecutionContext, PGInspector
 from sqlalchemy.engine.url import URL
 
-__version__ = "0.3.2"
+__version__ = "0.3.3"
 
 if TYPE_CHECKING:
     from sqlalchemy.sql.ddl import ExecutableDDLElement  # type: ignore
