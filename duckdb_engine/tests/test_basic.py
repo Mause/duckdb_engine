@@ -1,7 +1,9 @@
 import zlib
 from datetime import timedelta
+from pathlib import Path
 from typing import Any, Optional
 
+import duckdb
 from hypothesis import assume, given, settings
 from hypothesis.strategies import text
 from pytest import fixture, importorskip, mark, raises
@@ -22,6 +24,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects import registry
 from sqlalchemy.dialects.postgresql.base import PGInspector
 from sqlalchemy.engine import Engine
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import RelationshipProperty, Session, relationship, sessionmaker
 
@@ -240,8 +243,6 @@ def test_binary(session: Session) -> None:
 
 def test_comment_support() -> None:
     "comments not yet supported by duckdb"
-    import duckdb
-
     exc = getattr(duckdb, "StandardException", DBAPI.Error)
 
     with raises(exc, match="syntax error"):
@@ -276,3 +277,20 @@ def test_inmemory() -> None:
     res = shell.run_cell("""eng.execute("SHOW TABLES").fetchall()""")
 
     assert res.result == [("t",)]
+
+
+def test_config(tmp_path: Path) -> None:
+    db_path = tmp_path / "test.db"
+
+    with duckdb.connect(str(db_path)) as db:
+        db.execute("create table hello1 (i int)")
+
+    eng = create_engine(
+        f"duckdb:///{db_path}",
+        connect_args={"read_only": True, "config": {"memory_limit": "500mb"}},
+    )
+
+    with raises(
+        DBAPIError, match='Cannot execute statement of type "CREATE" in read-only mode!'
+    ):
+        eng.execute("create table hello2 (i int)")

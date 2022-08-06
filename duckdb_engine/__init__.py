@@ -158,8 +158,10 @@ class Dialect(postgres_dialect):
         kwargs["use_native_hstore"] = False
         super().__init__(*args, **kwargs)
 
-    def connect(self, *args: Any, **kwargs: Any) -> ConnectionWrapper:
-        return ConnectionWrapper(duckdb.connect(*args, **kwargs))
+    def connect(
+        self, database: str, read_only: bool = False, config: Dict = None
+    ) -> ConnectionWrapper:
+        return ConnectionWrapper(duckdb.connect(database, read_only, config or {}))
 
     def on_connect(self) -> None:
         pass
