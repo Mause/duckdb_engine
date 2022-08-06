@@ -42,6 +42,23 @@ frank = session.query(FakeModel).one()
 assert frank.name == "Frank"
 ```
 
+## Configuration
+
+You can configure DuckDB by passing `connect_args` to the create_engine function
+```python
+create_engine(
+    'duckdb:///:memory:',
+    connect_args={
+        'read_only': True,
+        'config': {
+            'memory_limit': '500mb'
+        }
+    }
+)
+```
+
+The supported configuration parameters are listed in the [DuckDB docs](https://duckdb.org/docs/sql/configuration)
+
 ## How to register a pandas DataFrame
 
 ```python
