@@ -58,6 +58,6 @@ jobs:
       - uses: codecov/codecov-action@v3
         with:
           files: ./coverage.xml
-          env: PYTHON  # set from matrix
+          env_vars: PYTHON  # set from matrix
           fail_ci_if_error: true
           verbose: true
