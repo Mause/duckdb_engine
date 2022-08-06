@@ -53,7 +53,7 @@ class ConnectionWrapper:
         # TODO: remove this once duckdb supports fetchmany natively
         try:
             # TODO: add size parameter here once the next duckdb version is released
-            return (self.c.fetch_df_chunk()).values.tolist()
+            return (self.c.fetch_df_chunk()).values.tolist()  # type: ignore
         except RuntimeError as e:
             if e.args[0].startswith(
                 "Invalid Input Error: Attempting to fetch from an unsuccessful or closed streaming query result"

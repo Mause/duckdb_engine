@@ -253,7 +253,7 @@ def test_comment_support() -> None:
 def test_rowcount() -> None:
     import duckdb
 
-    duckdb.default_connection.rowcount
+    duckdb.default_connection.rowcount  # type: ignore
 
 
 def test_sessions(session: Session) -> None:
@@ -282,8 +282,9 @@ def test_inmemory() -> None:
 def test_config(tmp_path: Path) -> None:
     db_path = tmp_path / "test.db"
 
-    with duckdb.connect(str(db_path)) as db:
-        db.execute("create table hello1 (i int)")
+    db = duckdb.connect(str(db_path))
+    db.execute("create table hello1 (i int)")
+    db.close()
 
     eng = create_engine(
         f"duckdb:///{db_path}",
