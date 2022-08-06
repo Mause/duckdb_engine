@@ -4,3 +4,7 @@
 dist/
 *.egg-info
 __pycache__/
+.tox/
+htmlcov/
+.coverage
+coverage.xml
