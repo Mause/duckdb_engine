@@ -26,6 +26,7 @@ hypothesis = "^6.31.6"
 pandas = "^1"
 ipython-sql = "^0.4.1"
 sqlalchemy-stubs = "^0.4"
+pytest-cov = {extras = ["coverage"], version = "^3.0.0"}
 
 [tool.poetry.plugins."sqlalchemy.dialects"]
 duckdb = "duckdb_engine:Dialect"
