@@ -21,7 +21,7 @@ class DBAPI:
     threadsafety = duckdb.threadsafety
 
     # this is being fixed upstream to add a proper exception hierarchy
-    Error = RuntimeError
+    Error = getattr(duckdb, "Error", RuntimeError)
 
     @staticmethod
     def Binary(x: Any) -> Any:
