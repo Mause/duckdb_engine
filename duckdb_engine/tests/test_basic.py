@@ -295,3 +295,50 @@ def test_config(tmp_path: Path) -> None:
         DBAPIError, match='Cannot execute statement of type "CREATE" in read-only mode!'
     ):
         eng.execute("create table hello2 (i int)")
+
+
+def test_361() -> None:
+    from sqlalchemy import MetaData, create_engine, func, select, text
+    from sqlalchemy.engine import URL
+
+    url = URL.create(
+        "postgresql+psycopg",
+        username="gitpod",
+        password="gitpod",
+        host="localhost",
+        database="sammy",
+    )
+    engine = create_engine(url)
+    with engine.connect() as conn:
+        print(
+            conn.execute(
+                text(
+                    "create table if not exists test (dt date); insert into test values ('2022-01-01');"
+                )
+            )
+        )
+        print(conn.commit())
+
+    metadata = MetaData()
+    metadata.reflect(bind=engine)
+    test = metadata.tables["test"]
+    part = "year"
+    date_part = func.date_part(part, test.c.dt)
+
+    stmt = select(date_part).select_from(test).group_by(date_part)
+
+    with engine.connect() as conn:
+        conn.execute(stmt).fetchall()  # same exception
+
+
+def test_361_psycopg():
+    import psycopg
+
+    breakpoint()
+    with psycopg.connect(
+        "user=gitpod password=gitpod host=localhost dbname=sammy"
+    ) as conn:
+        query = "SELECT date_part(%(date_part_2)s::VARCHAR, test.dt) AS date_part_1 \nFROM test GROUP BY date_part(%(date_part_2)s::VARCHAR, test.dt)"
+        effective_parameters = {"date_part_2": "year"}
+
+        conn.execute(query, effective_parameters)
