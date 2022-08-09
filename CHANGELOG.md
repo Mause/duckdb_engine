@@ -1,5 +1,36 @@
 # Changelog
 
+## [0.3.3](https://github.com/Mause/duckdb_engine/compare/v0.3.2...v0.3.3) (2022-08-06)
+
+
+### Bug Fixes
+
+* add code coverage reporting ([019b61c](https://github.com/Mause/duckdb_engine/commit/019b61ca21a9f47467b2f01acdecf275fe658aec))
+* add documentation and test for duckdb config ([f3e577a](https://github.com/Mause/duckdb_engine/commit/f3e577a8fcdd9b00db0e0ea8002bc3d574003e02))
+* correct dialect error lookup for bleeding edge ([0e04d02](https://github.com/Mause/duckdb_engine/commit/0e04d02d86c4f3e8d4ff3cf8d147e0707faedff9))
+
+## [0.3.2](https://github.com/Mause/duckdb_engine/compare/v0.3.1...v0.3.2) (2022-08-05)
+
+
+### Bug Fixes
+
+* unpin numpy for python 3.6 ([3e87509](https://github.com/Mause/duckdb_engine/commit/3e875091164c018db6ccfa4e1dd2fd5e6238979c))
+
+## [0.3.1](https://github.com/Mause/duckdb_engine/compare/v0.3.0...v0.3.1) (2022-08-05)
+
+
+### Bug Fixes
+
+* add py.typed file ([99e39e4](https://github.com/Mause/duckdb_engine/commit/99e39e4184d3ec5a48cf1eac65641035f5fb79a8))
+* update test for bleeding edge ([ec63594](https://github.com/Mause/duckdb_engine/commit/ec63594dbe99c58ac88870de8d3daea847970302))
+
+## [0.3.0](https://github.com/Mause/duckdb_engine/compare/v0.2.0...v0.3.0) (2022-08-02)
+
+
+### Features
+
+* use SingletonThreadPool for :memory: connections ([58ef77a](https://github.com/Mause/duckdb_engine/commit/58ef77acb55f3bfbe8be511f79a151a25f54a374))
+
 ## [0.2.0](https://github.com/Mause/duckdb_engine/compare/v0.1.12...v0.2.0) (2022-07-03)
 
 
