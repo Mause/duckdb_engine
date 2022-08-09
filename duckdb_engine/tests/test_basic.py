@@ -444,14 +444,12 @@ def test_361() -> None:
     )
     engine = create_engine(url)
     with engine.connect() as conn:
-        print(
-            conn.execute(
-                text(
-                    "create table if not exists test (dt date); insert into test values ('2022-01-01');"
-                )
+        conn.execute(
+            text(
+                "create table if not exists test (dt date); insert into test values ('2022-01-01');"
             )
         )
-        print(conn.commit())
+        conn.commit()
 
     metadata = MetaData()
     metadata.reflect(bind=engine)
@@ -468,7 +466,6 @@ def test_361() -> None:
 def test_361_psycopg():
     psycopg = importorskip("psycopg")
 
-    breakpoint()
     with psycopg.connect(
         "user=gitpod password=gitpod host=localhost dbname=sammy"
     ) as conn:
