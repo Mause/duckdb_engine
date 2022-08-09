@@ -1,33 +1,39 @@
 name: Python application
 
-on: pull_request
+on: [pull_request, workflow_dispatch]
 permissions:
   checks: write
   issues: write
+  pull-requests: write
 
 jobs:
   build_backend:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
         python: [3.6, 3.7, 3.8, 3.9] #, "3.10.0-rc.1"]
+        bleeding_edge: [false]
+        include:
+        - python: 3.9
+          bleeding_edge: true
+
+    env:
+      PYTHON: ${{matrix.python}}
 
     steps:
       - uses: actions/checkout@v3
+      - name: Install poetry
+        run: pipx install poetry
       - name: Set up Python ${{ matrix.python }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
-      - name: Cache poetry virtualenv
-        id: cache-poetry
-        uses: actions/cache@v3
-        with:
-          path: ~/.local/share/virtualenvs
-          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
-      - name: Install poetry
+          cache: poetry
+      - name: Install tox
         run: |
-          python -m pip install --upgrade poetry tox tox-gh-actions
+          python -m pip install --upgrade tox tox-gh-actions
       - name: Lint with flake8
         run: |
           pip install flake8
@@ -36,9 +42,19 @@ jobs:
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Test with tox
+        run: tox -e duckdb_master
+        if: matrix.bleeding_edge
+      - name: Test with tox
         run: tox
+        if: "!matrix.bleeding_edge"
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
-          files: results.xml
+          junit_files: results.xml
+      - uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.xml
+          env_vars: PYTHON  # set from matrix
+          fail_ci_if_error: true
+          verbose: true

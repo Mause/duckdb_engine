@@ -1,10 +1,12 @@
 import zlib
 from datetime import timedelta
+from pathlib import Path
 from typing import Any, Optional
 
+import duckdb
 from hypothesis import assume, given, settings
 from hypothesis.strategies import text
-from pytest import fixture, mark
+from pytest import fixture, importorskip, mark, raises
 from sqlalchemy import (
     Column,
     ForeignKey,
@@ -22,10 +24,11 @@ from sqlalchemy import (
 from sqlalchemy.dialects import registry
 from sqlalchemy.dialects.postgresql.base import PGInspector
 from sqlalchemy.engine import Engine
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import RelationshipProperty, Session, relationship, sessionmaker
 
-from .conftest import raises_msg
+from .. import DBAPI
 
 
 @fixture
@@ -188,7 +191,7 @@ def test_reflect(session: Session, engine: Engine) -> None:
 def test_commit(session: Session, engine: Engine) -> None:
     session.execute("commit;")
 
-    from IPython.core.interactiveshell import InteractiveShell
+    InteractiveShell = importorskip("IPython.core.interactiveshell").InteractiveShell
 
     shell = InteractiveShell()
     assert not shell.run_line_magic("load_ext", "sql")
@@ -250,19 +253,19 @@ def test_binary(session: Session) -> None:
     assert b.text == "Hello World!"
 
 
-@raises_msg("syntax error")
 def test_comment_support() -> None:
     "comments not yet supported by duckdb"
-    import duckdb
+    exc = getattr(duckdb, "StandardException", DBAPI.Error)
 
-    duckdb.default_connection.execute('comment on sqlite_master is "hello world";')
+    with raises(exc, match="syntax error"):
+        duckdb.default_connection.execute('comment on sqlite_master is "hello world";')
 
 
 @mark.xfail(raises=AttributeError)
 def test_rowcount() -> None:
     import duckdb
 
-    duckdb.default_connection.rowcount
+    duckdb.default_connection.rowcount  # type: ignore
 
 
 def test_sessions(session: Session) -> None:
@@ -274,3 +277,33 @@ def test_sessions(session: Session) -> None:
     c.field = timedelta(days=5)
     session.flush()
     session.commit()
+
+
+def test_inmemory() -> None:
+    InteractiveShell = importorskip("IPython.core.interactiveshell").InteractiveShell
+
+    shell = InteractiveShell()
+    shell.run_cell("""import sqlalchemy as sa""")
+    shell.run_cell("""eng = sa.create_engine("duckdb:///:memory:")""")
+    shell.run_cell("""eng.execute("CREATE TABLE t (x int)")""")
+    res = shell.run_cell("""eng.execute("SHOW TABLES").fetchall()""")
+
+    assert res.result == [("t",)]
+
+
+def test_config(tmp_path: Path) -> None:
+    db_path = tmp_path / "test.db"
+
+    db = duckdb.connect(str(db_path))
+    db.execute("create table hello1 (i int)")
+    db.close()
+
+    eng = create_engine(
+        f"duckdb:///{db_path}",
+        connect_args={"read_only": True, "config": {"memory_limit": "500mb"}},
+    )
+
+    with raises(
+        DBAPIError, match='Cannot execute statement of type "CREATE" in read-only mode!'
+    ):
+        eng.execute("create table hello2 (i int)")

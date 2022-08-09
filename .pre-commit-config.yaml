@@ -25,7 +25,7 @@ repos:
           - --in-place
           - --remove-all-unused-imports
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.37.2
+    rev: v2.37.3
     hooks:
       - id: pyupgrade
         args:
@@ -35,16 +35,17 @@ repos:
     hooks:
       - id: black
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.961
+    rev: v0.971
     hooks:
      - id: mypy
        additional_dependencies:
+          - "duckdb==0.4.0"
           - "pytest==6.2.4"
           - "hypothesis==6.14.1"
           - "sqlalchemy-stubs==0.4"
           - "types-setuptools==57.4.17"
   - repo: https://github.com/PyCQA/flake8
-    rev: '4.0.1'  # pick a git hash / tag to point to
+    rev: '5.0.4'  # pick a git hash / tag to point to
     hooks:
     - id: flake8
       args:

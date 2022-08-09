@@ -2,6 +2,7 @@ import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Type
 
 import duckdb
+from sqlalchemy import pool
 from sqlalchemy import types as sqltypes
 from sqlalchemy import util
 from sqlalchemy.dialects.postgresql import dialect as postgres_dialect
@@ -10,7 +11,7 @@ from sqlalchemy.engine.url import URL
 
 from .sql_parsing import register_dataframe
 
-__version__ = "0.2.0"
+__version__ = "0.3.3"
 
 if TYPE_CHECKING:
     from sqlalchemy.sql.ddl import ExecutableDDLElement  # type: ignore
@@ -21,8 +22,8 @@ class DBAPI:
     apilevel = duckdb.apilevel
     threadsafety = duckdb.threadsafety
 
-    class Error(Exception):
-        pass
+    # this is being fixed upstream to add a proper exception hierarchy
+    Error = getattr(duckdb, "Error", RuntimeError)
 
     @staticmethod
     def Binary(x: Any) -> Any:
@@ -54,7 +55,7 @@ class ConnectionWrapper:
         # TODO: remove this once duckdb supports fetchmany natively
         try:
             # TODO: add size parameter here once the next duckdb version is released
-            return (self.c.fetch_df_chunk()).values.tolist()
+            return (self.c.fetch_df_chunk()).values.tolist()  # type: ignore
         except RuntimeError as e:
             if e.args[0].startswith(
                 "Invalid Input Error: Attempting to fetch from an unsuccessful or closed streaming query result"
@@ -157,8 +158,10 @@ class Dialect(postgres_dialect):
         kwargs["use_native_hstore"] = False
         super().__init__(*args, **kwargs)
 
-    def connect(self, *args: Any, **kwargs: Any) -> ConnectionWrapper:
-        return ConnectionWrapper(duckdb.connect(*args, **kwargs))
+    def connect(
+        self, database: str, read_only: bool = False, config: Dict = None
+    ) -> ConnectionWrapper:
+        return ConnectionWrapper(duckdb.connect(database, read_only, config or {}))
 
     def on_connect(self) -> None:
         pass
@@ -183,6 +186,13 @@ class Dialect(postgres_dialect):
         context: PGExecutionContext,
     ) -> None:
         cursor.execute(statement, parameters, context)
+
+    @classmethod
+    def get_pool_class(cls, url: URL) -> Type[pool.Pool]:
+        if url.database == ":memory:":
+            return pool.SingletonThreadPool
+        else:
+            return pool.QueuePool
 
     def do_executemany(
         self,
