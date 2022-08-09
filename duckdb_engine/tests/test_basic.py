@@ -298,6 +298,9 @@ def test_config(tmp_path: Path) -> None:
 
 
 def test_361() -> None:
+    importorskip('sqlalchemy', '2.0.0')
+    importorskip('psycopg', '3.0.0')
+
     from sqlalchemy import MetaData, create_engine, func, select, text
     from sqlalchemy.engine import URL
 
@@ -332,7 +335,7 @@ def test_361() -> None:
 
 
 def test_361_psycopg():
-    import psycopg
+    psycopg = importorskip('psycopg')
 
     breakpoint()
     with psycopg.connect(
