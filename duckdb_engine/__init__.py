@@ -2,7 +2,6 @@ import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Type, cast
 
 import duckdb
-
 from sqlalchemy import Column, Sequence, pool
 from sqlalchemy import types as sqltypes
 from sqlalchemy import util
