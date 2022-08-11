@@ -2,7 +2,6 @@ from functools import wraps
 from typing import Any, Callable, TypeVar
 
 import duckdb
-import pytest
 from packaging.specifiers import SpecifierSet
 from pytest import fixture, mark, raises
 from sqlalchemy import create_engine
@@ -11,7 +10,7 @@ from typing_extensions import ParamSpec, Protocol
 
 P = ParamSpec("P")
 
-pytest.register_assert_rewrite("sqlalchemy.testing.assertions")
+# pytest.register_assert_rewrite("sqlalchemy.testing.assertions")
 FuncT = TypeVar("FuncT", bound=Callable[..., Any])
 
 

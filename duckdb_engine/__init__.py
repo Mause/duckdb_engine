@@ -1,14 +1,13 @@
 import warnings
-from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Type, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Type
 
 import duckdb
-from sqlalchemy import Column, Sequence, pool
+from sqlalchemy import pool
 from sqlalchemy import types as sqltypes
 from sqlalchemy import util
 from sqlalchemy.dialects.postgresql import dialect as postgres_dialect
 from sqlalchemy.dialects.postgresql.base import PGExecutionContext, PGInspector
 from sqlalchemy.engine.url import URL
-from sqlalchemy.sql.ddl import CreateTable
 
 __version__ = "0.3.3"
 
@@ -117,19 +116,6 @@ class DuckDBEngineCommentWarning(DuckDBEngineWarning):
     pass
 
 
-def remove_serial_columns(ddl: CreateTable) -> None:
-    for column in ddl.columns:
-        el = cast(Column, column.element)
-        if el.primary_key:
-            warnings.warn(
-                "Generating a named sequence for your table - this is probably very buggy",
-                category=DuckDBEngineWarning,
-            )
-            seq: Sequence = Sequence(ddl.element.name + "_" + el.name + "_seq")
-            el.default = seq
-            el.server_default = seq.next_value()
-
-
 def remove_comments(ddl: "ExecutableDDLElement") -> None:
     # TODO: swap these attribute checks for type checks
     if hasattr(ddl, "element"):
@@ -186,9 +172,7 @@ class Dialect(postgres_dialect):
         ddl: "ExecutableDDLElement",
         **kwargs: Any,
     ) -> postgres_dialect.ddl_compiler:
-
-        if isinstance(ddl, CreateTable):
-            remove_serial_columns(ddl)
+        # TODO: enforce no `serial` type
 
         remove_comments(ddl)
 
