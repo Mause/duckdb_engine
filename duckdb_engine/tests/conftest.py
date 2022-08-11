@@ -14,10 +14,12 @@ P = ParamSpec("P")
 FuncT = TypeVar("FuncT", bound=Callable[..., Any])
 
 
+registry.register("duckdb", "duckdb_engine", "Dialect")  # type: ignore
+registry.register("duckdb.duckdb_engine", "duckdb_engine", "Dialect")  # type: ignore
+
+
 @fixture
 def engine() -> Engine:
-    registry.register("duckdb", "duckdb_engine", "Dialect")  # type: ignore
-
     return create_engine("duckdb:///:memory:")
 
 
