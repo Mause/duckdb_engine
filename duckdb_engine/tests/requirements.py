@@ -5,7 +5,7 @@ from sqlalchemy.testing.requirements import SuiteRequirements, exclusions
 
 class Requirements(SuiteRequirements):
     @property
-    def schemas(self) -> exclusions.Compound:
+    def schemas(self) -> exclusions.compound:
         return exclusions.closed()
 
 
