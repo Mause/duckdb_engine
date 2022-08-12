@@ -8,7 +8,7 @@ from sqlalchemy.dialects.postgresql import dialect as postgres_dialect
 from sqlalchemy.dialects.postgresql.base import PGExecutionContext, PGInspector
 from sqlalchemy.engine.url import URL
 
-__version__ = "0.3.3"
+__version__ = "0.3.4"
 
 
 class DBAPI:
