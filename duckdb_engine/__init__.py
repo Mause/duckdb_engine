@@ -1,6 +1,5 @@
 import warnings
-from typing import Any, Dict, List, Tuple, Type, cast
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Type
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Type, cast
 
 import duckdb
 from sqlalchemy import Column, Sequence, pool
