@@ -108,10 +108,6 @@ class DuckDBEngineWarning(Warning):
     pass
 
 
-class DuckDBEngineCommentWarning(DuckDBEngineWarning):
-    pass
-
-
 class Dialect(postgres_dialect):
     name = "duckdb"
     driver = "duckdb_engine"
