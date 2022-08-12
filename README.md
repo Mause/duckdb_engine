@@ -1,16 +1,19 @@
 # duckdb_engine
 
-[![Supported Python Versions](https://img.shields.io/pypi/pyversions/duckdb-engine)](https://pypi.org/project/duckdb-engine/) [![PyPI version](https://badge.fury.io/py/duckdb-engine.svg)](https://badge.fury.io/py/duckdb-engine)
+[![Supported Python Versions](https://img.shields.io/pypi/pyversions/duckdb-engine)](https://pypi.org/project/duckdb-engine/) [![PyPI version](https://badge.fury.io/py/duckdb-engine.svg)](https://badge.fury.io/py/duckdb-engine) [![codecov](https://codecov.io/gh/Mause/duckdb_engine/branch/master/graph/badge.svg)](https://codecov.io/gh/Mause/duckdb_engine)
 
-Very very very basic sqlalchemy driver for duckdb
+Basic SQLAlchemy driver for [DuckDB](https://duckdb.org/)
 
-## Usage
-
+## Installation
 ```sh
 $ pip install duckdb-engine
 ```
 
-Once you've installed this package, you should be able to just use it, as sqlalchemy does a python path search
+DuckDB Engine also has a conda feedstock available, the instructions for the use of which are available in it's [repository](https://github.com/conda-forge/duckdb-engine-feedstock).
+
+## Usage
+
+Once you've installed this package, you should be able to just use it, as SQLAlchemy does a python path search
 
 ```python
 from sqlalchemy import Column, Integer, Sequence, String, create_engine
@@ -39,6 +42,23 @@ frank = session.query(FakeModel).one()
 assert frank.name == "Frank"
 ```
 
+## Configuration
+
+You can configure DuckDB by passing `connect_args` to the create_engine function
+```python
+create_engine(
+    'duckdb:///:memory:',
+    connect_args={
+        'read_only': True,
+        'config': {
+            'memory_limit': '500mb'
+        }
+    }
+)
+```
+
+The supported configuration parameters are listed in the [DuckDB docs](https://duckdb.org/docs/sql/configuration)
+
 ## How to register a pandas DataFrame
 
 ```python
@@ -49,10 +69,10 @@ eng.execute("select * from dataframe_name")
 ```
 
 ## Things to keep in mind
-Duckdb's SQL parser is based on the PostgreSQL parser, but not all features in PostgreSQL are supported in duckdb. Because the `duckdb_engine` dialect is derived from the `postgresql` dialect, `sqlalchemy` may try to use PostgreSQL-only features. Below are some caveats to look out for.
+Duckdb's SQL parser is based on the PostgreSQL parser, but not all features in PostgreSQL are supported in duckdb. Because the `duckdb_engine` dialect is derived from the `postgresql` dialect, `SQLAlchemy` may try to use PostgreSQL-only features. Below are some caveats to look out for.
 
 ### Auto-incrementing ID columns
-When defining an Integer column as a primary key, `sqlalchemy` uses the `SERIAL` datatype for PostgreSQL. Duckdb does not yet support this datatype because it's a non-standard PostgreSQL legacy type, so a workaround is to use the `sqlalchemy.Sequence()` object to auto-increment the key. For more information on sequences, you can find the [`sqlalchemy Sequence` documentation here](https://docs.sqlalchemy.org/en/14/core/defaults.html#associating-a-sequence-as-the-server-side-default).
+When defining an Integer column as a primary key, `SQLAlchemy` uses the `SERIAL` datatype for PostgreSQL. Duckdb does not yet support this datatype because it's a non-standard PostgreSQL legacy type, so a workaround is to use the `SQLAlchemy.Sequence()` object to auto-increment the key. For more information on sequences, you can find the [`SQLAlchemy Sequence` documentation here](https://docs.sqlalchemy.org/en/14/core/defaults.html#associating-a-sequence-as-the-server-side-default).
 
 The following example demonstrates how to create an auto-incrementing ID column for a simple table:
 

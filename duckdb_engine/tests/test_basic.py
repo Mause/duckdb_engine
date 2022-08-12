@@ -1,8 +1,12 @@
+import zlib
 from datetime import timedelta
+from pathlib import Path
+from typing import Any, Optional
 
+import duckdb
 from hypothesis import assume, given, settings
 from hypothesis.strategies import text
-from pytest import fixture, mark
+from pytest import fixture, importorskip, mark, raises
 from sqlalchemy import (
     Column,
     ForeignKey,
@@ -14,12 +18,17 @@ from sqlalchemy import (
     Table,
     create_engine,
     inspect,
+    select,
+    types,
 )
 from sqlalchemy.dialects import registry
 from sqlalchemy.dialects.postgresql.base import PGInspector
 from sqlalchemy.engine import Engine
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import RelationshipProperty, Session, relationship, sessionmaker
+
+from .. import DBAPI
 
 
 @fixture
@@ -32,6 +41,29 @@ def engine() -> Engine:
 
 
 Base = declarative_base()
+
+
+class CompressedString(types.TypeDecorator):
+    """Custom Column Type"""
+
+    impl = types.BLOB
+
+    def process_bind_param(self, value: Optional[str], dialect: Any) -> Optional[bytes]:  # type: ignore
+        if value is None:
+            return None
+        return zlib.compress(value.encode("utf-8"), level=9)
+
+    def process_result_value(self, value: bytes, dialect: Any) -> str:  # type: ignore
+        return zlib.decompress(value).decode("utf-8")
+
+
+class TableWithBinary(Base):
+
+    __tablename__ = "table_with_binary"
+
+    id = Column(Integer(), Sequence("id_seq"), primary_key=True)
+
+    text = Column(CompressedString())
 
 
 class FakeModel(Base):
@@ -173,7 +205,7 @@ def test_reflect(session: Session, engine: Engine) -> None:
 def test_commit(session: Session, engine: Engine) -> None:
     session.execute("commit;")
 
-    from IPython.core.interactiveshell import InteractiveShell
+    InteractiveShell = importorskip("IPython.core.interactiveshell").InteractiveShell
 
     shell = InteractiveShell()
     assert not shell.run_line_magic("load_ext", "sql")
@@ -211,3 +243,69 @@ def test_intervals(session: Session) -> None:
     owner = session.query(IntervalModel).one()  # act
 
     assert owner.field == timedelta(days=1)
+
+
+def test_binary(session: Session) -> None:
+
+    a = TableWithBinary(text="Hello World!")
+    session.add(a)
+    session.commit()
+
+    b: TableWithBinary = session.scalar(select(TableWithBinary))  # type: ignore
+    assert b.text == "Hello World!"
+
+
+def test_comment_support() -> None:
+    "comments not yet supported by duckdb"
+    exc = getattr(duckdb, "StandardException", DBAPI.Error)
+
+    with raises(exc, match="syntax error"):
+        duckdb.default_connection.execute('comment on sqlite_master is "hello world";')
+
+
+@mark.xfail(raises=AttributeError)
+def test_rowcount() -> None:
+    import duckdb
+
+    duckdb.default_connection.rowcount  # type: ignore
+
+
+def test_sessions(session: Session) -> None:
+    c = IntervalModel(field=timedelta(seconds=5))
+    session.add(c)
+    session.commit()
+
+    c = session.get(IntervalModel, 1)  # type: ignore
+    c.field = timedelta(days=5)
+    session.flush()
+    session.commit()
+
+
+def test_inmemory() -> None:
+    InteractiveShell = importorskip("IPython.core.interactiveshell").InteractiveShell
+
+    shell = InteractiveShell()
+    shell.run_cell("""import sqlalchemy as sa""")
+    shell.run_cell("""eng = sa.create_engine("duckdb:///:memory:")""")
+    shell.run_cell("""eng.execute("CREATE TABLE t (x int)")""")
+    res = shell.run_cell("""eng.execute("SHOW TABLES").fetchall()""")
+
+    assert res.result == [("t",)]
+
+
+def test_config(tmp_path: Path) -> None:
+    db_path = tmp_path / "test.db"
+
+    db = duckdb.connect(str(db_path))
+    db.execute("create table hello1 (i int)")
+    db.close()
+
+    eng = create_engine(
+        f"duckdb:///{db_path}",
+        connect_args={"read_only": True, "config": {"memory_limit": "500mb"}},
+    )
+
+    with raises(
+        DBAPIError, match='Cannot execute statement of type "CREATE" in read-only mode!'
+    ):
+        eng.execute("create table hello2 (i int)")

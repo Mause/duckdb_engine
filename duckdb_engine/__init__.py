@@ -2,7 +2,7 @@ import warnings
 from typing import Any, Dict, List, Tuple, Type, cast
 
 import duckdb
-from sqlalchemy import Column, Sequence
+from sqlalchemy import Column, Sequence, pool
 from sqlalchemy import types as sqltypes
 from sqlalchemy import util
 from sqlalchemy.dialects.postgresql import dialect as postgres_dialect
@@ -10,14 +10,20 @@ from sqlalchemy.dialects.postgresql.base import PGExecutionContext, PGInspector
 from sqlalchemy.engine.url import URL
 from sqlalchemy.sql.ddl import CreateTable
 
-__version__ = "0.1.12-alpha.0"
+__version__ = "0.3.4"
 
 
 class DBAPI:
-    paramstyle = "qmark"
+    paramstyle = duckdb.paramstyle
+    apilevel = duckdb.apilevel
+    threadsafety = duckdb.threadsafety
 
-    class Error(Exception):
-        pass
+    # this is being fixed upstream to add a proper exception hierarchy
+    Error = getattr(duckdb, "Error", RuntimeError)
+
+    @staticmethod
+    def Binary(x: Any) -> Any:
+        return x
 
 
 class DuckDBInspector(PGInspector):
@@ -45,7 +51,7 @@ class ConnectionWrapper:
         # TODO: remove this once duckdb supports fetchmany natively
         try:
             # TODO: add size parameter here once the next duckdb version is released
-            return (self.c.fetch_df_chunk()).values.tolist()
+            return (self.c.fetch_df_chunk()).values.tolist()  # type: ignore
         except RuntimeError as e:
             if e.args[0].startswith(
                 "Invalid Input Error: Attempting to fetch from an unsuccessful or closed streaming query result"
@@ -123,6 +129,8 @@ class Dialect(postgres_dialect):
     _has_events = False
     identifier_preparer = None
     supports_statement_cache = False
+    supports_comments = False
+    supports_sane_rowcount = False
     inspector = DuckDBInspector
     # colspecs TODO: remap types to duckdb types
     colspecs = util.update_copy(
@@ -140,8 +148,10 @@ class Dialect(postgres_dialect):
         kwargs["use_native_hstore"] = False
         super().__init__(**kwargs)
 
-    def connect(self, *args: Any, **kwargs: Any) -> ConnectionWrapper:
-        return ConnectionWrapper(duckdb.connect(*args, **kwargs))
+    def connect(
+        self, database: str, read_only: bool = False, config: Dict = None
+    ) -> ConnectionWrapper:
+        return ConnectionWrapper(duckdb.connect(database, read_only, config or {}))
 
     def on_connect(self) -> None:
         pass
@@ -153,8 +163,6 @@ class Dialect(postgres_dialect):
         if isinstance(ddl, CreateTable):
             remove_serial_columns(ddl, self.generate_sequences)
 
-        # duckdb doesn't support foreign key constraints (yet)
-        ddl.include_foreign_key_constraints = {}
         return postgres_dialect.ddl_compiler(dialect, ddl, **kwargs)
 
     def do_execute(
@@ -165,6 +173,13 @@ class Dialect(postgres_dialect):
         context: PGExecutionContext,
     ) -> None:
         cursor.execute(statement, parameters, context)
+
+    @classmethod
+    def get_pool_class(cls, url: URL) -> Type[pool.Pool]:
+        if url.database == ":memory:":
+            return pool.SingletonThreadPool
+        else:
+            return pool.QueuePool
 
     def do_executemany(
         self,
