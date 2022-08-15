@@ -1,12 +1,13 @@
+import logging
 import zlib
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 import duckdb
 from hypothesis import assume, given, settings
 from hypothesis.strategies import text as text_strat
-from pytest import fixture, importorskip, mark, raises
+from pytest import LogCaptureFixture, fixture, importorskip, mark, raises
 from sqlalchemy import (
     Column,
     ForeignKey,
@@ -293,3 +294,22 @@ def test_config(tmp_path: Path) -> None:
         DBAPIError, match='Cannot execute statement of type "CREATE" in read-only mode!'
     ):
         eng.execute("create table hello2 (i int)")
+
+
+def test_do_ping(tmp_path: Path, caplog: LogCaptureFixture) -> None:
+    engine = create_engine(
+        "duckdb:///" + str(tmp_path / "db"), pool_pre_ping=True, pool_size=1
+    )
+
+    logger = cast(logging.Logger, engine.pool.logger)  # type: ignore
+    logger.setLevel(logging.DEBUG)
+
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        engine.connect()  # create a connection in the pool
+        assert (
+            engine.connect() is not None
+        )  # grab the "stale" connection, which will cause a ping
+
+        assert any(
+            "Pool pre-ping on connection" in message for message in caplog.messages
+        )
