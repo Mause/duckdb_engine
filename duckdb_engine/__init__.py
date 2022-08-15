@@ -8,7 +8,7 @@ from sqlalchemy.dialects.postgresql.base import PGInspector
 from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
 from sqlalchemy.engine.url import URL
 
-__version__ = "0.3.4"
+__version__ = "0.4.0"
 
 if TYPE_CHECKING:
     from sqlalchemy.base import Connection
