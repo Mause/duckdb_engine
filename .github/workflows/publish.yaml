@@ -1,6 +1,7 @@
-name: Python package
+name: Publish python package
 on:
-  release: [created]
+  release:
+    types: [published]
 
 jobs:
   build:
