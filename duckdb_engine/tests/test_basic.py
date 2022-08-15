@@ -293,3 +293,9 @@ def test_config(tmp_path: Path) -> None:
         DBAPIError, match='Cannot execute statement of type "CREATE" in read-only mode!'
     ):
         eng.execute("create table hello2 (i int)")
+
+
+def test_do_ping(tmp_path: Path) -> None:
+    engine = create_engine("duckdb:///" + str(tmp_path / "db"), pool_pre_ping=True)
+    con = engine.connect()
+    con.dialect.do_ping(con.connection.connection)  # type: ignore

@@ -40,6 +40,8 @@ class DuckDBInspector(PGInspector):
 class ConnectionWrapper:
     c: duckdb.DuckDBPyConnection
     notices: List[str]
+    autocommit = None  # duckdb doesn't support setting autocommit
+    closed = False
 
     def __init__(self, c: duckdb.DuckDBPyConnection) -> None:
         self.c = c
