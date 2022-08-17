@@ -5,7 +5,7 @@ import duckdb
 from packaging.specifiers import SpecifierSet
 from pytest import fixture, mark, raises
 from sqlalchemy import create_engine
-from sqlalchemy.dialects import registry
+from sqlalchemy.dialects import registry  # type: ignore
 from sqlalchemy.engine import Engine
 from typing_extensions import ParamSpec, Protocol
 
@@ -16,7 +16,7 @@ FuncT = TypeVar("FuncT", bound=Callable[..., Any])
 
 @fixture
 def engine() -> Engine:
-    registry.register("duckdb", "duckdb_engine", "Dialect")  # type: ignore
+    registry.register("duckdb", "duckdb_engine", "Dialect")
 
     return create_engine("duckdb:///:memory:")
 

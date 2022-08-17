@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.4.0](https://github.com/Mause/duckdb_engine/compare/v0.3.4...v0.4.0) (2022-08-15)
+
+
+### Features
+
+* switch to first party sqlalchemy stubs ([cf9f626](https://github.com/Mause/duckdb_engine/commit/cf9f6268bc1da8418e7188e37fe6c0c20cb2a05e))
+
+
+### Bug Fixes
+
+* support ping on latest sqlalchemy ([bd63122](https://github.com/Mause/duckdb_engine/commit/bd631226f03f28c5fa2532b9ddd20a69c70a49e0))
+
+## [0.3.4](https://github.com/Mause/duckdb_engine/compare/v0.3.3...v0.3.4) (2022-08-12)
+
+
+### Bug Fixes
+
+* disable comments in dialect ([96cca1c](https://github.com/Mause/duckdb_engine/commit/96cca1c6bd4c10a0c8f70fbd695fa8434c94358f))
+* restore mypy checking to github builds ([b252679](https://github.com/Mause/duckdb_engine/commit/b252679ed4da3477cd39bd37825639f03d5ded5a))
+
 ## [0.3.3](https://github.com/Mause/duckdb_engine/compare/v0.3.2...v0.3.3) (2022-08-06)
 
 

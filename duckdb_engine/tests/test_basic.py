@@ -1,12 +1,13 @@
+import logging
 import zlib
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 import duckdb
 from hypothesis import assume, given, settings
-from hypothesis.strategies import text
-from pytest import fixture, importorskip, mark, raises
+from hypothesis.strategies import text as text_strat
+from pytest import LogCaptureFixture, fixture, importorskip, mark, raises
 from sqlalchemy import (
     Column,
     ForeignKey,
@@ -19,21 +20,21 @@ from sqlalchemy import (
     create_engine,
     inspect,
     select,
+    text,
     types,
 )
-from sqlalchemy.dialects import registry
-from sqlalchemy.dialects.postgresql.base import PGInspector
-from sqlalchemy.engine import Engine
+from sqlalchemy.dialects import registry  # type: ignore
+from sqlalchemy.engine import Engine, Inspector
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import RelationshipProperty, Session, relationship, sessionmaker
+from sqlalchemy.orm import Session, relationship, sessionmaker
 
 from .. import DBAPI
 
 
 @fixture
 def engine() -> Engine:
-    registry.register("duckdb", "duckdb_engine", "Dialect")  # type: ignore
+    registry.register("duckdb", "duckdb_engine", "Dialect")
 
     eng = create_engine("duckdb:///:memory:")
     Base.metadata.create_all(eng)
@@ -48,12 +49,12 @@ class CompressedString(types.TypeDecorator):
 
     impl = types.BLOB
 
-    def process_bind_param(self, value: Optional[str], dialect: Any) -> Optional[bytes]:  # type: ignore
+    def process_bind_param(self, value: Optional[str], dialect: Any) -> Optional[bytes]:
         if value is None:
             return None
         return zlib.compress(value.encode("utf-8"), level=9)
 
-    def process_result_value(self, value: bytes, dialect: Any) -> str:  # type: ignore
+    def process_result_value(self, value: bytes, dialect: Any) -> str:
         return zlib.decompress(value).decode("utf-8")
 
 
@@ -72,7 +73,7 @@ class FakeModel(Base):
     id = Column(Integer, Sequence("fakemodel_id_sequence"), primary_key=True)
     name = Column(String)
 
-    owner = relationship("Owner")  # type: RelationshipProperty[Owner]
+    owner: "Owner" = relationship("Owner")
 
 
 class Owner(Base):
@@ -80,9 +81,7 @@ class Owner(Base):
     id = Column(Integer, Sequence("owner_id"), primary_key=True)
 
     fake_id = Column(Integer, ForeignKey("fake.id"))
-    owned = relationship(
-        FakeModel, back_populates="owner"
-    )  # type: RelationshipProperty[FakeModel]
+    owned: FakeModel = relationship(FakeModel, back_populates="owner")
 
 
 class IntervalModel(Base):
@@ -118,7 +117,7 @@ def test_foreign(session: Session) -> None:
     assert owner.owned.name == "Walter"
 
 
-@given(text())
+@given(text_strat())
 @settings(deadline=timedelta(seconds=1))
 def test_simple_string(s: str) -> None:
     assume("\x00" not in s)
@@ -135,7 +134,7 @@ def test_simple_string(s: str) -> None:
     assert owner.owned.name == s
 
 
-def test_get_tables(inspector: PGInspector) -> None:
+def test_get_tables(inspector: Inspector) -> None:
     assert inspector.get_table_names()
     assert inspector.get_view_names() == []
 
@@ -145,7 +144,7 @@ def test_get_views(engine: Engine) -> None:
     views = engine.dialect.get_view_names(con)
     assert views == []
 
-    engine.execute("create view test as select 1")
+    engine.execute(text("create view test as select 1"))
 
     con = engine.connect()
     views = engine.dialect.get_view_names(con)
@@ -153,8 +152,8 @@ def test_get_views(engine: Engine) -> None:
 
 
 @fixture
-def inspector(engine: Engine, session: Session) -> PGInspector:
-    session.execute("create table test (id int);")
+def inspector(engine: Engine, session: Session) -> Inspector:
+    session.execute(text("create table test (id int);"))
     session.commit()
 
     meta = MetaData()
@@ -163,25 +162,25 @@ def inspector(engine: Engine, session: Session) -> PGInspector:
     return inspect(engine)
 
 
-def test_get_columns(inspector: PGInspector) -> None:
+def test_get_columns(inspector: Inspector) -> None:
     inspector.get_columns("test", None)
 
 
-def test_get_foreign_keys(inspector: PGInspector) -> None:
+def test_get_foreign_keys(inspector: Inspector) -> None:
     inspector.get_foreign_keys("test", None)
 
 
 @mark.xfail(reason="reflection not yet supported in duckdb", raises=NotImplementedError)
-def test_get_check_constraints(inspector: PGInspector) -> None:
+def test_get_check_constraints(inspector: Inspector) -> None:
     inspector.get_check_constraints("test", None)
 
 
-def test_get_unique_constraints(inspector: PGInspector) -> None:
+def test_get_unique_constraints(inspector: Inspector) -> None:
     inspector.get_unique_constraints("test", None)
 
 
 def test_reflect(session: Session, engine: Engine) -> None:
-    session.execute("create table test (id int);")
+    session.execute(text("create table test (id int);"))
     session.commit()
 
     meta = MetaData(engine)
@@ -189,7 +188,7 @@ def test_reflect(session: Session, engine: Engine) -> None:
 
 
 def test_commit(session: Session, engine: Engine) -> None:
-    session.execute("commit;")
+    session.execute(text("commit;"))
 
     InteractiveShell = importorskip("IPython.core.interactiveshell").InteractiveShell
 
@@ -200,7 +199,7 @@ def test_commit(session: Session, engine: Engine) -> None:
 
 
 def test_table_reflect(session: Session, engine: Engine) -> None:
-    session.execute("create table test (id int);")
+    session.execute(text("create table test (id int);"))
     session.commit()
 
     meta = MetaData()
@@ -237,7 +236,7 @@ def test_binary(session: Session) -> None:
     session.add(a)
     session.commit()
 
-    b: TableWithBinary = session.scalar(select(TableWithBinary))  # type: ignore
+    b: TableWithBinary = session.scalar(select(TableWithBinary))
     assert b.text == "Hello World!"
 
 
@@ -295,6 +294,25 @@ def test_config(tmp_path: Path) -> None:
         DBAPIError, match='Cannot execute statement of type "CREATE" in read-only mode!'
     ):
         eng.execute("create table hello2 (i int)")
+
+
+def test_do_ping(tmp_path: Path, caplog: LogCaptureFixture) -> None:
+    engine = create_engine(
+        "duckdb:///" + str(tmp_path / "db"), pool_pre_ping=True, pool_size=1
+    )
+
+    logger = cast(logging.Logger, engine.pool.logger)  # type: ignore
+    logger.setLevel(logging.DEBUG)
+
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        engine.connect()  # create a connection in the pool
+        assert (
+            engine.connect() is not None
+        )  # grab the "stale" connection, which will cause a ping
+
+        assert any(
+            "Pool pre-ping on connection" in message for message in caplog.messages
+        )
 
 
 def test_361() -> None:
