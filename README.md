@@ -106,6 +106,10 @@ The `pandas.read_sql()` method can read tables from `duckdb_engine` into DataFra
 >>> df = pd.read_sql('users', engine, chunksize=25)  ### Throws an exception
 ```
 
+### Unsigned integer support
+
+Unsigned integers are supported by DuckDB, and are available in [`duckdb_engine.datatypes`](duckdb_engine/datatypes.py).
+
 ## The name
 
 Yes, I'm aware this package should be named `duckdb-driver` or something, I wasn't thinking when I named it and it's too hard to change the name now

@@ -4,14 +4,25 @@ import duckdb
 from sqlalchemy import pool
 from sqlalchemy import types as sqltypes
 from sqlalchemy import util
-from sqlalchemy.dialects.postgresql.base import PGInspector
+from sqlalchemy.dialects.postgresql.base import PGInspector, PGTypeCompiler
 from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
 from sqlalchemy.engine.url import URL
+from sqlalchemy.ext.compiler import compiles
+
+from . import datatypes
 
 __version__ = "0.4.0"
 
 if TYPE_CHECKING:
     from sqlalchemy.base import Connection
+
+
+@compiles(datatypes.UInt64, "duckdb")  # type: ignore
+@compiles(datatypes.UInt32, "duckdb")  # type: ignore
+@compiles(datatypes.UInt16, "duckdb")  # type: ignore
+@compiles(datatypes.UInt8, "duckdb")  # type: ignore
+def compile_uint(element: sqltypes.Integer, compiler: PGTypeCompiler, **kw: Any) -> str:
+    return type(element).__name__
 
 
 class DBAPI:
