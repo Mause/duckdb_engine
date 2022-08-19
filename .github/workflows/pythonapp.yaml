@@ -52,6 +52,7 @@ jobs:
         if: always()
         with:
           junit_files: results.xml
+          check_name:  "Test Results - ${{ join(matrix.*, ' - ') }}"
       - uses: codecov/codecov-action@v3
         with:
           files: ./coverage.xml
