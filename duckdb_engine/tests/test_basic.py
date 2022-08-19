@@ -153,7 +153,7 @@ def test_get_views(engine: Engine) -> None:
 
 def test_preload_extension() -> None:
     try:
-        duckdb.default_connection.execute("INSTALL https")
+        duckdb.default_connection.execute("INSTALL httpfs")
     except Exception as e:
         skip(str(e))
     engine = create_engine(
