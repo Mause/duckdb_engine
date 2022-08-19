@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.5.0](https://github.com/Mause/duckdb_engine/compare/v0.4.0...v0.5.0) (2022-08-19)
+
+
+### Features
+
+* support unsigned integer types ([a69a35b](https://github.com/Mause/duckdb_engine/commit/a69a35bdfbfc9b992bc31dfb0f31f1097458d741))
+
+
+### Bug Fixes
+
+* try to fix poetry installation in workflow ([db21892](https://github.com/Mause/duckdb_engine/commit/db2189296782ecee0c83d9b2e8a91f6a4c0dd3bb))
+
+
+### Documentation
+
+* mention unsigned integer support in README ([4e403cb](https://github.com/Mause/duckdb_engine/commit/4e403cb89c32031c5966725427d14162b4ceceab))
+
 ## [0.4.0](https://github.com/Mause/duckdb_engine/compare/v0.3.4...v0.4.0) (2022-08-15)
 
 
