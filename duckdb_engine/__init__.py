@@ -11,7 +11,7 @@ from sqlalchemy.ext.compiler import compiles
 
 from . import datatypes
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 
 if TYPE_CHECKING:
     from sqlalchemy.base import Connection
