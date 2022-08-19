@@ -162,7 +162,13 @@ def test_preload_extension() -> None:
             "config": {"s3_region": "ap-southeast-2"},
         },
     )
-    assert engine.connect().execute("select * From duckdb_extensions() where loaded")
+    with engine.connect() as conn:
+        assert conn.execute(
+            "select * from duckdb_extensions() where loaded and name='httpfs'"
+        ).fetchone()
+        assert not conn.execute(
+            "select * from duckdb_extensions() where loaded and name='fts'"
+        ).fetchone()
 
 
 @fixture
