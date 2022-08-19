@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Type
 
 import duckdb
-from sqlalchemy import pool
+from sqlalchemy import String, pool
 from sqlalchemy import types as sqltypes
 from sqlalchemy import util
 from sqlalchemy.dialects.postgresql.base import PGInspector, PGTypeCompiler
@@ -10,6 +10,7 @@ from sqlalchemy.engine.url import URL
 from sqlalchemy.ext.compiler import compiles
 
 from . import datatypes
+from .config import get_core_config
 
 __version__ = "0.5.0"
 
@@ -32,6 +33,9 @@ class DBAPI:
 
     # this is being fixed upstream to add a proper exception hierarchy
     Error = getattr(duckdb, "Error", RuntimeError)
+
+    IOException = getattr(duckdb, "IOException", RuntimeError)
+    CatalogException = getattr(duckdb, "CatalogException", RuntimeError)
 
     @staticmethod
     def Binary(x: Any) -> Any:
@@ -144,12 +148,34 @@ class Dialect(PGDialect_psycopg2):
         },
     )
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         kwargs["use_native_hstore"] = False
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
 
     def connect(self, *cargs: Any, **cparams: Any) -> "Connection":
-        return ConnectionWrapper(duckdb.connect(*cargs, **cparams))
+
+        core_keys = get_core_config()
+        preload_extensions = cparams.pop("preload_extensions", [])
+        config = cparams.get("config", {})
+
+        ext = {k: config.pop(k) for k in list(config) if k not in core_keys}
+
+        conn = duckdb.connect(*cargs, **cparams)
+
+        for extension in preload_extensions:
+            try:
+                conn.execute(f"LOAD {extension}")
+            except self.dbapi().IOException:
+                pass
+
+        for k, v in ext.items():
+            v = String().literal_processor(dialect=self)(v)
+            try:
+                conn.execute(f"SET {k} = {v}")
+            except self.dbapi().CatalogException:
+                pass
+
+        return ConnectionWrapper(conn)
 
     def on_connect(self) -> None:
         pass
@@ -189,7 +215,7 @@ class Dialect(PGDialect_psycopg2):
         connection: Any,
         schema: Optional[Any] = ...,
         include: Any = ...,
-        **kw: Any
+        **kw: Any,
     ) -> Any:
         s = "SELECT name FROM sqlite_master WHERE type='view' ORDER BY name"
         rs = connection.exec_driver_sql(s)

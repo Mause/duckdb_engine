@@ -7,7 +7,7 @@ from typing import Any, Optional, cast
 import duckdb
 from hypothesis import assume, given, settings
 from hypothesis.strategies import text as text_strat
-from pytest import LogCaptureFixture, fixture, importorskip, mark, raises
+from pytest import LogCaptureFixture, fixture, importorskip, mark, raises, skip
 from sqlalchemy import (
     Column,
     ForeignKey,
@@ -149,6 +149,21 @@ def test_get_views(engine: Engine) -> None:
     con = engine.connect()
     views = engine.dialect.get_view_names(con)
     assert views == ["test"]
+
+
+def test_preload_extension() -> None:
+    try:
+        duckdb.default_connection.execute("INSTALL https")
+    except Exception as e:
+        skip(str(e))
+    engine = create_engine(
+        "duckdb:///",
+        connect_args={
+            "preload_extensions": ["httpfs"],
+            "config": {"s3_region": "ap-southeast-2"},
+        },
+    )
+    engine.connect()
 
 
 @fixture
