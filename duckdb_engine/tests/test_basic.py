@@ -1,4 +1,5 @@
 import logging
+import os
 import zlib
 from datetime import timedelta
 from pathlib import Path
@@ -7,7 +8,7 @@ from typing import Any, Optional, cast
 import duckdb
 from hypothesis import assume, given, settings
 from hypothesis.strategies import text as text_strat
-from pytest import LogCaptureFixture, fixture, importorskip, mark, raises, skip
+from pytest import LogCaptureFixture, fixture, importorskip, mark, raises
 from sqlalchemy import (
     Column,
     ForeignKey,
@@ -151,11 +152,9 @@ def test_get_views(engine: Engine) -> None:
     assert views == ["test"]
 
 
+@mark.skipif(os.uname().machine == "aarch64", reason="not supported on aarch64")
 def test_preload_extension() -> None:
-    try:
-        duckdb.default_connection.execute("INSTALL httpfs")
-    except Exception as e:
-        skip(str(e))
+    duckdb.default_connection.execute("INSTALL httpfs")
     engine = create_engine(
         "duckdb:///",
         connect_args={
