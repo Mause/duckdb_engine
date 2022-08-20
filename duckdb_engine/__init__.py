@@ -206,7 +206,7 @@ class Dialect(PGDialect_psycopg2):
         connection: Any,
         schema: Optional[Any] = ...,
         include: Any = ...,
-        **kw: Any
+        **kw: Any,
     ) -> Any:
         s = "SELECT name FROM sqlite_master WHERE type='view' ORDER BY name"
         rs = connection.exec_driver_sql(s)
