@@ -34,9 +34,6 @@ class DBAPI:
     # this is being fixed upstream to add a proper exception hierarchy
     Error = getattr(duckdb, "Error", RuntimeError)
 
-    IOException = getattr(duckdb, "IOException", RuntimeError)
-    CatalogException = getattr(duckdb, "CatalogException", RuntimeError)
-
     @staticmethod
     def Binary(x: Any) -> Any:
         return x
@@ -148,9 +145,9 @@ class Dialect(PGDialect_psycopg2):
         },
     )
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(self, *args, **kwargs: Any) -> None:
         kwargs["use_native_hstore"] = False
-        super().__init__(**kwargs)
+        super().__init__(*args, **kwargs)
 
     def connect(self, *cargs: Any, **cparams: Any) -> "Connection":
 
@@ -209,7 +206,7 @@ class Dialect(PGDialect_psycopg2):
         connection: Any,
         schema: Optional[Any] = ...,
         include: Any = ...,
-        **kw: Any,
+        **kw: Any
     ) -> Any:
         s = "SELECT name FROM sqlite_master WHERE type='view' ORDER BY name"
         rs = connection.exec_driver_sql(s)
