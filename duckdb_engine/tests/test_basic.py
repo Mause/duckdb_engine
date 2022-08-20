@@ -166,7 +166,7 @@ def test_preload_extension() -> None:
     # check that we get an error indicating that the extension was loaded
     with engine.connect() as conn, raises(DBAPI.Error, match="unreachable"):
         conn.execute(
-            "SELECT * FROM read_parquet('https://<domain>/path/to/file.parquet');'"
+            "SELECT * FROM read_parquet('https://domain/path/to/file.parquet');'"
         )
 
 
