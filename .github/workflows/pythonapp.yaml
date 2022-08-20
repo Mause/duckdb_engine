@@ -3,8 +3,6 @@ name: Python application
 on: [pull_request, workflow_dispatch]
 permissions:
   checks: write
-  issues: write
-  pull-requests: write
 
 jobs:
   build_backend:
@@ -52,7 +50,8 @@ jobs:
         if: always()
         with:
           junit_files: results.xml
-          check_name:  "Test Results - ${{ join(matrix.*, ' - ') }}"
+          comment_mode: off
+          check_name:  "Test Results - ${{ join(matrix.*, ', ') }}"
       - uses: codecov/codecov-action@v3
         with:
           files: ./coverage.xml
