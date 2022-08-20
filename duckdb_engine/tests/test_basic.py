@@ -162,13 +162,12 @@ def test_preload_extension() -> None:
             "config": {"s3_region": "ap-southeast-2"},
         },
     )
-    with engine.connect() as conn:
-        assert conn.execute(
-            "select * from duckdb_extensions() where loaded and name='httpfs'"
-        ).fetchone()
-        assert not conn.execute(
-            "select * from duckdb_extensions() where loaded and name='fts'"
-        ).fetchone()
+
+    # check that we get an error indicating that the extension was loaded
+    with engine.connect() as conn, raises(DBAPI.Error, match="unreachable"):
+        conn.execute(
+            "SELECT * FROM read_parquet('https://<domain>/path/to/file.parquet');'"
+        )
 
 
 @fixture
