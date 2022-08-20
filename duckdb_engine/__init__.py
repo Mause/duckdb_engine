@@ -163,17 +163,11 @@ class Dialect(PGDialect_psycopg2):
         conn = duckdb.connect(*cargs, **cparams)
 
         for extension in preload_extensions:
-            try:
-                conn.execute(f"LOAD {extension}")
-            except self.dbapi().IOException:
-                pass
+            conn.execute(f"LOAD {extension}")
 
         for k, v in ext.items():
             v = String().literal_processor(dialect=self)(v)
-            try:
-                conn.execute(f"SET {k} = {v}")
-            except self.dbapi().CatalogException:
-                pass
+            conn.execute(f"SET {k} = {v}")
 
         return ConnectionWrapper(conn)
 
