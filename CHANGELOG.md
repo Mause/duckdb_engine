@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.6.0](https://github.com/Mause/duckdb_engine/compare/v0.5.0...v0.6.0) (2022-08-21)
+
+
+### Features
+
+* allow preloading of extensions ([13a92e1](https://github.com/Mause/duckdb_engine/commit/13a92e1fa7d6bdb5777b46c234cb00a150978e9c))
+
+
+### Documentation
+
+* document preload_extensions config parameter ([c0f2a99](https://github.com/Mause/duckdb_engine/commit/c0f2a993ee826fa91cab2add7321c52e437bb5a8))
+* link to example of IPython-SQL usage ([96e8bdf](https://github.com/Mause/duckdb_engine/commit/96e8bdf3aa8e0d645534bd19188d086d234e606e))
+
 ## [0.5.0](https://github.com/Mause/duckdb_engine/compare/v0.4.0...v0.5.0) (2022-08-19)
 
 
