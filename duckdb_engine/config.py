@@ -21,4 +21,4 @@ def apply_config(
 ) -> None:
     process = String().literal_processor(dialect=dialect)
     for k, v in ext.items():
-        conn.execute(f"SET {process(k)} = {process(v)}")
+        conn.execute(f"SET {k} = {process(v)}")
