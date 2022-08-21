@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Type
 
 import duckdb
-from sqlalchemy import String, pool
+from sqlalchemy import pool
 from sqlalchemy import types as sqltypes
 from sqlalchemy import util
 from sqlalchemy.dialects.postgresql.base import PGInspector, PGTypeCompiler
@@ -10,7 +10,7 @@ from sqlalchemy.engine.url import URL
 from sqlalchemy.ext.compiler import compiles
 
 from . import datatypes
-from .config import get_core_config
+from .config import apply_config, get_core_config
 
 __version__ = "0.5.0"
 
@@ -132,7 +132,6 @@ class Dialect(PGDialect_psycopg2):
     supports_statement_cache = False
     supports_comments = False
     supports_sane_rowcount = False
-    supports_comments = False
     inspector = DuckDBInspector
     # colspecs TODO: remap types to duckdb types
     colspecs = util.update_copy(
@@ -162,9 +161,7 @@ class Dialect(PGDialect_psycopg2):
         for extension in preload_extensions:
             conn.execute(f"LOAD {extension}")
 
-        for k, v in ext.items():
-            v = String().literal_processor(dialect=self)(v)
-            conn.execute(f"SET {k} = {v}")
+        apply_config(self, conn, ext)
 
         return ConnectionWrapper(conn)
 
