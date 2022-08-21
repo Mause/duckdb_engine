@@ -56,6 +56,11 @@ frank = session.query(FakeModel).one()
 assert frank.name == "Frank"
 ```
 
+## Usage in IPython/Jupyter
+
+With IPython-SQL and DuckDB-Engine you can query DuckDB natively in your notebook!
+Alex Monahan has a great demo of this on [his blog](https://alex-monahan.github.io/2021/08/22/Python_and_SQL_Better_Together.html#an-example-workflow-with-duckdb)
+
 ## Configuration
 
 You can configure DuckDB by passing `connect_args` to the create_engine function
