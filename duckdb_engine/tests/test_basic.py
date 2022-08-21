@@ -1,4 +1,5 @@
 import logging
+import os
 import zlib
 from datetime import timedelta
 from pathlib import Path
@@ -149,6 +150,24 @@ def test_get_views(engine: Engine) -> None:
     con = engine.connect()
     views = engine.dialect.get_view_names(con)
     assert views == ["test"]
+
+
+@mark.skipif(os.uname().machine == "aarch64", reason="not supported on aarch64")
+def test_preload_extension() -> None:
+    duckdb.default_connection.execute("INSTALL httpfs")
+    engine = create_engine(
+        "duckdb:///",
+        connect_args={
+            "preload_extensions": ["httpfs"],
+            "config": {"s3_region": "ap-southeast-2"},
+        },
+    )
+
+    # check that we get an error indicating that the extension was loaded
+    with engine.connect() as conn, raises(Exception, match="HTTP HEAD error"):
+        conn.execute(
+            "SELECT * FROM read_parquet('https://domain/path/to/file.parquet');"
+        )
 
 
 @fixture
