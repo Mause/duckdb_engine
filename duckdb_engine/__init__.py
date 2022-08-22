@@ -12,7 +12,7 @@ from sqlalchemy.ext.compiler import compiles
 from . import datatypes
 from .config import apply_config, get_core_config
 
-__version__ = "0.5.0"
+__version__ = "0.6.0"
 
 if TYPE_CHECKING:
     from sqlalchemy.base import Connection
