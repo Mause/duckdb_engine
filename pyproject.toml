@@ -31,6 +31,9 @@ pytest-cov = {extras = ["coverage"], version = "^3.0.0"}
 [tool.poetry.plugins."sqlalchemy.dialects"]
 duckdb = "duckdb_engine:Dialect"
 
+[tool.poe.tasks]
+test = "pytest --junitxml=results.xml --cov --cov-report xml:coverage.xml --verbose -rs"
+
 [tool.pytest.ini_options]
 addopts = "--hypothesis-show-statistics"
 xfail_strict = true
