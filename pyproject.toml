@@ -32,7 +32,7 @@ pytest-cov = {extras = ["coverage"], version = "^3.0.0"}
 duckdb = "duckdb_engine:Dialect"
 
 [tool.poe.tasks]
-test = "pytest --junitxml=results.xml --cov --cov-report xml:coverage.xml --verbose -rs"
+test = "poetry run pytest --junitxml=results.xml --cov --cov-report xml:coverage.xml --verbose -rs"
 
 [tool.pytest.ini_options]
 addopts = "--hypothesis-show-statistics"
