@@ -4,14 +4,26 @@ import duckdb
 from sqlalchemy import pool
 from sqlalchemy import types as sqltypes
 from sqlalchemy import util
-from sqlalchemy.dialects.postgresql.base import PGInspector
+from sqlalchemy.dialects.postgresql.base import PGInspector, PGTypeCompiler
 from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
 from sqlalchemy.engine.url import URL
+from sqlalchemy.ext.compiler import compiles
 
-__version__ = "0.3.4"
+from . import datatypes
+from .config import apply_config, get_core_config
+
+__version__ = "0.6.0"
 
 if TYPE_CHECKING:
     from sqlalchemy.base import Connection
+
+
+@compiles(datatypes.UInt64, "duckdb")  # type: ignore
+@compiles(datatypes.UInt32, "duckdb")  # type: ignore
+@compiles(datatypes.UInt16, "duckdb")  # type: ignore
+@compiles(datatypes.UInt8, "duckdb")  # type: ignore
+def compile_uint(element: sqltypes.Integer, compiler: PGTypeCompiler, **kw: Any) -> str:
+    return type(element).__name__
 
 
 class DBAPI:
@@ -40,6 +52,8 @@ class DuckDBInspector(PGInspector):
 class ConnectionWrapper:
     c: duckdb.DuckDBPyConnection
     notices: List[str]
+    autocommit = None  # duckdb doesn't support setting autocommit
+    closed = False
 
     def __init__(self, c: duckdb.DuckDBPyConnection) -> None:
         self.c = c
@@ -118,7 +132,6 @@ class Dialect(PGDialect_psycopg2):
     supports_statement_cache = False
     supports_comments = False
     supports_sane_rowcount = False
-    supports_comments = False
     inspector = DuckDBInspector
     # colspecs TODO: remap types to duckdb types
     colspecs = util.update_copy(
@@ -136,7 +149,21 @@ class Dialect(PGDialect_psycopg2):
         super().__init__(*args, **kwargs)
 
     def connect(self, *cargs: Any, **cparams: Any) -> "Connection":
-        return ConnectionWrapper(duckdb.connect(*cargs, **cparams))
+
+        core_keys = get_core_config()
+        preload_extensions = cparams.pop("preload_extensions", [])
+        config = cparams.get("config", {})
+
+        ext = {k: config.pop(k) for k in list(config) if k not in core_keys}
+
+        conn = duckdb.connect(*cargs, **cparams)
+
+        for extension in preload_extensions:
+            conn.execute(f"LOAD {extension}")
+
+        apply_config(self, conn, ext)
+
+        return ConnectionWrapper(conn)
 
     def on_connect(self) -> None:
         pass
@@ -176,7 +203,7 @@ class Dialect(PGDialect_psycopg2):
         connection: Any,
         schema: Optional[Any] = ...,
         include: Any = ...,
-        **kw: Any
+        **kw: Any,
     ) -> Any:
         s = "SELECT name FROM sqlite_master WHERE type='view' ORDER BY name"
         rs = connection.exec_driver_sql(s)

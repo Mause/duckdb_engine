@@ -1,5 +1,47 @@
 # Changelog
 
+## [0.6.0](https://github.com/Mause/duckdb_engine/compare/v0.5.0...v0.6.0) (2022-08-21)
+
+
+### Features
+
+* allow preloading of extensions ([13a92e1](https://github.com/Mause/duckdb_engine/commit/13a92e1fa7d6bdb5777b46c234cb00a150978e9c))
+
+
+### Documentation
+
+* document preload_extensions config parameter ([c0f2a99](https://github.com/Mause/duckdb_engine/commit/c0f2a993ee826fa91cab2add7321c52e437bb5a8))
+* link to example of IPython-SQL usage ([96e8bdf](https://github.com/Mause/duckdb_engine/commit/96e8bdf3aa8e0d645534bd19188d086d234e606e))
+
+## [0.5.0](https://github.com/Mause/duckdb_engine/compare/v0.4.0...v0.5.0) (2022-08-19)
+
+
+### Features
+
+* support unsigned integer types ([a69a35b](https://github.com/Mause/duckdb_engine/commit/a69a35bdfbfc9b992bc31dfb0f31f1097458d741))
+
+
+### Bug Fixes
+
+* try to fix poetry installation in workflow ([db21892](https://github.com/Mause/duckdb_engine/commit/db2189296782ecee0c83d9b2e8a91f6a4c0dd3bb))
+
+
+### Documentation
+
+* mention unsigned integer support in README ([4e403cb](https://github.com/Mause/duckdb_engine/commit/4e403cb89c32031c5966725427d14162b4ceceab))
+
+## [0.4.0](https://github.com/Mause/duckdb_engine/compare/v0.3.4...v0.4.0) (2022-08-15)
+
+
+### Features
+
+* switch to first party sqlalchemy stubs ([cf9f626](https://github.com/Mause/duckdb_engine/commit/cf9f6268bc1da8418e7188e37fe6c0c20cb2a05e))
+
+
+### Bug Fixes
+
+* support ping on latest sqlalchemy ([bd63122](https://github.com/Mause/duckdb_engine/commit/bd631226f03f28c5fa2532b9ddd20a69c70a49e0))
+
 ## [0.3.4](https://github.com/Mause/duckdb_engine/compare/v0.3.3...v0.3.4) (2022-08-12)
 
 

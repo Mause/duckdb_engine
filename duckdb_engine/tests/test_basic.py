@@ -1,12 +1,14 @@
+import logging
+import os
 import zlib
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 import duckdb
 from hypothesis import assume, given, settings
 from hypothesis.strategies import text as text_strat
-from pytest import fixture, importorskip, mark, raises
+from pytest import LogCaptureFixture, fixture, importorskip, mark, raises
 from sqlalchemy import (
     Column,
     ForeignKey,
@@ -148,6 +150,24 @@ def test_get_views(engine: Engine) -> None:
     con = engine.connect()
     views = engine.dialect.get_view_names(con)
     assert views == ["test"]
+
+
+@mark.skipif(os.uname().machine == "aarch64", reason="not supported on aarch64")
+def test_preload_extension() -> None:
+    duckdb.default_connection.execute("INSTALL httpfs")
+    engine = create_engine(
+        "duckdb:///",
+        connect_args={
+            "preload_extensions": ["httpfs"],
+            "config": {"s3_region": "ap-southeast-2"},
+        },
+    )
+
+    # check that we get an error indicating that the extension was loaded
+    with engine.connect() as conn, raises(Exception, match="HTTP HEAD error"):
+        conn.execute(
+            "SELECT * FROM read_parquet('https://domain/path/to/file.parquet');"
+        )
 
 
 @fixture
@@ -293,3 +313,22 @@ def test_config(tmp_path: Path) -> None:
         DBAPIError, match='Cannot execute statement of type "CREATE" in read-only mode!'
     ):
         eng.execute("create table hello2 (i int)")
+
+
+def test_do_ping(tmp_path: Path, caplog: LogCaptureFixture) -> None:
+    engine = create_engine(
+        "duckdb:///" + str(tmp_path / "db"), pool_pre_ping=True, pool_size=1
+    )
+
+    logger = cast(logging.Logger, engine.pool.logger)  # type: ignore
+    logger.setLevel(logging.DEBUG)
+
+    with caplog.at_level(logging.DEBUG, logger=logger.name):
+        engine.connect()  # create a connection in the pool
+        assert (
+            engine.connect() is not None
+        )  # grab the "stale" connection, which will cause a ping
+
+        assert any(
+            "Pool pre-ping on connection" in message for message in caplog.messages
+        )
