@@ -22,7 +22,7 @@ def get_core_config() -> Set[str]:
 def apply_config(
     dialect: Dialect,
     conn: duckdb.DuckDBPyConnection,
-    ext: Dict[str, Union[str | int | bool]],
+    ext: Dict[str, Union[str, int, bool]],
 ) -> None:
     processors = {k: v.literal_processor(dialect=dialect) for k, v in TYPES.items()}
 
