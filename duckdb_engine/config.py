@@ -24,6 +24,7 @@ def apply_config(
     conn: duckdb.DuckDBPyConnection,
     ext: Dict[str, Union[str, int, bool]],
 ) -> None:
+    # TODO: does sqlalchemy have something that could do this for us?
     processors = {k: v.literal_processor(dialect=dialect) for k, v in TYPES.items()}
 
     for k, v in ext.items():
