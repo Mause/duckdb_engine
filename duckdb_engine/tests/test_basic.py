@@ -159,7 +159,7 @@ def test_preload_extension() -> None:
         "duckdb:///",
         connect_args={
             "preload_extensions": ["httpfs"],
-            "config": {"s3_region": "ap-southeast-2"},
+            "config": {"s3_region": "ap-southeast-2", "s3_use_ssl": True},
         },
     )
 
