@@ -261,9 +261,7 @@ def test_binary(session: Session) -> None:
 
 def test_comment_support() -> None:
     "comments not yet supported by duckdb"
-    exc = getattr(duckdb, "StandardException", DBAPI.Error)
-
-    with raises(exc, match="syntax error"):
+    with raises(DBAPI.ParserException, match="syntax error"):
         duckdb.default_connection.execute('comment on sqlite_master is "hello world";')
 
 
