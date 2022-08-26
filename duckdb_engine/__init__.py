@@ -207,7 +207,7 @@ class Dialect(PGDialect_psycopg2):
         include: Any = ...,
         **kw: Any,
     ) -> Any:
-        s = "SELECT name FROM sqlite_master WHERE type='view' ORDER BY name"
-        rs = connection.exec_driver_sql(s)
+        s = f"SELECT table_name FROM information_schema.tables WHERE table_type='VIEW' and table_schema=?"
+        rs = connection.execute( s,schema if schema is not None else 'main' )
 
         return [row[0] for row in rs]
