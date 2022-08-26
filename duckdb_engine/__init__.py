@@ -208,6 +208,6 @@ class Dialect(PGDialect_psycopg2):
         **kw: Any,
     ) -> Any:
         s = f"SELECT table_name FROM information_schema.tables WHERE table_type='VIEW' and table_schema=?"
-        rs = connection.execute( s,schema if schema is not None else 'main' )
+        rs = connection.execute(s, schema if schema is not None else "main")
 
         return [row[0] for row in rs]
