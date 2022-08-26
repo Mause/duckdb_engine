@@ -70,6 +70,7 @@ class TableWithBinary(Base):
 
 class FakeModel(Base):
     __tablename__ = "fake"
+    __allow_unmapped__ = True  # sqlalchemy 2
 
     id = Column(Integer, Sequence("fakemodel_id_sequence"), primary_key=True)
     name = Column(String)
@@ -79,6 +80,8 @@ class FakeModel(Base):
 
 class Owner(Base):
     __tablename__ = "owner"
+    __allow_unmapped__ = True  # sqlalchemy 2
+
     id = Column(Integer, Sequence("owner_id"), primary_key=True)
 
     fake_id = Column(Integer, ForeignKey("fake.id"))
