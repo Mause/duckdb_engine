@@ -175,6 +175,11 @@ class Dialect(PGDialect_psycopg2):
         else:
             return pool.QueuePool
 
+    @classmethod
+    def import_dbapi(cls) -> None:
+        "for sqlalchemy 2 only"
+        __import__("duckdb")
+
     @staticmethod
     def dbapi() -> Type[DBAPI]:
         return DBAPI
