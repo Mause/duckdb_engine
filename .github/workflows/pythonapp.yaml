@@ -36,7 +36,7 @@ jobs:
           cache: poetry
       - name: Install tox
         run: |
-          python${{ matrix.python }} -m pip install --upgrade tox
+          python -m pip install --upgrade tox
         env:
           PIP_CONSTRAINT: CONSTRAINTS.txt
       - name: Lint with flake8
