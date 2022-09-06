@@ -92,7 +92,7 @@ python-versions = "*"
 
 [[package]]
 name = "duckdb"
-version = "0.4.0"
+version = "0.5.0"
 description = "DuckDB embedded database"
 category = "main"
 optional = false
@@ -730,7 +730,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.6.1"
-content-hash = "9ca25efd31557fac59501cf15b61b71050bce928f0ef117ecb0d09cc79381033"
+content-hash = "87bec093ad7e67c6f1a56f45dd38292aaf0d758885bac80a9f4315db432a7a42"
 
 [metadata.files]
 appdirs = [
@@ -858,6 +858,7 @@ duckdb = [
     {file = "duckdb-0.4.0-cp39-cp39-win_amd64.whl", hash = "sha256:7f5677229b897a90c0c32e222956e64eb0ba996dc870a1fb90427250f4ce5cb2"},
     {file = "duckdb-0.4.0.tar.gz", hash = "sha256:569e5d618de871e21dd676925349a7a5e701b87ebda3433e0c1d57627a465c1c"},
 ]
+duckdb = []
 fancycompleter = [
     {file = "fancycompleter-0.9.1-py3-none-any.whl", hash = "sha256:dd076bca7d9d524cc7f25ec8f35ef95388ffef9ef46def4d3d25e9b044ad7080"},
     {file = "fancycompleter-0.9.1.tar.gz", hash = "sha256:09e0feb8ae242abdfd7ef2ba55069a46f011814a80fe5476be48f51b00247272"},
