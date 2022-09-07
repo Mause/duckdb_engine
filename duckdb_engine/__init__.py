@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Type
 
 import duckdb
+import sqlalchemy
 from sqlalchemy import pool
 from sqlalchemy import types as sqltypes
 from sqlalchemy import util
@@ -8,7 +9,6 @@ from sqlalchemy.dialects.postgresql.base import PGInspector, PGTypeCompiler
 from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
 from sqlalchemy.engine.url import URL
 from sqlalchemy.ext.compiler import compiles
-import sqlalchemy
 
 from . import datatypes
 from .config import apply_config, get_core_config
@@ -209,9 +209,9 @@ class Dialect(PGDialect_psycopg2):
         **kw: Any,
     ) -> Any:
         schema = schema if schema is not None else "main"
-        if sqlalchemy.__version__<'1.4':
+        if sqlalchemy.__version__ < "1.4":
             s = f"SELECT table_name FROM information_schema.tables WHERE table_type='VIEW' and table_schema=? "
-            rs = connection.execute(s , schema)
+            rs = connection.execute(s, schema)
         else:
             s = f"SELECT table_name FROM information_schema.tables WHERE table_type='VIEW' and table_schema='%s' "
             schema = schema if schema is not None else "main"
