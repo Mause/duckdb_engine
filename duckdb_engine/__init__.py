@@ -207,7 +207,7 @@ class Dialect(PGDialect_psycopg2):
         include: Any = None,
         **kw: Any,
     ) -> Any:
-        s = f"SELECT table_name FROM information_schema.tables WHERE table_type='VIEW' and table_schema=?"
-        rs = connection.execute(s, schema if schema is not None else "main")
+        s = f"SELECT table_name FROM information_schema.tables WHERE table_type='VIEW' and table_schema=%s "
+        rs = connection.exec_driver_sql(s, % schema if schema is not None else "main")
 
         return [row[0] for row in rs]
