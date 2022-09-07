@@ -8,7 +8,7 @@ from typing import Any, Optional, cast
 import duckdb
 from hypothesis import assume, given, settings
 from hypothesis.strategies import text as text_strat
-from pytest import LogCaptureFixture, fixture, importorskip, mark, raises, xfail
+from pytest import LogCaptureFixture, fixture, importorskip, mark, raises
 from sqlalchemy import (
     Column,
     ForeignKey,
@@ -146,16 +146,20 @@ def test_get_views(engine: Engine) -> None:
     assert views == []
 
     engine.execute(text("create view test as select 1"))
+    engine.execute(
+        text("create schema scheme; create view scheme.schema_test as select 1")
+    )
 
     con = engine.connect()
     views = engine.dialect.get_view_names(con)
     assert views == ["test"]
 
+    views = engine.dialect.get_view_names(con, schema="scheme")
+    assert views == ["schema_test"]
+
 
 @mark.skipif(os.uname().machine == "aarch64", reason="not supported on aarch64")
 def test_preload_extension() -> None:
-    if duckdb.__version__ != "0.4.0":  # type: ignore
-        xfail(reason="does not match DuckDB version")
     duckdb.default_connection.execute("INSTALL httpfs")
     engine = create_engine(
         "duckdb:///",
