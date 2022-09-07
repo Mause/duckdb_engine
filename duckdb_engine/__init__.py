@@ -8,6 +8,7 @@ from sqlalchemy.dialects.postgresql.base import PGInspector, PGTypeCompiler
 from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
 from sqlalchemy.engine.url import URL
 from sqlalchemy.ext.compiler import compiles
+import sqlalchemy
 
 from . import datatypes
 from .config import apply_config, get_core_config
@@ -207,8 +208,13 @@ class Dialect(PGDialect_psycopg2):
         include: Any = None,
         **kw: Any,
     ) -> Any:
-        s = f"SELECT table_name FROM information_schema.tables WHERE table_type='VIEW' and table_schema=%s "
         schema = schema if schema is not None else "main"
-        rs = connection.exec_driver_sql(s % schema)
+        if sqlalchemy.__version__<'1.4':
+            s = f"SELECT table_name FROM information_schema.tables WHERE table_type='VIEW' and table_schema=? "
+            rs = connection.execute(s , schema)
+        else:
+            s = f"SELECT table_name FROM information_schema.tables WHERE table_type='VIEW' and table_schema='%s' "
+            schema = schema if schema is not None else "main"
+            rs = connection.exec_driver_sql(s % schema)
 
         return [row[0] for row in rs]
