@@ -203,8 +203,8 @@ class Dialect(PGDialect_psycopg2):
     def get_view_names(
         self,
         connection: Any,
-        schema: Optional[Any] = ...,
-        include: Any = ...,
+        schema: Optional[Any] = None,
+        include: Any = None,
         **kw: Any,
     ) -> Any:
         s = f"SELECT table_name FROM information_schema.tables WHERE table_type='VIEW' and table_schema=?"
