@@ -25,7 +25,8 @@ from sqlalchemy import (
     types,
 )
 from sqlalchemy.dialects import registry  # type: ignore
-from sqlalchemy.engine import Engine, Inspector
+from sqlalchemy.engine import Engine
+from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, relationship, sessionmaker
