@@ -1,7 +1,7 @@
 from typing import Type
 
 from pytest import mark
-from sqlalchemy import Column, Integer, MetaData, Table, inspect
+from sqlalchemy import Column, Integer, MetaData, Table
 from sqlalchemy.engine import Engine
 
 from .. import datatypes as dt
@@ -20,4 +20,4 @@ def test_unsigned_integer_type(engine: Engine, coltype: Type[Integer]) -> None:
         ),
     )
     meta.create_all()
-    assert inspect(engine).has_table(tname)
+    assert engine.has_table(tname)

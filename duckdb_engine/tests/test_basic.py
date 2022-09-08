@@ -20,12 +20,12 @@ from sqlalchemy import (
     Table,
     create_engine,
     inspect,
-    select,
     text,
     types,
 )
 from sqlalchemy.dialects import registry  # type: ignore
-from sqlalchemy.engine import Engine, Inspector
+from sqlalchemy.engine import Engine
+from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, relationship, sessionmaker
@@ -234,7 +234,7 @@ def test_table_reflect(session: Session, engine: Engine) -> None:
     user_table = Table("test", meta)
     insp = inspect(engine)
 
-    insp.reflect_table(user_table, None)
+    insp.reflecttable(user_table, None)
 
 
 def test_fetch_df_chunks() -> None:
@@ -264,7 +264,7 @@ def test_binary(session: Session) -> None:
     session.add(a)
     session.commit()
 
-    b: TableWithBinary = session.scalar(select(TableWithBinary))
+    b: TableWithBinary = session.query(TableWithBinary).one()
     assert b.text == "Hello World!"
 
 
@@ -286,8 +286,9 @@ def test_sessions(session: Session) -> None:
     session.add(c)
     session.commit()
 
-    c = session.get(IntervalModel, 1)  # type: ignore
-    c.field = timedelta(days=5)
+    c2 = session.query(IntervalModel).get(1)
+    assert c2
+    c2.field = timedelta(days=5)
     session.flush()
     session.commit()
 
