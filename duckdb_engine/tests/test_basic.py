@@ -284,8 +284,9 @@ def test_sessions(session: Session) -> None:
     session.add(c)
     session.commit()
 
-    c = session.get(IntervalModel, 1)  # type: ignore
-    c.field = timedelta(days=5)
+    c2 = session.query(IntervalModel).get(1)
+    assert c2
+    c2.field = timedelta(days=5)
     session.flush()
     session.commit()
 
