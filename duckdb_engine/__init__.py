@@ -158,6 +158,8 @@ class Dialect(PGDialect_psycopg2):
 
         ext = {k: config.pop(k) for k in list(config) if k not in core_keys}
 
+        if 'dbname' in cparams:
+            cparams['database'] = cparams.pop('dbname')  # sqlalchemy 2
         conn = duckdb.connect(*cargs, **cparams)
 
         for extension in preload_extensions:
