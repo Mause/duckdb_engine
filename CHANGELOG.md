@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.6.3](https://github.com/Mause/duckdb_engine/compare/v0.6.2...v0.6.3) (2022-09-08)
+
+
+### Bug Fixes
+
+* add schema support to get_view_names ([b58bf32](https://github.com/Mause/duckdb_engine/commit/b58bf3234b77e26871fb4373358d4b55627eae8b))
+* correct get_view_names for older sqlalchemy ([b58bf32](https://github.com/Mause/duckdb_engine/commit/b58bf3234b77e26871fb4373358d4b55627eae8b))
+* repin duckdb & poetry ([#400](https://github.com/Mause/duckdb_engine/issues/400)) ([4586852](https://github.com/Mause/duckdb_engine/commit/4586852eae2b49241e32b02a40d16eefa7d809c1))
+
 ## [0.6.2](https://github.com/Mause/duckdb_engine/compare/v0.6.1...v0.6.2) (2022-08-25)
 
 
