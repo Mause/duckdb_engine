@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.2](https://github.com/Mause/duckdb_engine/compare/v0.6.1...v0.6.2) (2022-08-25)
+
+
+### Bug Fixes
+
+* fix bleeding edge duckdb for exceptions changes ([f955264](https://github.com/Mause/duckdb_engine/commit/f9552642fe212d114a3670068dc73243594a0cec))
+
 ## [0.6.1](https://github.com/Mause/duckdb_engine/compare/v0.6.0...v0.6.1) (2022-08-23)
 
 

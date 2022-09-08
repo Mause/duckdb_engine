@@ -12,7 +12,7 @@ from sqlalchemy.ext.compiler import compiles
 from . import datatypes
 from .config import apply_config, get_core_config
 
-__version__ = "0.6.1"
+__version__ = "0.6.2"
 
 if TYPE_CHECKING:
     from sqlalchemy.base import Connection
@@ -33,6 +33,8 @@ class DBAPI:
 
     # this is being fixed upstream to add a proper exception hierarchy
     Error = getattr(duckdb, "Error", RuntimeError)
+    TransactionException = getattr(duckdb, "TransactionException", Error)
+    ParserException = getattr(duckdb, "ParserException", Error)
 
     @staticmethod
     def Binary(x: Any) -> Any:
@@ -193,7 +195,7 @@ class Dialect(PGDialect_psycopg2):
     def do_rollback(self, connection: "Connection") -> None:
         try:
             super().do_rollback(connection)
-        except RuntimeError as e:
+        except DBAPI.TransactionException as e:
             if (
                 e.args[0]
                 != "TransactionContext Error: cannot rollback - no transaction is active"
@@ -206,11 +208,11 @@ class Dialect(PGDialect_psycopg2):
     def get_view_names(
         self,
         connection: Any,
-        schema: Optional[Any] = ...,
-        include: Any = ...,
+        schema: Optional[Any] = None,
+        include: Any = None,
         **kw: Any,
     ) -> Any:
-        s = "SELECT name FROM sqlite_master WHERE type='view' ORDER BY name"
-        rs = connection.exec_driver_sql(s)
+        s = "SELECT table_name FROM information_schema.tables WHERE table_type='VIEW' and table_schema=?"
+        rs = connection.execute(s, schema if schema is not None else "main")
 
         return [row[0] for row in rs]

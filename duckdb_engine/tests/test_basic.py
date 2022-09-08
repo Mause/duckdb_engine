@@ -149,10 +149,16 @@ def test_get_views(engine: Engine) -> None:
     assert views == []
 
     engine.execute(text("create view test as select 1"))
+    engine.execute(
+        text("create schema scheme; create view scheme.schema_test as select 1")
+    )
 
     con = engine.connect()
     views = engine.dialect.get_view_names(con)
     assert views == ["test"]
+
+    views = engine.dialect.get_view_names(con, schema="scheme")
+    assert views == ["schema_test"]
 
 
 @mark.skipif(os.uname().machine == "aarch64", reason="not supported on aarch64")
@@ -264,9 +270,7 @@ def test_binary(session: Session) -> None:
 
 def test_comment_support() -> None:
     "comments not yet supported by duckdb"
-    exc = getattr(duckdb, "StandardException", DBAPI.Error)
-
-    with raises(exc, match="syntax error"):
+    with raises(DBAPI.ParserException, match="syntax error"):
         duckdb.default_connection.execute('comment on sqlite_master is "hello world";')
 
 
