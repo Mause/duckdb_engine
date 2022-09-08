@@ -232,7 +232,7 @@ def test_table_reflect(session: Session, engine: Engine) -> None:
     user_table = Table("test", meta)
     insp = inspect(engine)
 
-    insp.reflect_table(user_table, None)
+    insp.reflecttable(user_table, None)
 
 
 def test_fetch_df_chunks() -> None:
