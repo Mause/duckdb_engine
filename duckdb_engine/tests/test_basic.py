@@ -20,7 +20,6 @@ from sqlalchemy import (
     Table,
     create_engine,
     inspect,
-    select,
     text,
     types,
 )
@@ -262,7 +261,7 @@ def test_binary(session: Session) -> None:
     session.add(a)
     session.commit()
 
-    b: TableWithBinary = session.scalar(select(TableWithBinary))
+    b: TableWithBinary = session.query(TableWithBinary).one()
     assert b.text == "Hello World!"
 
 
