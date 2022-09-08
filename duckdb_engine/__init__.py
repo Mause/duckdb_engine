@@ -183,7 +183,7 @@ class Dialect(PGDialect_psycopg2):
     def import_dbapi(cls) -> None:
         "for sqlalchemy 2 only"
         __import__("duckdb")
-        
+
     def initialize(self, connection: "Connection") -> None:
         "for sqlalchemy 2 only"
 
