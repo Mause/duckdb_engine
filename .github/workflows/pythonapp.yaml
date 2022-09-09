@@ -34,6 +34,11 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           cache: poetry
+      - run: python -m pip wheel numpy==1.19.3
+      - uses: actions/upload-artifacts@v3
+        with:
+          path: '*.whl'
+          name: wheels
       - name: Install tox
         run: |
           python -m pip install --upgrade tox
