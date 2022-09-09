@@ -35,7 +35,7 @@ jobs:
           python-version: ${{ matrix.python }}
           cache: poetry
       - run: python -m pip wheel numpy==1.19.3
-      - uses: actions/upload-artifacts@v3
+      - uses: actions/upload-artifact@v3
         with:
           path: '*.whl'
           name: wheels
