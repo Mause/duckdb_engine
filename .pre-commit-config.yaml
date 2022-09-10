@@ -31,7 +31,7 @@ repos:
         args:
           - --py36-plus
   - repo: https://github.com/psf/black
-    rev: 22.6.0
+    rev: 22.8.0
     hooks:
       - id: black
   - repo: https://github.com/pre-commit/mirrors-mypy
@@ -42,7 +42,7 @@ repos:
           - "duckdb==0.4.0"
           - "pytest==6.2.4"
           - "hypothesis==6.14.1"
-          - "sqlalchemy-stubs==0.4"
+          - "sqlalchemy[mypy]"
           - "types-setuptools==57.4.17"
   - repo: https://github.com/PyCQA/flake8
     rev: '5.0.4'  # pick a git hash / tag to point to

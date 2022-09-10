@@ -1,18 +1,29 @@
-import warnings
-from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Type
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Type
 
 import duckdb
 from sqlalchemy import pool
 from sqlalchemy import types as sqltypes
 from sqlalchemy import util
-from sqlalchemy.dialects.postgresql import dialect as postgres_dialect
-from sqlalchemy.dialects.postgresql.base import PGExecutionContext, PGInspector
+from sqlalchemy.dialects.postgresql.base import PGInspector, PGTypeCompiler
+from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
 from sqlalchemy.engine.url import URL
+from sqlalchemy.ext.compiler import compiles
 
-__version__ = "0.3.3"
+from . import datatypes
+from .config import apply_config, get_core_config
+
+__version__ = "0.6.3"
 
 if TYPE_CHECKING:
-    from sqlalchemy.sql.ddl import ExecutableDDLElement  # type: ignore
+    from sqlalchemy.base import Connection
+
+
+@compiles(datatypes.UInt64, "duckdb")  # type: ignore
+@compiles(datatypes.UInt32, "duckdb")  # type: ignore
+@compiles(datatypes.UInt16, "duckdb")  # type: ignore
+@compiles(datatypes.UInt8, "duckdb")  # type: ignore
+def compile_uint(element: sqltypes.Integer, compiler: PGTypeCompiler, **kw: Any) -> str:
+    return type(element).__name__
 
 
 class DBAPI:
@@ -22,6 +33,8 @@ class DBAPI:
 
     # this is being fixed upstream to add a proper exception hierarchy
     Error = getattr(duckdb, "Error", RuntimeError)
+    TransactionException = getattr(duckdb, "TransactionException", Error)
+    ParserException = getattr(duckdb, "ParserException", Error)
 
     @staticmethod
     def Binary(x: Any) -> Any:
@@ -41,12 +54,14 @@ class DuckDBInspector(PGInspector):
 class ConnectionWrapper:
     c: duckdb.DuckDBPyConnection
     notices: List[str]
+    autocommit = None  # duckdb doesn't support setting autocommit
+    closed = False
 
     def __init__(self, c: duckdb.DuckDBPyConnection) -> None:
         self.c = c
         self.notices = list()
 
-    def cursor(self) -> "ConnectionWrapper":
+    def cursor(self) -> "Connection":
         return self
 
     def fetchmany(self, size: int = None) -> List:
@@ -66,7 +81,7 @@ class ConnectionWrapper:
         return getattr(self.c, name)
 
     @property
-    def connection(self) -> "ConnectionWrapper":
+    def connection(self) -> "Connection":
         return self
 
     def close(self) -> None:
@@ -112,40 +127,17 @@ class DuckDBEngineWarning(Warning):
     pass
 
 
-class DuckDBEngineCommentWarning(DuckDBEngineWarning):
-    pass
-
-
-def remove_comments(ddl: "ExecutableDDLElement") -> None:
-    # TODO: swap these attribute checks for type checks
-    if hasattr(ddl, "element"):
-        remove_comments(ddl.element)
-    elif hasattr(ddl, "elements"):
-        for el in ddl.elements:
-            remove_comments(el)
-    elif hasattr(ddl, "columns"):
-        for col in ddl.columns:
-            remove_comments(col)
-
-    if hasattr(ddl, "comment") and ddl.comment:
-        ddl.comment = None
-        warnings.warn(
-            "Stripping a comment, as duckdb does not support them",
-            category=DuckDBEngineCommentWarning,
-        )
-
-
-class Dialect(postgres_dialect):
+class Dialect(PGDialect_psycopg2):
     name = "duckdb"
     driver = "duckdb_engine"
     _has_events = False
-    identifier_preparer = None
     supports_statement_cache = False
+    supports_comments = False
     supports_sane_rowcount = False
     inspector = DuckDBInspector
     # colspecs TODO: remap types to duckdb types
     colspecs = util.update_copy(
-        postgres_dialect.colspecs,
+        PGDialect_psycopg2.colspecs,
         {
             # the psycopg2 driver registers a _PGNumeric with custom logic for
             # postgres type_codes (such as 701 for float) that duckdb doesn't have
@@ -158,34 +150,25 @@ class Dialect(postgres_dialect):
         kwargs["use_native_hstore"] = False
         super().__init__(*args, **kwargs)
 
-    def connect(
-        self, database: str, read_only: bool = False, config: Dict = None
-    ) -> ConnectionWrapper:
-        return ConnectionWrapper(duckdb.connect(database, read_only, config or {}))
+    def connect(self, *cargs: Any, **cparams: Any) -> "Connection":
+
+        core_keys = get_core_config()
+        preload_extensions = cparams.pop("preload_extensions", [])
+        config = cparams.get("config", {})
+
+        ext = {k: config.pop(k) for k in list(config) if k not in core_keys}
+
+        conn = duckdb.connect(*cargs, **cparams)
+
+        for extension in preload_extensions:
+            conn.execute(f"LOAD {extension}")
+
+        apply_config(self, conn, ext)
+
+        return ConnectionWrapper(conn)
 
     def on_connect(self) -> None:
         pass
-
-    def ddl_compiler(
-        self,
-        dialect: str,
-        ddl: "ExecutableDDLElement",
-        **kwargs: Any,
-    ) -> postgres_dialect.ddl_compiler:
-        # TODO: enforce no `serial` type
-
-        remove_comments(ddl)
-
-        return postgres_dialect.ddl_compiler(dialect, ddl, **kwargs)
-
-    def do_execute(
-        self,
-        cursor: ConnectionWrapper,
-        statement: str,
-        parameters: Any,
-        context: PGExecutionContext,
-    ) -> None:
-        cursor.execute(statement, parameters, context)
 
     @classmethod
     def get_pool_class(cls, url: URL) -> Type[pool.Pool]:
@@ -194,57 +177,37 @@ class Dialect(postgres_dialect):
         else:
             return pool.QueuePool
 
-    def do_executemany(
-        self,
-        cursor: ConnectionWrapper,
-        statement: str,
-        parameters: List[Any],
-        context: PGExecutionContext = None,
-    ) -> None:
-        cursor.executemany(statement, parameters, context)
-
     @staticmethod
     def dbapi() -> Type[DBAPI]:
         return DBAPI
 
-    def create_connect_args(self, u: URL) -> Tuple[Tuple, Dict]:
-        if hasattr(u, "render_as_string"):
-            # Compatible with SQLAlchemy >= 1.4
-            string_representation = u.render_as_string(hide_password=False)  # type: ignore
-        else:
-            # Compatible with SQLAlchemy < 1.4
-            string_representation = u.__to_string__(hide_password=False)
-        return (), {"database": string_representation.split("///")[1]}
-
-    def _get_server_version_info(
-        self, connection: ConnectionWrapper
-    ) -> Tuple[int, int]:
+    def _get_server_version_info(self, connection: "Connection") -> Tuple[int, int]:
         return (8, 0)
 
-    def get_default_isolation_level(self, connection: ConnectionWrapper) -> None:
+    def get_default_isolation_level(self, connection: "Connection") -> None:
         raise NotImplementedError()
 
-    def do_rollback(self, connection: ConnectionWrapper) -> None:
+    def do_rollback(self, connection: "Connection") -> None:
         try:
             super().do_rollback(connection)
-        except RuntimeError as e:
+        except DBAPI.TransactionException as e:
             if (
                 e.args[0]
                 != "TransactionContext Error: cannot rollback - no transaction is active"
             ):
                 raise e
 
-    def do_begin(self, connection: ConnectionWrapper) -> None:
+    def do_begin(self, connection: "Connection") -> None:
         connection.execute("begin")
 
-    @classmethod
-    def get_dialect_cls(cls, u: str) -> Type["Dialect"]:
-        return cls
-
     def get_view_names(
-        self, connection: ConnectionWrapper, schema: str = None, **kwargs: Any
-    ) -> List[str]:
-        s = "SELECT name FROM sqlite_master WHERE type='view' ORDER BY name"
-        rs = connection.exec_driver_sql(s)
+        self,
+        connection: Any,
+        schema: Optional[Any] = None,
+        include: Any = None,
+        **kw: Any,
+    ) -> Any:
+        s = "SELECT table_name FROM information_schema.tables WHERE table_type='VIEW' and table_schema=?"
+        rs = connection.execute(s, schema if schema is not None else "main")
 
         return [row[0] for row in rs]
