@@ -65,10 +65,15 @@ class ConnectionWrapper:
         return self
 
     def fetchmany(self, size: int = None) -> List:
-        # TODO: remove this once duckdb supports fetchmany natively
+        if hasattr(self.c, "fetchmany"):
+            # fetchmany was only added in 0.5.0
+            if size is None:
+                return self.c.fetchmany()
+            else:
+                return self.c.fetchmany(size)
+
         try:
-            # TODO: add size parameter here once the next duckdb version is released
-            return (self.c.fetch_df_chunk()).values.tolist()  # type: ignore
+            return (self.c.fetch_df_chunk()).values.tolist()
         except RuntimeError as e:
             if e.args[0].startswith(
                 "Invalid Input Error: Attempting to fetch from an unsuccessful or closed streaming query result"
