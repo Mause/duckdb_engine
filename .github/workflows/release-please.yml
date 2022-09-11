@@ -13,3 +13,4 @@ jobs:
         with:
           release-type: python
           package-name: duckdb_engine
+          token: ${{ secrets.ACCESS_TOKEN }}

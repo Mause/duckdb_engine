@@ -1,4 +1,5 @@
 import logging
+import os
 import zlib
 from datetime import timedelta
 from pathlib import Path
@@ -19,12 +20,12 @@ from sqlalchemy import (
     Table,
     create_engine,
     inspect,
-    select,
     text,
     types,
 )
 from sqlalchemy.dialects import registry  # type: ignore
-from sqlalchemy.engine import Engine, Inspector
+from sqlalchemy.engine import Engine
+from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, relationship, sessionmaker
@@ -145,10 +146,34 @@ def test_get_views(engine: Engine) -> None:
     assert views == []
 
     engine.execute(text("create view test as select 1"))
+    engine.execute(
+        text("create schema scheme; create view scheme.schema_test as select 1")
+    )
 
     con = engine.connect()
     views = engine.dialect.get_view_names(con)
     assert views == ["test"]
+
+    views = engine.dialect.get_view_names(con, schema="scheme")
+    assert views == ["schema_test"]
+
+
+@mark.skipif(os.uname().machine == "aarch64", reason="not supported on aarch64")
+def test_preload_extension() -> None:
+    duckdb.default_connection.execute("INSTALL httpfs")
+    engine = create_engine(
+        "duckdb:///",
+        connect_args={
+            "preload_extensions": ["httpfs"],
+            "config": {"s3_region": "ap-southeast-2", "s3_use_ssl": True},
+        },
+    )
+
+    # check that we get an error indicating that the extension was loaded
+    with engine.connect() as conn, raises(Exception, match="HTTP HEAD error"):
+        conn.execute(
+            "SELECT * FROM read_parquet('https://domain/path/to/file.parquet');"
+        )
 
 
 @fixture
@@ -206,7 +231,7 @@ def test_table_reflect(session: Session, engine: Engine) -> None:
     user_table = Table("test", meta)
     insp = inspect(engine)
 
-    insp.reflect_table(user_table, None)
+    insp.reflecttable(user_table, None)
 
 
 def test_fetch_df_chunks() -> None:
@@ -236,15 +261,13 @@ def test_binary(session: Session) -> None:
     session.add(a)
     session.commit()
 
-    b: TableWithBinary = session.scalar(select(TableWithBinary))
+    b: TableWithBinary = session.query(TableWithBinary).one()
     assert b.text == "Hello World!"
 
 
 def test_comment_support() -> None:
     "comments not yet supported by duckdb"
-    exc = getattr(duckdb, "StandardException", DBAPI.Error)
-
-    with raises(exc, match="syntax error"):
+    with raises(DBAPI.ParserException, match="syntax error"):
         duckdb.default_connection.execute('comment on sqlite_master is "hello world";')
 
 
@@ -260,8 +283,9 @@ def test_sessions(session: Session) -> None:
     session.add(c)
     session.commit()
 
-    c = session.get(IntervalModel, 1)  # type: ignore
-    c.field = timedelta(days=5)
+    c2 = session.query(IntervalModel).get(1)
+    assert c2
+    c2.field = timedelta(days=5)
     session.flush()
     session.commit()
 

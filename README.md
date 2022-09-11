@@ -4,6 +4,20 @@
 
 Basic SQLAlchemy driver for [DuckDB](https://duckdb.org/)
 
+<!--ts-->
+* [duckdb_engine](#duckdb_engine)
+   * [Installation](#installation)
+   * [Usage](#usage)
+   * [Configuration](#configuration)
+   * [How to register a pandas DataFrame](#how-to-register-a-pandas-dataframe)
+   * [Things to keep in mind](#things-to-keep-in-mind)
+      * [Auto-incrementing ID columns](#auto-incrementing-id-columns)
+      * [Pandas read_sql() chunksize](#pandas-read_sql-chunksize)
+      * [Unsigned integer support](#unsigned-integer-support)
+   * [Preloading extensions (experimental)](#preloading-extensions-experimental)
+   * [The name](#the-name)
+<!--te-->
+
 ## Installation
 ```sh
 $ pip install duckdb-engine
@@ -41,6 +55,11 @@ frank = session.query(FakeModel).one()
 
 assert frank.name == "Frank"
 ```
+
+## Usage in IPython/Jupyter
+
+With IPython-SQL and DuckDB-Engine you can query DuckDB natively in your notebook!
+Alex Monahan has a great demo of this on [his blog](https://alex-monahan.github.io/2021/08/22/Python_and_SQL_Better_Together.html#an-example-workflow-with-duckdb)
 
 ## Configuration
 
@@ -104,6 +123,28 @@ The `pandas.read_sql()` method can read tables from `duckdb_engine` into DataFra
 >>> engine = sqlalchemy.create_engine('duckdb:////path/to/duck.db')
 >>> df = pd.read_sql('users', engine)                ### Works as expected
 >>> df = pd.read_sql('users', engine, chunksize=25)  ### Throws an exception
+```
+
+### Unsigned integer support
+
+Unsigned integers are supported by DuckDB, and are available in [`duckdb_engine.datatypes`](duckdb_engine/datatypes.py).
+
+## Preloading extensions (experimental)
+
+Until the DuckDB python client allows you to natively preload extensions, I've added experimental support via a `connect_args` parameter
+
+```python
+from sqlalchemy import create_engine
+
+create_engine(
+    'duckdb:///:memory:',
+    connect_args={
+        'preload_extensions': ['https'],
+        'config': {
+            's3_region': 'ap-southeast-1'
+        }
+    }
+)
 ```
 
 ## The name

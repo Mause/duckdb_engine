@@ -1,17 +1,31 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Type
+import warnings
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Type, cast
 
 import duckdb
 from sqlalchemy import pool
 from sqlalchemy import types as sqltypes
 from sqlalchemy import util
-from sqlalchemy.dialects.postgresql.base import PGInspector
+from sqlalchemy.dialects.postgresql.base import PGInspector, PGTypeCompiler
 from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
 from sqlalchemy.engine.url import URL
+from sqlalchemy.ext.compiler import compiles
 
-__version__ = "0.4.0"
+from . import datatypes
+from .config import apply_config, get_core_config
+
+__version__ = "0.6.4"
 
 if TYPE_CHECKING:
     from sqlalchemy.base import Connection
+    from sqlalchemy.engine.interfaces import _IndexDict
+
+
+@compiles(datatypes.UInt64, "duckdb")  # type: ignore
+@compiles(datatypes.UInt32, "duckdb")  # type: ignore
+@compiles(datatypes.UInt16, "duckdb")  # type: ignore
+@compiles(datatypes.UInt8, "duckdb")  # type: ignore
+def compile_uint(element: sqltypes.Integer, compiler: PGTypeCompiler, **kw: Any) -> str:
+    return type(element).__name__
 
 
 class DBAPI:
@@ -21,6 +35,8 @@ class DBAPI:
 
     # this is being fixed upstream to add a proper exception hierarchy
     Error = getattr(duckdb, "Error", RuntimeError)
+    TransactionException = getattr(duckdb, "TransactionException", Error)
+    ParserException = getattr(duckdb, "ParserException", Error)
 
     @staticmethod
     def Binary(x: Any) -> Any:
@@ -51,10 +67,15 @@ class ConnectionWrapper:
         return self
 
     def fetchmany(self, size: int = None) -> List:
-        # TODO: remove this once duckdb supports fetchmany natively
+        if hasattr(self.c, "fetchmany"):
+            # fetchmany was only added in 0.5.0
+            if size is None:
+                return self.c.fetchmany()
+            else:
+                return self.c.fetchmany(size)
+
         try:
-            # TODO: add size parameter here once the next duckdb version is released
-            return (self.c.fetch_df_chunk()).values.tolist()  # type: ignore
+            return cast(list, self.c.fetch_df_chunk().values.tolist())
         except RuntimeError as e:
             if e.args[0].startswith(
                 "Invalid Input Error: Attempting to fetch from an unsuccessful or closed streaming query result"
@@ -120,7 +141,6 @@ class Dialect(PGDialect_psycopg2):
     supports_statement_cache = False
     supports_comments = False
     supports_sane_rowcount = False
-    supports_comments = False
     inspector = DuckDBInspector
     # colspecs TODO: remap types to duckdb types
     colspecs = util.update_copy(
@@ -138,7 +158,21 @@ class Dialect(PGDialect_psycopg2):
         super().__init__(*args, **kwargs)
 
     def connect(self, *cargs: Any, **cparams: Any) -> "Connection":
-        return ConnectionWrapper(duckdb.connect(*cargs, **cparams))
+
+        core_keys = get_core_config()
+        preload_extensions = cparams.pop("preload_extensions", [])
+        config = cparams.get("config", {})
+
+        ext = {k: config.pop(k) for k in list(config) if k not in core_keys}
+
+        conn = duckdb.connect(*cargs, **cparams)
+
+        for extension in preload_extensions:
+            conn.execute(f"LOAD {extension}")
+
+        apply_config(self, conn, ext)
+
+        return ConnectionWrapper(conn)
 
     def on_connect(self) -> None:
         pass
@@ -151,7 +185,7 @@ class Dialect(PGDialect_psycopg2):
             return pool.QueuePool
 
     @staticmethod
-    def dbapi() -> Type[DBAPI]:
+    def dbapi(**kwargs: Any) -> Type[DBAPI]:
         return DBAPI
 
     def _get_server_version_info(self, connection: "Connection") -> Tuple[int, int]:
@@ -163,7 +197,7 @@ class Dialect(PGDialect_psycopg2):
     def do_rollback(self, connection: "Connection") -> None:
         try:
             super().do_rollback(connection)
-        except RuntimeError as e:
+        except DBAPI.TransactionException as e:
             if (
                 e.args[0]
                 != "TransactionContext Error: cannot rollback - no transaction is active"
@@ -176,11 +210,24 @@ class Dialect(PGDialect_psycopg2):
     def get_view_names(
         self,
         connection: Any,
-        schema: Optional[Any] = ...,
-        include: Any = ...,
-        **kw: Any
+        schema: Optional[Any] = None,
+        include: Any = None,
+        **kw: Any,
     ) -> Any:
-        s = "SELECT name FROM sqlite_master WHERE type='view' ORDER BY name"
-        rs = connection.exec_driver_sql(s)
+        s = "SELECT table_name FROM information_schema.tables WHERE table_type='VIEW' and table_schema=?"
+        rs = connection.execute(s, schema if schema is not None else "main")
 
         return [row[0] for row in rs]
+
+    def get_indexes(
+        self,
+        connection: "Connection",
+        table_name: str,
+        schema: Optional[str] = None,
+        **kw: Any,
+    ) -> List["_IndexDict"]:
+        warnings.warn(
+            "duckdb-engine doesn't yet support reflection on indices",
+            DuckDBEngineWarning,
+        )
+        return []
