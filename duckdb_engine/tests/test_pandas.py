@@ -14,7 +14,7 @@ from typing import Dict, List, Optional, Tuple, Union, cast
 
 import pandas as pd
 from pandas.testing import assert_frame_equal
-from pytest import mark, xfail
+from pytest import importorskip, mark
 from sqlalchemy import create_engine
 
 _possible_args = OrderedDict(
@@ -87,7 +87,6 @@ table_name = "test_read"
 
 # Perform the test twice:
 # Once for reading the table name (testing reflection),
-@mark.xfail(reason="reflection not yet supported in duckdb")
 @mark.parametrize(params_strings["read_sql"], params["read_sql"])
 def test_read_sql_reflection(
     chunksize: Tuple[Optional[int]],
@@ -113,7 +112,7 @@ def run_query(query: str, chunksize: Optional[int]) -> None:
     if chunksize is None:
         assert len(chunks[0]) == sample_rowcount
     else:
-        xfail(reason="This will fail until the next duckdb release")
+        importorskip("duckdb", "0.5.0")
 
         # Assert that the chunks are the size specified.
         assert len(chunks[0]) == chunksize
