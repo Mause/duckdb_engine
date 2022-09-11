@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/Mause/duckdb_engine/compare/v0.6.4...v0.7.0) (2022-09-11)
+
+
+### Features
+
+* test against python 3.10 ([#344](https://github.com/Mause/duckdb_engine/issues/344)) ([cc7ecc7](https://github.com/Mause/duckdb_engine/commit/cc7ecc7c5ce67a4efcc37b01495a6f6d863e63c2))
+
 ## [0.6.4](https://github.com/Mause/duckdb_engine/compare/v0.6.3...v0.6.4) (2022-09-11)
 
 
