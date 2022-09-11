@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.6.4](https://github.com/Mause/duckdb_engine/compare/v0.6.3...v0.6.4) (2022-09-11)
+
+
+### Bug Fixes
+
+* stub out Dialect#get_indexes for now ([1d450ab](https://github.com/Mause/duckdb_engine/commit/1d450abd21afeff61f355ac2b94b0d7d80adac36))
+* use real fetchmany now it's available ([06400b4](https://github.com/Mause/duckdb_engine/commit/06400b464c100dedf43960b9e89470f8f53b7f70))
+
+
+### Dependencies
+
+* bump locked duckdb version ([1a83643](https://github.com/Mause/duckdb_engine/commit/1a8364309ee89db614d3dd7caafda5ba1ca51786))
+
 ## [0.6.3](https://github.com/Mause/duckdb_engine/compare/v0.6.2...v0.6.3) (2022-09-08)
 
 
