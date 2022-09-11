@@ -10,9 +10,9 @@ from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
 from sqlalchemy.engine.url import URL
 from sqlalchemy.ext.compiler import compiles
 
-from .sql_parsing import register_dataframe
 from . import datatypes
 from .config import apply_config, get_core_config
+from .sql_parsing import register_dataframe
 
 __version__ = "0.6.4"
 
