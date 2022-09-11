@@ -225,7 +225,7 @@ class Dialect(PGDialect_psycopg2):
         table_name: str,
         schema: Optional[str] = None,
         **kw: Any,
-    ) -> List[_IndexDict]:
+    ) -> List["_IndexDict"]:
         warnings.warn(
             "duckdb-engine doesn't yet support reflection on indices",
             DuckDBEngineWarning,
