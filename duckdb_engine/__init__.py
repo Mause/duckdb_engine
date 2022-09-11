@@ -1,4 +1,5 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Type
+import warnings
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Type, cast
 
 import duckdb
 from sqlalchemy import pool
@@ -16,6 +17,7 @@ __version__ = "0.6.3"
 
 if TYPE_CHECKING:
     from sqlalchemy.base import Connection
+    from sqlalchemy.engine.interfaces import _IndexDict
 
 
 @compiles(datatypes.UInt64, "duckdb")  # type: ignore
@@ -65,10 +67,15 @@ class ConnectionWrapper:
         return self
 
     def fetchmany(self, size: int = None) -> List:
-        # TODO: remove this once duckdb supports fetchmany natively
+        if hasattr(self.c, "fetchmany"):
+            # fetchmany was only added in 0.5.0
+            if size is None:
+                return self.c.fetchmany()
+            else:
+                return self.c.fetchmany(size)
+
         try:
-            # TODO: add size parameter here once the next duckdb version is released
-            return (self.c.fetch_df_chunk()).values.tolist()  # type: ignore
+            return cast(list, self.c.fetch_df_chunk().values.tolist())
         except RuntimeError as e:
             if e.args[0].startswith(
                 "Invalid Input Error: Attempting to fetch from an unsuccessful or closed streaming query result"
@@ -178,7 +185,7 @@ class Dialect(PGDialect_psycopg2):
             return pool.QueuePool
 
     @staticmethod
-    def dbapi() -> Type[DBAPI]:
+    def dbapi(**kwargs: Any) -> Type[DBAPI]:
         return DBAPI
 
     def _get_server_version_info(self, connection: "Connection") -> Tuple[int, int]:
@@ -211,3 +218,16 @@ class Dialect(PGDialect_psycopg2):
         rs = connection.execute(s, schema if schema is not None else "main")
 
         return [row[0] for row in rs]
+
+    def get_indexes(
+        self,
+        connection: "Connection",
+        table_name: str,
+        schema: Optional[str] = None,
+        **kw: Any,
+    ) -> List["_IndexDict"]:
+        warnings.warn(
+            "duckdb-engine doesn't yet support reflection on indices",
+            DuckDBEngineWarning,
+        )
+        return []
