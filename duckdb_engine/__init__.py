@@ -1,3 +1,4 @@
+import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Type, cast
 
 import duckdb
@@ -16,6 +17,7 @@ __version__ = "0.6.3"
 
 if TYPE_CHECKING:
     from sqlalchemy.base import Connection
+    from sqlalchemy.engine.interfaces import _IndexDict
 
 
 @compiles(datatypes.UInt64, "duckdb")  # type: ignore
@@ -216,3 +218,16 @@ class Dialect(PGDialect_psycopg2):
         rs = connection.execute(s, schema if schema is not None else "main")
 
         return [row[0] for row in rs]
+
+    def get_indexes(
+        self,
+        connection: "Connection",
+        table_name: str,
+        schema: Optional[str] = None,
+        **kw: Any,
+    ) -> List[_IndexDict]:
+        warnings.warn(
+            "duckdb-engine doesn't yet support reflection on indices",
+            DuckDBEngineWarning,
+        )
+        return []
