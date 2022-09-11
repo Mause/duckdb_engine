@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Type
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Type, cast
 
 import duckdb
 from sqlalchemy import pool
@@ -73,7 +73,7 @@ class ConnectionWrapper:
                 return self.c.fetchmany(size)
 
         try:
-            return (self.c.fetch_df_chunk()).values.tolist()
+            return cast(list, self.c.fetch_df_chunk().values.tolist())
         except RuntimeError as e:
             if e.args[0].startswith(
                 "Invalid Input Error: Attempting to fetch from an unsuccessful or closed streaming query result"
@@ -183,7 +183,7 @@ class Dialect(PGDialect_psycopg2):
             return pool.QueuePool
 
     @staticmethod
-    def dbapi() -> Type[DBAPI]:
+    def dbapi(**kwargs: Any) -> Type[DBAPI]:
         return DBAPI
 
     def _get_server_version_info(self, connection: "Connection") -> Tuple[int, int]:
