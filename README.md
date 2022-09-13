@@ -115,6 +115,9 @@ The following example demonstrates how to create an auto-incrementing ID column 
 ```
 
 ### Pandas `read_sql()` chunksize
+
+**NOTE**: this is no longer an issue in versions `>=0.5.0` of `duckdb`
+
 The `pandas.read_sql()` method can read tables from `duckdb_engine` into DataFrames, but the `sqlalchemy.engine.result.ResultProxy` trips up when `fetchmany()` is called. Therefore, for now `chunksize=None` (default) is necessary when reading duckdb tables into DataFrames. For example:
 
 ```python
