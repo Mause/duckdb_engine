@@ -342,7 +342,7 @@ def test_do_ping(tmp_path: Path, caplog: LogCaptureFixture) -> None:
 def test_361() -> None:
     # setup
     conn = duckdb.connect("test.duckdb")
-    conn.execute("create table test (dt date); insert into test values ('2022-01-01');");
+    conn.execute("create table test (dt date); insert into test values ('2022-01-01');")
 
     # query
     engine = create_engine("duckdb:///test.duckdb")
