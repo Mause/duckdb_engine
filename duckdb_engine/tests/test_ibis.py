@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 @fixture
-def ibis_conn() -> Backend:
+def ibis_conn() -> "Backend":
     import ibis
 
     return ibis.duckdb.connect()
