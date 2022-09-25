@@ -1,6 +1,6 @@
 # duckdb_engine
 
-[![Supported Python Versions](https://img.shields.io/pypi/pyversions/duckdb-engine)](https://pypi.org/project/duckdb-engine/) [![PyPI version](https://badge.fury.io/py/duckdb-engine.svg)](https://badge.fury.io/py/duckdb-engine) [![codecov](https://codecov.io/gh/Mause/duckdb_engine/branch/master/graph/badge.svg)](https://codecov.io/gh/Mause/duckdb_engine)
+[![Supported Python Versions](https://img.shields.io/pypi/pyversions/duckdb-engine)](https://pypi.org/project/duckdb-engine/) [![PyPI version](https://badge.fury.io/py/duckdb-engine.svg)](https://badge.fury.io/py/duckdb-engine) [![PyPI Downloads](https://img.shields.io/pypi/dm/duckdb-engine.svg)](https://pypi.org/project/duckdb-engine/) [![codecov](https://codecov.io/gh/Mause/duckdb_engine/branch/master/graph/badge.svg)](https://codecov.io/gh/Mause/duckdb_engine)
 
 Basic SQLAlchemy driver for [DuckDB](https://duckdb.org/)
 
@@ -115,6 +115,9 @@ The following example demonstrates how to create an auto-incrementing ID column 
 ```
 
 ### Pandas `read_sql()` chunksize
+
+**NOTE**: this is no longer an issue in versions `>=0.5.0` of `duckdb`
+
 The `pandas.read_sql()` method can read tables from `duckdb_engine` into DataFrames, but the `sqlalchemy.engine.result.ResultProxy` trips up when `fetchmany()` is called. Therefore, for now `chunksize=None` (default) is necessary when reading duckdb tables into DataFrames. For example:
 
 ```python
