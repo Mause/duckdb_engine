@@ -368,6 +368,22 @@ def test_table_reflect(session: Session, engine: Engine) -> None:
     reflect_table(user_table, None)
 
 
+def test_enum_reflection(session: Session, engine: Engine) -> None:
+    importorskip("duckdb", "0.6.1-dev0")
+
+    sql = [
+        "CREATE TYPE enum_t AS ENUM('a', 'b');",
+        "CREATE TABLE tmp (enum_col enum_t);",
+        "INSERT INTO tmp VALUES ('b');",
+        "INSERT INTO tmp VALUES ('a');",
+    ]
+    for s in sql:
+        session.execute(text(s))
+
+    tmp = Table("tmp", MetaData())
+    assert inspect(engine).reflecttable(tmp, include_columns=True)
+
+
 def test_fetch_df_chunks() -> None:
     import duckdb
 
