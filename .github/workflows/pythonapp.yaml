@@ -34,6 +34,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           cache: poetry
+          check-latest: true
       - name: Install tox
         run: |
           python -m pip install --upgrade tox
