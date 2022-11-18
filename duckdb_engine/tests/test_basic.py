@@ -368,8 +368,36 @@ def test_table_reflect(session: Session, engine: Engine) -> None:
     reflect_table(user_table, None)
 
 
+def test_enum_type_format(session: Session, engine: Engine) -> None:
+    importorskip("duckdb", "0.6.1-dev10")
+
+    sql = [
+        "CREATE TYPE enum_t AS ENUM('a', 'b');",
+        "CREATE TABLE tmp (enum_col enum_t);",
+    ]
+    for s in sql:
+        session.execute(text(s))
+
+    (column,) = session.execute(
+        text("select * from duckdb_columns() where column_name = 'enum_col'")
+    )
+    (type_actual,) = session.execute(
+        text("select * from duckdb_types() where type_name = 'enum_t'"),
+    )
+
+    type_oid = type_actual["type_oid"]
+    data_type_id = column["data_type_id"]
+
+    (result,) = session.execute(
+        text("SELECT pg_catalog.format_type(:type_oid, 0)"), {"type_oid": type_oid}
+    )
+    assert result[0] == "enum"
+
+    assert type_oid == data_type_id
+
+
 def test_enum_reflection(session: Session, engine: Engine) -> None:
-    importorskip("duckdb", "0.6.1-dev0")
+    importorskip("duckdb", "0.6.1-dev10")
 
     sql = [
         "CREATE TYPE enum_t AS ENUM('a', 'b');",
@@ -381,7 +409,7 @@ def test_enum_reflection(session: Session, engine: Engine) -> None:
         session.execute(text(s))
 
     tmp = Table("tmp", MetaData())
-    assert inspect(engine).reflecttable(tmp, include_columns=True)
+    inspect(engine).reflecttable(tmp, include_columns=[])
 
 
 def test_fetch_df_chunks() -> None:
