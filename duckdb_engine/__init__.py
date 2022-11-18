@@ -223,6 +223,8 @@ class Dialect(PGDialect_psycopg2):
     supports_comments = has_comment_support()
     supports_sane_rowcount = False
     supports_server_side_cursors = False
+    supports_native_enum = True
+    server_version_info = (8, 0)
     inspector = DuckDBInspector
     # colspecs TODO: remap types to duckdb types
     colspecs = util.update_copy(
@@ -283,8 +285,8 @@ class Dialect(PGDialect_psycopg2):
     def dbapi(**kwargs: Any) -> Type[DBAPI]:
         return DBAPI
 
-    def _get_server_version_info(self, connection: "Connection") -> Tuple[int, int]:
-        return (8, 0)
+    def initialize(self, connection: Any) -> None:
+        pass
 
     def get_default_isolation_level(self, connection: "Connection") -> None:
         raise NotImplementedError()
