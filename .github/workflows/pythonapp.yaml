@@ -17,9 +17,6 @@ jobs:
         - python: 3.9
           bleeding_edge: true
 
-    env:
-      PYTHON: ${{matrix.python}}
-
     steps:
       - uses: actions/checkout@v3
       - name: Remove cached duckdb extensions
@@ -60,8 +57,11 @@ jobs:
           comment_mode: off
           check_name:  "Test Results - ${{ join(matrix.*, ', ') }}"
       - uses: codecov/codecov-action@v3
+        env:
+          PYTHON: ${{matrix.python}}
+          BLEEDING_EDGE: ${{matrix.bleeding_edge}}
         with:
           files: ./coverage.xml
-          env_vars: PYTHON  # set from matrix
+          env_vars: PYTHON,BLEEDING_EDGE  # set from matrix
           fail_ci_if_error: true
           verbose: true
