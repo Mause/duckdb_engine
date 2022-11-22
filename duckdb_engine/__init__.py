@@ -83,10 +83,13 @@ class ConnectionWrapper:
                 return []
             else:
                 raise e
-                
+
     @property
     def c(self):
-        warnings.warn("Directly accessing the internal connection object is deprecated (please go via the __getattr__ impl)", DeprecationWarning)
+        warnings.warn(
+            "Directly accessing the internal connection object is deprecated (please go via the __getattr__ impl)",
+            DeprecationWarning,
+        )
         return self.__c
 
     def __getattr__(self, name: str) -> Any:
