@@ -54,7 +54,7 @@ class DuckDBInspector(PGInspector):
 
 
 class ConnectionWrapper:
-    c: duckdb.DuckDBPyConnection
+    __c: duckdb.DuckDBPyConnection
     notices: List[str]
     autocommit = None  # duckdb doesn't support setting autocommit
     closed = False
@@ -85,7 +85,7 @@ class ConnectionWrapper:
                 raise e
 
     @property
-    def c(self):
+    def c(self) -> duckdb.DuckDBPyConnection:
         warnings.warn(
             "Directly accessing the internal connection object is deprecated (please go via the __getattr__ impl)",
             DeprecationWarning,
