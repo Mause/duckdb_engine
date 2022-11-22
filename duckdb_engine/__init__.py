@@ -60,7 +60,7 @@ class ConnectionWrapper:
     closed = False
 
     def __init__(self, c: duckdb.DuckDBPyConnection) -> None:
-        self.c = c
+        self.__c = c
         self.notices = list()
 
     def cursor(self) -> "Connection":
@@ -70,12 +70,12 @@ class ConnectionWrapper:
         if hasattr(self.c, "fetchmany"):
             # fetchmany was only added in 0.5.0
             if size is None:
-                return self.c.fetchmany()
+                return self.__c.fetchmany()
             else:
-                return self.c.fetchmany(size)
+                return self.__c.fetchmany(size)
 
         try:
-            return cast(list, self.c.fetch_df_chunk().values.tolist())
+            return cast(list, self.__c.fetch_df_chunk().values.tolist())
         except RuntimeError as e:
             if e.args[0].startswith(
                 "Invalid Input Error: Attempting to fetch from an unsuccessful or closed streaming query result"
@@ -83,9 +83,14 @@ class ConnectionWrapper:
                 return []
             else:
                 raise e
+                
+    @property
+    def c(self):
+        warnings.warn("Directly accessing the internal connection object is deprecated (please go via the __getattr__ impl)", DeprecationWarning)
+        return self.__c
 
     def __getattr__(self, name: str) -> Any:
-        return getattr(self.c, name)
+        return getattr(self.__c, name)
 
     @property
     def connection(self) -> "Connection":
@@ -102,22 +107,22 @@ class ConnectionWrapper:
     def executemany(
         self, statement: str, parameters: List[Dict] = None, context: Any = None
     ) -> None:
-        self.c.executemany(statement, parameters)
+        self.__c.executemany(statement, parameters)
 
     def execute(
         self, statement: str, parameters: Tuple = None, context: Any = None
     ) -> None:
         try:
             if statement.lower() == "commit":  # this is largely for ipython-sql
-                self.c.commit()
+                self.__c.commit()
             elif statement.lower() == "register":
                 assert parameters and len(parameters) == 2, parameters
                 view_name, df = parameters
-                self.c.register(view_name, df)
+                self.__c.register(view_name, df)
             elif parameters is None:
-                self.c.execute(statement)
+                self.__c.execute(statement)
             else:
-                self.c.execute(statement, parameters)
+                self.__c.execute(statement, parameters)
         except RuntimeError as e:
             if e.args[0].startswith("Not implemented Error"):
                 raise NotImplementedError(*e.args) from e
