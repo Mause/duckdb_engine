@@ -45,7 +45,7 @@ repos:
           - "sqlalchemy[mypy]"
           - "types-setuptools==57.4.17"
   - repo: https://github.com/PyCQA/flake8
-    rev: '5.0.4'  # pick a git hash / tag to point to
+    rev: '6.0.0'  # pick a git hash / tag to point to
     hooks:
     - id: flake8
       args:
