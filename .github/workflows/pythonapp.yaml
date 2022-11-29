@@ -44,10 +44,10 @@ jobs:
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Test with tox
-        run: tox -e duckdb_master,ibis --parallel auto
+        run: tox -e duckdb_master,ibis
         if: matrix.bleeding_edge
       - name: Test with tox
-        run: tox --parallel auto
+        run: tox
         if: "!matrix.bleeding_edge"
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
@@ -62,6 +62,7 @@ jobs:
           BLEEDING_EDGE: ${{matrix.bleeding_edge}}
         with:
           files: ./coverage.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
           env_vars: PYTHON,BLEEDING_EDGE  # set from matrix
           fail_ci_if_error: true
           verbose: true

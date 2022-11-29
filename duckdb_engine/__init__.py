@@ -5,13 +5,12 @@ import duckdb
 from sqlalchemy import pool
 from sqlalchemy import types as sqltypes
 from sqlalchemy import util
-from sqlalchemy.dialects.postgresql.base import PGInspector, PGTypeCompiler
+from sqlalchemy.dialects.postgresql.base import PGInspector
 from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
 from sqlalchemy.engine.url import URL
-from sqlalchemy.ext.compiler import compiles
 
-from . import datatypes
 from .config import apply_config, get_core_config
+from .datatypes import register_extension_types
 
 __version__ = "0.6.5"
 
@@ -20,12 +19,7 @@ if TYPE_CHECKING:
     from sqlalchemy.engine.interfaces import _IndexDict
 
 
-@compiles(datatypes.UInt64, "duckdb")  # type: ignore
-@compiles(datatypes.UInt32, "duckdb")  # type: ignore
-@compiles(datatypes.UInt16, "duckdb")  # type: ignore
-@compiles(datatypes.UInt8, "duckdb")  # type: ignore
-def compile_uint(element: sqltypes.Integer, compiler: PGTypeCompiler, **kw: Any) -> str:
-    return type(element).__name__
+register_extension_types()
 
 
 class DBAPI:
