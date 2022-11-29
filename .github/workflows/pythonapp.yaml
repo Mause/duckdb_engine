@@ -17,9 +17,6 @@ jobs:
         - python: 3.9
           bleeding_edge: true
 
-    env:
-      PYTHON: ${{matrix.python}}
-
     steps:
       - uses: actions/checkout@v3
       - name: Remove cached duckdb extensions
@@ -47,10 +44,10 @@ jobs:
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Test with tox
-        run: tox -e duckdb_master,ibis --parallel auto
+        run: tox -e duckdb_master,ibis
         if: matrix.bleeding_edge
       - name: Test with tox
-        run: tox --parallel auto
+        run: tox
         if: "!matrix.bleeding_edge"
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
@@ -60,8 +57,12 @@ jobs:
           comment_mode: off
           check_name:  "Test Results - ${{ join(matrix.*, ', ') }}"
       - uses: codecov/codecov-action@v3
+        env:
+          PYTHON: ${{matrix.python}}
+          BLEEDING_EDGE: ${{matrix.bleeding_edge}}
         with:
           files: ./coverage.xml
-          env_vars: PYTHON  # set from matrix
+          token: ${{ secrets.CODECOV_TOKEN }}
+          env_vars: PYTHON,BLEEDING_EDGE  # set from matrix
           fail_ci_if_error: true
           verbose: true
