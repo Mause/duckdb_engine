@@ -39,7 +39,7 @@ class DBAPI:
 
 class DuckDBInspector(PGInspector):
     def get_check_constraints(
-        self, table_name: str, schema: str = None, **kw: Any
+        self, table_name: str, schema: Optional[str] = None, **kw: Any
     ) -> List[Dict[str, Any]]:
         try:
             return super().get_check_constraints(table_name, schema, **kw)
@@ -60,7 +60,7 @@ class ConnectionWrapper:
     def cursor(self) -> "Connection":
         return self
 
-    def fetchmany(self, size: int = None) -> List:
+    def fetchmany(self, size: Optional[int] = None) -> List:
         if hasattr(self.c, "fetchmany"):
             # fetchmany was only added in 0.5.0
             if size is None:
@@ -102,12 +102,18 @@ class ConnectionWrapper:
         return -1
 
     def executemany(
-        self, statement: str, parameters: List[Dict] = None, context: Any = None
+        self,
+        statement: str,
+        parameters: Optional[List[Dict]] = None,
+        context: Optional[Any] = None,
     ) -> None:
         self.__c.executemany(statement, parameters)
 
     def execute(
-        self, statement: str, parameters: Tuple = None, context: Any = None
+        self,
+        statement: str,
+        parameters: Optional[Tuple] = None,
+        context: Optional[Any] = None,
     ) -> None:
         try:
             if statement.lower() == "commit":  # this is largely for ipython-sql
@@ -213,7 +219,7 @@ class Dialect(PGDialect_psycopg2):
         self,
         connection: Any,
         schema: Optional[Any] = None,
-        include: Any = None,
+        include: Optional[Any] = None,
         **kw: Any,
     ) -> Any:
         s = "SELECT table_name FROM information_schema.tables WHERE table_type='VIEW' and table_schema=?"
