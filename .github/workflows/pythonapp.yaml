@@ -62,6 +62,7 @@ jobs:
           BLEEDING_EDGE: ${{matrix.bleeding_edge}}
         with:
           files: ./coverage.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
           env_vars: PYTHON,BLEEDING_EDGE  # set from matrix
           fail_ci_if_error: true
           verbose: true
