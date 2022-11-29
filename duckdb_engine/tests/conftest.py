@@ -7,6 +7,7 @@ from pytest import fixture, mark, raises
 from sqlalchemy import create_engine
 from sqlalchemy.dialects import registry  # type: ignore
 from sqlalchemy.engine import Engine
+from sqlalchemy.orm import Session, sessionmaker
 from typing_extensions import ParamSpec, Protocol
 
 P = ParamSpec("P")
@@ -19,6 +20,11 @@ def engine() -> Engine:
     registry.register("duckdb", "duckdb_engine", "Dialect")
 
     return create_engine("duckdb:///:memory:")
+
+
+@fixture
+def session(engine: Engine) -> Session:
+    return sessionmaker(bind=engine)()
 
 
 class HasVersion(Protocol):
