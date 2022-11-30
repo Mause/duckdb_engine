@@ -5,27 +5,21 @@ import duckdb
 from sqlalchemy import pool
 from sqlalchemy import types as sqltypes
 from sqlalchemy import util
-from sqlalchemy.dialects.postgresql.base import PGInspector, PGTypeCompiler
+from sqlalchemy.dialects.postgresql.base import PGInspector
 from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
 from sqlalchemy.engine.url import URL
-from sqlalchemy.ext.compiler import compiles
 
-from . import datatypes
 from .config import apply_config, get_core_config
+from .datatypes import register_extension_types
 
-__version__ = "0.6.4"
+__version__ = "0.6.5"
 
 if TYPE_CHECKING:
     from sqlalchemy.base import Connection
     from sqlalchemy.engine.interfaces import _IndexDict
 
 
-@compiles(datatypes.UInt64, "duckdb")  # type: ignore
-@compiles(datatypes.UInt32, "duckdb")  # type: ignore
-@compiles(datatypes.UInt16, "duckdb")  # type: ignore
-@compiles(datatypes.UInt8, "duckdb")  # type: ignore
-def compile_uint(element: sqltypes.Integer, compiler: PGTypeCompiler, **kw: Any) -> str:
-    return type(element).__name__
+register_extension_types()
 
 
 class DBAPI:
@@ -45,7 +39,7 @@ class DBAPI:
 
 class DuckDBInspector(PGInspector):
     def get_check_constraints(
-        self, table_name: str, schema: str = None, **kw: Any
+        self, table_name: str, schema: Optional[str] = None, **kw: Any
     ) -> List[Dict[str, Any]]:
         try:
             return super().get_check_constraints(table_name, schema, **kw)
@@ -54,28 +48,28 @@ class DuckDBInspector(PGInspector):
 
 
 class ConnectionWrapper:
-    c: duckdb.DuckDBPyConnection
+    __c: duckdb.DuckDBPyConnection
     notices: List[str]
     autocommit = None  # duckdb doesn't support setting autocommit
     closed = False
 
     def __init__(self, c: duckdb.DuckDBPyConnection) -> None:
-        self.c = c
+        self.__c = c
         self.notices = list()
 
     def cursor(self) -> "Connection":
         return self
 
-    def fetchmany(self, size: int = None) -> List:
+    def fetchmany(self, size: Optional[int] = None) -> List:
         if hasattr(self.c, "fetchmany"):
             # fetchmany was only added in 0.5.0
             if size is None:
-                return self.c.fetchmany()
+                return self.__c.fetchmany()
             else:
-                return self.c.fetchmany(size)
+                return self.__c.fetchmany(size)
 
         try:
-            return cast(list, self.c.fetch_df_chunk().values.tolist())
+            return cast(list, self.__c.fetch_df_chunk().values.tolist())
         except RuntimeError as e:
             if e.args[0].startswith(
                 "Invalid Input Error: Attempting to fetch from an unsuccessful or closed streaming query result"
@@ -84,8 +78,16 @@ class ConnectionWrapper:
             else:
                 raise e
 
+    @property
+    def c(self) -> duckdb.DuckDBPyConnection:
+        warnings.warn(
+            "Directly accessing the internal connection object is deprecated (please go via the __getattr__ impl)",
+            DeprecationWarning,
+        )
+        return self.__c
+
     def __getattr__(self, name: str) -> Any:
-        return getattr(self.c, name)
+        return getattr(self.__c, name)
 
     @property
     def connection(self) -> "Connection":
@@ -100,24 +102,30 @@ class ConnectionWrapper:
         return -1
 
     def executemany(
-        self, statement: str, parameters: List[Dict] = None, context: Any = None
+        self,
+        statement: str,
+        parameters: Optional[List[Dict]] = None,
+        context: Optional[Any] = None,
     ) -> None:
-        self.c.executemany(statement, parameters)
+        self.__c.executemany(statement, parameters)
 
     def execute(
-        self, statement: str, parameters: Tuple = None, context: Any = None
+        self,
+        statement: str,
+        parameters: Optional[Tuple] = None,
+        context: Optional[Any] = None,
     ) -> None:
         try:
             if statement.lower() == "commit":  # this is largely for ipython-sql
-                self.c.commit()
+                self.__c.commit()
             elif statement.lower() == "register":
                 assert parameters and len(parameters) == 2, parameters
                 view_name, df = parameters
-                self.c.register(view_name, df)
+                self.__c.register(view_name, df)
             elif parameters is None:
-                self.c.execute(statement)
+                self.__c.execute(statement)
             else:
-                self.c.execute(statement, parameters)
+                self.__c.execute(statement, parameters)
         except RuntimeError as e:
             if e.args[0].startswith("Not implemented Error"):
                 raise NotImplementedError(*e.args) from e
@@ -211,7 +219,7 @@ class Dialect(PGDialect_psycopg2):
         self,
         connection: Any,
         schema: Optional[Any] = None,
-        include: Any = None,
+        include: Optional[Any] = None,
         **kw: Any,
     ) -> Any:
         s = "SELECT table_name FROM information_schema.tables WHERE table_type='VIEW' and table_schema=?"
