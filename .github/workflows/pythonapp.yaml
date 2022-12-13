@@ -21,10 +21,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: Remove cached duckdb extensions
         run: rm -rf ~/.duckdb
-      - run: echo "poetry==1.1.15" > CONSTRAINTS.txt
       - name: Install poetry
-        env:
-          PIP_CONSTRAINT: CONSTRAINTS.txt
         run: python -m pip install poetry pip -U
       - name: Set up Python ${{ matrix.python }}
         uses: actions/setup-python@v4
