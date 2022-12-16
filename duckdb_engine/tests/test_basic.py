@@ -118,6 +118,13 @@ def test_foreign(session: Session) -> None:
     assert owner.owned.name == "Walter"
 
 
+def test_disabled_server_side_cursors(session: Session) -> None:
+    session.add(FakeModel(name="Walter"))
+    session.commit()
+
+    assert list(session.query(FakeModel).yield_per(1))
+
+
 @given(text_strat())
 @settings(deadline=timedelta(seconds=1))
 def test_simple_string(s: str) -> None:

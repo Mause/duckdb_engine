@@ -149,6 +149,7 @@ class Dialect(PGDialect_psycopg2):
     supports_statement_cache = False
     supports_comments = False
     supports_sane_rowcount = False
+    supports_server_side_cursors = False
     inspector = DuckDBInspector
     # colspecs TODO: remap types to duckdb types
     colspecs = util.update_copy(
