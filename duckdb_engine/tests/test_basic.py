@@ -118,7 +118,11 @@ def test_foreign(session: Session) -> None:
     assert owner.owned.name == "Walter"
 
 
-def test_disabled_server_side_cursors(session: Session) -> None:
+def test_disabled_server_side_cursors(engine: Engine) -> None:
+    connection = engine.connect().execution_options(stream_results=True)
+
+    session = sessionmaker(bind=connection)()
+
     session.add(FakeModel(name="Walter"))
     session.commit()
 
