@@ -326,7 +326,7 @@ def test_config(tmp_path: Path) -> None:
     )
 
     with raises(
-        DBAPIError, match='Cannot execute statement of type "CREATE" (on database "test" which is attached in )?read-only mode!'
+        DBAPIError, match='Cannot execute statement of type "CREATE" (on database "test" which is attached )?in read-only mode!'
     ):
         eng.execute("create table hello2 (i int)")
 
