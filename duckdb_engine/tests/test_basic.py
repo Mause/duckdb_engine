@@ -28,7 +28,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session, relationship, sessionmaker
+from sqlalchemy.orm import Mapped, Session, relationship, sessionmaker
 
 from .. import DBAPI
 
@@ -74,7 +74,7 @@ class FakeModel(Base):
     id = Column(Integer, Sequence("fakemodel_id_sequence"), primary_key=True)
     name = Column(String)
 
-    owner: "Owner" = relationship("Owner")
+    owner: Mapped["Owner"] = relationship("Owner")
 
 
 class Owner(Base):
@@ -82,7 +82,7 @@ class Owner(Base):
     id = Column(Integer, Sequence("owner_id"), primary_key=True)
 
     fake_id = Column(Integer, ForeignKey("fake.id"))
-    owned: FakeModel = relationship(FakeModel, back_populates="owner")
+    owned: Mapped[FakeModel] = relationship(FakeModel, back_populates="owner")
 
 
 class IntervalModel(Base):
