@@ -12,7 +12,7 @@ from sqlalchemy.engine.url import URL
 from .config import apply_config, get_core_config
 from .datatypes import register_extension_types
 
-__version__ = "0.6.5"
+__version__ = "0.6.6"
 
 if TYPE_CHECKING:
     from sqlalchemy.base import Connection
@@ -149,6 +149,7 @@ class Dialect(PGDialect_psycopg2):
     supports_statement_cache = False
     supports_comments = False
     supports_sane_rowcount = False
+    supports_server_side_cursors = False
     inspector = DuckDBInspector
     # colspecs TODO: remap types to duckdb types
     colspecs = util.update_copy(

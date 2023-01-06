@@ -118,6 +118,17 @@ def test_foreign(session: Session) -> None:
     assert owner.owned.name == "Walter"
 
 
+def test_disabled_server_side_cursors(engine: Engine) -> None:
+    connection = engine.connect().execution_options(stream_results=True)
+
+    session = sessionmaker(bind=connection)()
+
+    session.add(FakeModel(name="Walter"))
+    session.commit()
+
+    assert list(session.query(FakeModel).yield_per(1))
+
+
 @given(text_strat())
 @settings(deadline=timedelta(seconds=1))
 def test_simple_string(s: str) -> None:
@@ -170,7 +181,7 @@ def test_preload_extension() -> None:
     )
 
     # check that we get an error indicating that the extension was loaded
-    with engine.connect() as conn, raises(Exception, match="HTTP HEAD error"):
+    with engine.connect() as conn, raises(Exception, match="HTTP HEAD"):
         conn.execute(
             "SELECT * FROM read_parquet('https://domain/path/to/file.parquet');"
         )
@@ -315,7 +326,7 @@ def test_config(tmp_path: Path) -> None:
     )
 
     with raises(
-        DBAPIError, match='Cannot execute statement of type "CREATE" in read-only mode!'
+        DBAPIError, match='Cannot execute statement of type "CREATE" (on database "test" which is attached )?in read-only mode!'
     ):
         eng.execute("create table hello2 (i int)")
 
