@@ -13,9 +13,16 @@ from itertools import product
 from typing import Dict, List, Optional, Tuple, Union, cast
 
 import pandas as pd
+import sqlalchemy
+from packaging.version import Version
 from pandas.testing import assert_frame_equal
 from pytest import importorskip, mark
 from sqlalchemy import create_engine
+
+pytestmark = mark.skipif(
+    Version(sqlalchemy.__version__).major > 1,
+    reason="Pandas doesn't yet support sqlalchemy 2",
+)
 
 _possible_args = OrderedDict(
     {
