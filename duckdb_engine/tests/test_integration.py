@@ -5,6 +5,10 @@ from sqlalchemy.engine import Engine
 
 def test_integration(engine: Engine) -> None:
     with engine.connect() as conn:
-        conn.execute(text("register"), ("test_df", pd.DataFrame([{"a": 1}])))
+        execute = (
+            conn.exec_driver_sql if hasattr(conn, "exec_driver_sql") else conn.execute
+        )
+        params = ("test_df", pd.DataFrame([{"a": 1}]))
+        execute("register", params)  # type: ignore[operator]
 
         conn.execute(text("select * from test_df"))
