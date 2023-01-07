@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.7](https://github.com/Mause/duckdb_engine/compare/v0.6.6...v0.6.7) (2023-01-07)
+
+
+### Bug Fixes
+
+* correct attribute reference ([d2a2577](https://github.com/Mause/duckdb_engine/commit/d2a2577cded6e6e9282efab5370b15bbe4423a40))
+
 ## [0.6.6](https://github.com/Mause/duckdb_engine/compare/v0.6.5...v0.6.6) (2022-12-17)
 
 
