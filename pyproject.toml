@@ -36,7 +36,6 @@ duckdb = "duckdb_engine:Dialect"
 addopts = "--hypothesis-show-statistics"
 xfail_strict = true
 strict_markers = true
-strict_config = true
 
 [tool.mypy]
 ignore_missing_imports = true
