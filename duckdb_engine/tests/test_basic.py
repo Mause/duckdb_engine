@@ -319,8 +319,9 @@ def test_inmemory() -> None:
     shell = InteractiveShell()
     shell.run_cell("""import sqlalchemy as sa""")
     shell.run_cell("""eng = sa.create_engine("duckdb:///:memory:")""")
-    shell.run_cell("""eng.connect().execute("CREATE TABLE t (x int)")""")
-    res = shell.run_cell("""eng.connect().execute(sa.text("SHOW TABLES")).fetchall()""")
+    shell.run_cell("""conn = eng.connect()""")
+    shell.run_cell("""conn.execute(sa.text("CREATE TABLE t (x int)"))""")
+    res = shell.run_cell("""conn.execute(sa.text("SHOW TABLES")).fetchall()""")
 
     assert res.result == [("t",)]
 
