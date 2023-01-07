@@ -129,7 +129,7 @@ class ConnectionWrapper:
         try:
             if statement.lower() == "commit":  # this is largely for ipython-sql
                 self.__c.commit()
-            elif statement.lower() == "register":
+            elif statement.lower() in ("register", "register(?, ?)"):
                 assert parameters and len(parameters) == 2, parameters
                 view_name, df = parameters
                 self.__c.register(view_name, df)
