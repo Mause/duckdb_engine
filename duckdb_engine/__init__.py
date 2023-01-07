@@ -2,7 +2,7 @@ import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Type, cast
 
 import duckdb
-from sqlalchemy import pool
+from sqlalchemy import pool, text
 from sqlalchemy import types as sqltypes
 from sqlalchemy import util
 from sqlalchemy.dialects.postgresql.base import PGInspector
@@ -61,7 +61,7 @@ class ConnectionWrapper:
         return self
 
     def fetchmany(self, size: Optional[int] = None) -> List:
-        if hasattr(self.c, "fetchmany"):
+        if hasattr(self.__c, "fetchmany"):
             # fetchmany was only added in 0.5.0
             if size is None:
                 return self.__c.fetchmany()
@@ -223,8 +223,10 @@ class Dialect(PGDialect_psycopg2):
         include: Optional[Any] = None,
         **kw: Any,
     ) -> Any:
-        s = "SELECT table_name FROM information_schema.tables WHERE table_type='VIEW' and table_schema=?"
-        rs = connection.execute(s, schema if schema is not None else "main")
+        s = "SELECT table_name FROM information_schema.tables WHERE table_type='VIEW' and table_schema=:schema_name"
+        rs = connection.execute(
+            text(s), {"schema_name": schema if schema is not None else "main"}
+        )
 
         return [row[0] for row in rs]
 

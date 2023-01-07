@@ -156,12 +156,11 @@ def test_get_views(engine: Engine) -> None:
     views = engine.dialect.get_view_names(con)
     assert views == []
 
-    engine.execute(text("create view test as select 1"))
-    engine.execute(
+    con.execute(text("create view test as select 1"))
+    con.execute(
         text("create schema scheme; create view scheme.schema_test as select 1")
     )
 
-    con = engine.connect()
     views = engine.dialect.get_view_names(con)
     assert views == ["test"]
 
@@ -183,7 +182,7 @@ def test_preload_extension() -> None:
     # check that we get an error indicating that the extension was loaded
     with engine.connect() as conn, raises(Exception, match="HTTP HEAD"):
         conn.execute(
-            "SELECT * FROM read_parquet('https://domain/path/to/file.parquet');"
+            text("SELECT * FROM read_parquet('https://domain/path/to/file.parquet');")
         )
 
 
@@ -307,8 +306,9 @@ def test_inmemory() -> None:
     shell = InteractiveShell()
     shell.run_cell("""import sqlalchemy as sa""")
     shell.run_cell("""eng = sa.create_engine("duckdb:///:memory:")""")
-    shell.run_cell("""eng.execute("CREATE TABLE t (x int)")""")
-    res = shell.run_cell("""eng.execute("SHOW TABLES").fetchall()""")
+    shell.run_cell("""conn = eng.connect()""")
+    shell.run_cell("""conn.execute(sa.text("CREATE TABLE t (x int)"))""")
+    res = shell.run_cell("""conn.execute(sa.text("SHOW TABLES")).fetchall()""")
 
     assert res.result == [("t",)]
 
@@ -329,7 +329,8 @@ def test_config(tmp_path: Path) -> None:
         DBAPIError,
         match='Cannot execute statement of type "CREATE" (on database "test" which is attached )?in read-only mode!',
     ):
-        eng.execute("create table hello2 (i int)")
+        with eng.connect() as conn:
+            conn.execute(text("create table hello2 (i int)"))
 
 
 def test_do_ping(tmp_path: Path, caplog: LogCaptureFixture) -> None:
