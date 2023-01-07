@@ -229,8 +229,8 @@ def test_reflect(session: Session, engine: Engine) -> None:
     session.execute(text("create table test (id int);"))
     session.commit()
 
-    meta = MetaData(engine)
-    meta.reflect(only=["test"])
+    meta = MetaData()
+    meta.reflect(only=["test"], bind=engine)
 
 
 def test_commit(session: Session, engine: Engine) -> None:
