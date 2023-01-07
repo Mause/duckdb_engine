@@ -171,7 +171,6 @@ def test_get_views(engine: Engine) -> None:
         text("create schema scheme; create view scheme.schema_test as select 1")
     )
 
-    con = engine.connect()
     views = engine.dialect.get_view_names(con)
     assert views == ["test"]
 
