@@ -12,7 +12,7 @@ from sqlalchemy.engine.url import URL
 from .config import apply_config, get_core_config
 from .datatypes import register_extension_types
 
-__version__ = "0.6.6"
+__version__ = "0.6.7"
 
 if TYPE_CHECKING:
     from sqlalchemy.base import Connection
