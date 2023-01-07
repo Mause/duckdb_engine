@@ -3,7 +3,7 @@ import os
 import zlib
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Optional, cast
+from typing import Any, Generic, Optional, TypeVar, cast
 
 import duckdb
 from hypothesis import assume, given, settings
@@ -28,9 +28,19 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Mapped, Session, relationship, sessionmaker
+from sqlalchemy.orm import Session, relationship, sessionmaker
 
 from .. import DBAPI
+
+try:
+    # sqlalchemy 2
+    from sqlalchemy.orm import Mapped
+except ImportError:
+    # sqlalchemy 1
+    T = TypeVar("T")
+
+    class Mapped(Generic[T]):  # type: ignore[no-redef]
+        pass
 
 
 @fixture
