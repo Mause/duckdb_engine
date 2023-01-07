@@ -1,5 +1,15 @@
 import warnings
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Type, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Collection,
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    cast,
+)
 
 import duckdb
 from sqlalchemy import pool, text
@@ -238,13 +248,24 @@ class Dialect(PGDialect_psycopg2):
         schema: Optional[str] = None,
         **kw: Any,
     ) -> List["_IndexDict"]:
+        return self.get_multi_indexes(connection, schema, **kw)
+
+    # these four methods are for SQLA2 compatibility
+    def get_multi_indexes(
+        self,
+        connection: "Connection",
+        schema: Optional[str],
+        filter_names: Collection[str],
+        scope: str,
+        kind: str,
+        **kw: Any,
+    ) -> list:
         warnings.warn(
             "duckdb-engine doesn't yet support reflection on indices",
             DuckDBEngineWarning,
         )
         return []
 
-    # these three methods are for SQLA2 compatibility
     def initialize(self, connection: "Connection") -> None:
         DefaultDialect.initialize(self, connection)
 
