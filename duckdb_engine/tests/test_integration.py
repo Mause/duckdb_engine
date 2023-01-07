@@ -4,6 +4,7 @@ from sqlalchemy.engine import Engine
 
 
 def test_integration(engine: Engine) -> None:
-    engine.execute(text("register"), ("test_df", pd.DataFrame([{"a": 1}])))
+    with engine.connect() as conn:
+        conn.execute(text("register"), ("test_df", pd.DataFrame([{"a": 1}])))
 
-    engine.execute(text("select * from test_df"))
+        conn.execute(text("select * from test_df"))
