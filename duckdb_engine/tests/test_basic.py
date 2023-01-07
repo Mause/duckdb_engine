@@ -30,10 +30,11 @@ from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, relationship, sessionmaker
 
-from .. import DBAPI
+from .. import DBAPI, Dialect
 
 try:
     # sqlalchemy 2
+    from sqlalchemy.engine import ObjectKind  # type: ignore[attr-defined]
     from sqlalchemy.orm import Mapped
 except ImportError:
     # sqlalchemy 1
@@ -230,6 +231,18 @@ def test_reflect(session: Session, engine: Engine) -> None:
 
     meta = MetaData()
     meta.reflect(only=["test"], bind=engine)
+
+
+def test_get_multi_columns(engine: Engine) -> None:
+    importorskip("sqlalchemy", "2.0.0-rc1")
+    with engine.connect() as conn:
+        assert cast(Dialect, engine.dialect).get_multi_columns(  # type: ignore[attr-defined]
+            connection=conn,
+            schema=None,
+            filter_names=[],
+            scope=None,
+            kind=(ObjectKind.TABLE,),
+        )
 
 
 def test_commit(session: Session, engine: Engine) -> None:

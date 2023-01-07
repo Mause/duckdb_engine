@@ -250,7 +250,7 @@ class Dialect(PGDialect_psycopg2):
     ) -> List["_IndexDict"]:
         return self.get_multi_indexes(connection, schema, **kw)
 
-    # these four methods are for SQLA2 compatibility
+    # the following methods are for SQLA2 compatibility
     def get_multi_indexes(
         self,
         connection: "Connection",
@@ -275,3 +275,15 @@ class Dialect(PGDialect_psycopg2):
     @classmethod
     def import_dbapi(cls: Type["Dialect"]) -> Type[DBAPI]:
         return cls.dbapi()
+
+    # FIXME: these two methods are a hack around the fact that we use a single cursor all questions inside a connection
+    # and these are required to fix get_multi_columns. they need to be fixed somehow
+    def _load_enums(
+        self, connection: "Connection", schema: Optional[str] = None, **kw: Any
+    ) -> list:
+        return []
+
+    def _load_domains(
+        self, connection: "Connection", schema: Optional[str] = None, **kw: Any
+    ) -> list:
+        return []
