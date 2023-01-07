@@ -62,7 +62,7 @@ class ConnectionWrapper:
         return self
 
     def fetchmany(self, size: Optional[int] = None) -> List:
-        if hasattr(self.c, "fetchmany"):
+        if hasattr(self.__c, "fetchmany"):
             # fetchmany was only added in 0.5.0
             if size is None:
                 return self.__c.fetchmany()
