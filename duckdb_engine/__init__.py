@@ -2,7 +2,7 @@ import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Type, cast
 
 import duckdb
-from sqlalchemy import pool
+from sqlalchemy import pool, text
 from sqlalchemy import types as sqltypes
 from sqlalchemy import util
 from sqlalchemy.dialects.postgresql.base import PGInspector
@@ -224,7 +224,7 @@ class Dialect(PGDialect_psycopg2):
         **kw: Any,
     ) -> Any:
         s = "SELECT table_name FROM information_schema.tables WHERE table_type='VIEW' and table_schema=?"
-        rs = connection.execute(s, schema if schema is not None else "main")
+        rs = connection.execute(text(s), schema if schema is not None else "main")
 
         return [row[0] for row in rs]
 

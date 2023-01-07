@@ -183,7 +183,7 @@ def test_preload_extension() -> None:
     # check that we get an error indicating that the extension was loaded
     with engine.connect() as conn, raises(Exception, match="HTTP HEAD"):
         conn.execute(
-            "SELECT * FROM read_parquet('https://domain/path/to/file.parquet');"
+            text("SELECT * FROM read_parquet('https://domain/path/to/file.parquet');")
         )
 
 
