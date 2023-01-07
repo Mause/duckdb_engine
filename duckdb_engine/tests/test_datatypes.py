@@ -1,7 +1,7 @@
 from typing import Type
 
 from pytest import mark
-from sqlalchemy import Column, Integer
+from sqlalchemy import Column, Integer, inspect
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session
@@ -26,7 +26,14 @@ def test_unsigned_integer_type(
         },
     )
     Base.metadata.create_all(engine)
-    assert engine.has_table(tname)
+
+    has_table = (
+        engine.has_table
+        if hasattr("engine", "has_table")
+        else inspect(engine).has_table
+    )
+
+    assert has_table(tname)
 
     session.add(table(a=1))
     session.commit()

@@ -252,7 +252,10 @@ def test_table_reflect(session: Session, engine: Engine) -> None:
     user_table = Table("test", meta)
     insp = inspect(engine)
 
-    insp.reflecttable(user_table, None)
+    reflect_table = (
+        insp.reflecttable if hasattr(insp, "reflecttable") else insp.reflect_table
+    )
+    reflect_table(user_table, None)
 
 
 def test_fetch_df_chunks() -> None:
