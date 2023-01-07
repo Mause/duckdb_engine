@@ -7,6 +7,7 @@ from sqlalchemy import types as sqltypes
 from sqlalchemy import util
 from sqlalchemy.dialects.postgresql.base import PGInspector
 from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
+from sqlalchemy.engine.default import DefaultDialect
 from sqlalchemy.engine.url import URL
 
 from .config import apply_config, get_core_config
@@ -240,3 +241,14 @@ class Dialect(PGDialect_psycopg2):
             DuckDBEngineWarning,
         )
         return []
+
+    # these three methods are for SQLA2 compatibility
+    def initialize(self, connection: "Connection") -> None:
+        DefaultDialect.initialize(self, connection)
+
+    def create_connect_args(self, url: URL) -> Tuple[tuple, dict]:
+        return (), url.translate_connect_args(database="database")
+
+    @classmethod
+    def import_dbapi(cls: Type["Dialect"]) -> Type[DBAPI]:
+        return cls.dbapi()
