@@ -4,6 +4,7 @@ from typing import (
     Any,
     Collection,
     Dict,
+    Iterable,
     List,
     Optional,
     Tuple,
@@ -153,6 +154,13 @@ class DuckDBEngineWarning(Warning):
     pass
 
 
+def index_warning() -> None:
+    warnings.warn(
+        "duckdb-engine doesn't yet support reflection on indices",
+        DuckDBEngineWarning,
+    )
+
+
 class Dialect(PGDialect_psycopg2):
     name = "duckdb"
     driver = "duckdb_engine"
@@ -248,22 +256,18 @@ class Dialect(PGDialect_psycopg2):
         schema: Optional[str] = None,
         **kw: Any,
     ) -> List["_IndexDict"]:
-        return self.get_multi_indexes(connection, schema, **kw)
+        index_warning()
+        return []
 
     # the following methods are for SQLA2 compatibility
     def get_multi_indexes(
         self,
         connection: "Connection",
-        schema: Optional[str],
-        filter_names: Collection[str],
-        scope: str,
-        kind: str,
+        schema: Optional[str] = None,
+        filter_names: Optional[Collection[str]] = None,
         **kw: Any,
-    ) -> list:
-        warnings.warn(
-            "duckdb-engine doesn't yet support reflection on indices",
-            DuckDBEngineWarning,
-        )
+    ) -> Iterable[Tuple]:
+        index_warning()
         return []
 
     def initialize(self, connection: "Connection") -> None:
