@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.8](https://github.com/Mause/duckdb_engine/compare/v0.6.7...v0.6.8) (2023-01-08)
+
+
+### Bug Fixes
+
+* correct json type mapping ([7bf8753](https://github.com/Mause/duckdb_engine/commit/7bf8753f79aac22e2e133fd1b916950c32b0facf))
+
 ## [0.6.7](https://github.com/Mause/duckdb_engine/compare/v0.6.6...v0.6.7) (2023-01-07)
 
 
