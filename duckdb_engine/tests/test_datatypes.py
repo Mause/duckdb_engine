@@ -1,7 +1,7 @@
 from typing import Type
 
 from pytest import mark
-from sqlalchemy import Column, Integer, select
+from sqlalchemy import Column, Integer
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session
@@ -49,6 +49,6 @@ def test_json(engine: Engine, session: Session) -> None:
     session.add(Entry(meta={"hello": "world"}))  # type: ignore[call-arg]
     session.commit()
 
-    result = session.scalar(select(Entry))
+    result = session.query(Entry).one()
 
     assert result.meta == {"hello": "world"}
