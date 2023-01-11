@@ -11,24 +11,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: [3.6, 3.7, 3.8, 3.9, "3.10"]
+        python: [3.7, 3.8, 3.9, "3.10"]
         bleeding_edge: [false]
         include:
         - python: 3.9
           bleeding_edge: true
 
-    env:
-      PYTHON: ${{matrix.python}}
-
     steps:
       - uses: actions/checkout@v3
       - name: Remove cached duckdb extensions
         run: rm -rf ~/.duckdb
-      - run: echo "poetry==1.1.15" > CONSTRAINTS.txt
       - name: Install poetry
-        env:
-          PIP_CONSTRAINT: CONSTRAINTS.txt
-        run: python -m pip install poetry
+        run: python -m pip install poetry pip -U
       - name: Set up Python ${{ matrix.python }}
         uses: actions/setup-python@v4
         with:
@@ -36,9 +30,7 @@ jobs:
           cache: poetry
       - name: Install tox
         run: |
-          python -m pip install --upgrade tox
-        env:
-          PIP_CONSTRAINT: CONSTRAINTS.txt
+          python -m pip install --upgrade tox~=3.27.1
       - name: Lint with flake8
         run: |
           pip install flake8
@@ -60,8 +52,12 @@ jobs:
           comment_mode: off
           check_name:  "Test Results - ${{ join(matrix.*, ', ') }}"
       - uses: codecov/codecov-action@v3
+        env:
+          PYTHON: ${{matrix.python}}
+          BLEEDING_EDGE: ${{matrix.bleeding_edge}}
         with:
           files: ./coverage.xml
-          env_vars: PYTHON  # set from matrix
+          token: ${{ secrets.CODECOV_TOKEN }}
+          env_vars: PYTHON,BLEEDING_EDGE  # set from matrix
           fail_ci_if_error: true
           verbose: true

@@ -1,5 +1,58 @@
 # Changelog
 
+## [0.6.8](https://github.com/Mause/duckdb_engine/compare/v0.6.7...v0.6.8) (2023-01-08)
+
+
+### Bug Fixes
+
+* correct json type mapping ([7bf8753](https://github.com/Mause/duckdb_engine/commit/7bf8753f79aac22e2e133fd1b916950c32b0facf))
+
+## [0.6.7](https://github.com/Mause/duckdb_engine/compare/v0.6.6...v0.6.7) (2023-01-07)
+
+
+### Bug Fixes
+
+* correct attribute reference ([d2a2577](https://github.com/Mause/duckdb_engine/commit/d2a2577cded6e6e9282efab5370b15bbe4423a40))
+
+## [0.6.6](https://github.com/Mause/duckdb_engine/compare/v0.6.5...v0.6.6) (2022-12-17)
+
+
+### Bug Fixes
+
+* add missing data types ([92cef1b](https://github.com/Mause/duckdb_engine/commit/92cef1bf8f7fb12786675c450f8d134f9ed9104b))
+* add missing integer data types ([c7e9ccf](https://github.com/Mause/duckdb_engine/commit/c7e9ccf70a3f6baeca40909e18dfc628fa2401b1))
+* disable server side cursors ([bae0a1c](https://github.com/Mause/duckdb_engine/commit/bae0a1c23879fac3d6bf910979a2923531128f83))
+
+## [0.6.5](https://github.com/Mause/duckdb_engine/compare/v0.6.4...v0.6.5) (2022-11-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* drop python 3.6 support
+
+### Documentation
+
+* add note regarding fetchmany support in duckdb=&gt;0.5.0 ([7ccbaa9](https://github.com/Mause/duckdb_engine/commit/7ccbaa9873d14a21e2fb54a20931c29fe991b370))
+
+
+### Dependencies
+
+* add snapshottest ([0b18f47](https://github.com/Mause/duckdb_engine/commit/0b18f47b43fd5e34689a555b6f7706fbe6162d21))
+* bump tested duckdb to 0.5.1 in tox.ini ([da71828](https://github.com/Mause/duckdb_engine/commit/da718286e99be27f754ddc467d2b9bc137e88f8a))
+* declare shared test dependencies ([e43823c](https://github.com/Mause/duckdb_engine/commit/e43823ca29c9c75772612bf59812335ddb721790))
+* fix requirement declaration ([e3923ee](https://github.com/Mause/duckdb_engine/commit/e3923ee693a2bba455708787666652985b972b9f))
+* test against 0.5.1 ([0aca52e](https://github.com/Mause/duckdb_engine/commit/0aca52e21f2f2d4d2e5e847b5002a715b83dd5d2))
+
+
+### Code Refactoring
+
+* drop python 3.6 support ([0d81998](https://github.com/Mause/duckdb_engine/commit/0d81998caafee51d86f1692cd73867561b0ce576))
+
+
+### Miscellaneous Chores
+
+* release 0.6.5 ([52eca6f](https://github.com/Mause/duckdb_engine/commit/52eca6fce78319893dd6ba9de1e193d920e03c78))
+
 ## [0.6.4](https://github.com/Mause/duckdb_engine/compare/v0.6.3...v0.6.4) (2022-09-11)
 
 

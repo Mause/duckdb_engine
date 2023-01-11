@@ -1,10 +1,13 @@
 import pandas as pd
+from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
 
 def test_integration(engine: Engine) -> None:
-    conn = engine.connect()
+    with engine.connect() as conn:
+        execute = (
+            conn.exec_driver_sql if hasattr(conn, "exec_driver_sql") else conn.execute
+        )
+        execute("register('test_df', ?)", ((pd.DataFrame([{"a": 1}]),),))  # type: ignore[operator]
 
-    conn.exec_driver_sql("register('test_df', ?)", ((pd.DataFrame([{"a": 1}]),),))
-
-    conn.exec_driver_sql("select * from test_df")
+        conn.execute(text("select * from test_df"))
