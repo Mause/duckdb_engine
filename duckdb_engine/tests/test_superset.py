@@ -1,16 +1,23 @@
-from typing import List
+from typing import TYPE_CHECKING, List
 from uuid import uuid4
 
-from flask.testing import Client
-from flask_migrate import upgrade
+from pytest import importorskip
 from sqlalchemy.dialects import registry  # type: ignore
-from superset.app import SupersetApp, SupersetAppInitializer
-from superset.initialization import appbuilder
+
+importorskip("superset")
+
 
 registry.register("duckdb", "duckdb_engine", "Dialect")
 
+if TYPE_CHECKING:
+    from superset.app import SupersetApp
 
-def get_app() -> SupersetApp:
+
+def get_app() -> "SupersetApp":
+    from flask_migrate import upgrade
+    from superset.app import SupersetApp, SupersetAppInitializer
+    from superset.initialization import appbuilder
+
     app = SupersetApp(__name__)
     app.config.from_object("superset.config")
     app.config["WTF_CSRF_METHODS"] = {}
@@ -41,6 +48,8 @@ def get_app() -> SupersetApp:
 
 
 def test_superset(app: SupersetApp) -> None:
+    from flask.testing import Client
+
     database_name = f"test-duckdb-{uuid4()}"
 
     client = Client(app)
