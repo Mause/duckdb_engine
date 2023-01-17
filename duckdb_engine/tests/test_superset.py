@@ -1,7 +1,8 @@
+import json
 from typing import TYPE_CHECKING, List
 from uuid import uuid4
 
-from pytest import importorskip
+from pytest import fixture, importorskip
 from sqlalchemy.dialects import registry  # type: ignore
 
 importorskip("superset")
@@ -11,6 +12,11 @@ registry.register("duckdb", "duckdb_engine", "Dialect")
 
 if TYPE_CHECKING:
     from superset.app import SupersetApp
+
+
+@fixture()
+def app() -> "SupersetApp":
+    return get_app()
 
 
 def get_app() -> "SupersetApp":
@@ -47,8 +53,9 @@ def get_app() -> "SupersetApp":
     return app
 
 
-def test_superset(app: SupersetApp) -> None:
+def test_superset(app: "SupersetApp") -> None:
     from flask.testing import Client
+    from superset.models.core import ConfigurationMethod
 
     database_name = f"test-duckdb-{uuid4()}"
 
@@ -58,20 +65,23 @@ def test_superset(app: SupersetApp) -> None:
         json={
             "database_name": database_name,
             "sqlalchemy_uri": "duckdb:///:memory:",
-            "configuration_method": "dynamic_form",
-            "parameters": {
-                "engine": "duckdb",
-                "connect_args": {
-                    "preload_extensions": ["httpfs"],
-                    "config": {
-                        "s3_endpoint": "minio:9000",
-                        "s3_access_key_id": "XXX",
-                        "s3_secret_access_key": "XXX",
-                        "s3_url_style": "path",
-                        "s3_use_ssl": "False",
+            "configuration_method": ConfigurationMethod.SQLALCHEMY_FORM,
+            "extra": json.dumps(
+                {
+                    "engine_params": {
+                        "connect_args": {
+                            "preload_extensions": ["httpfs"],
+                            "config": {
+                                "s3_endpoint": "minio:9000",
+                                "s3_access_key_id": "XXX",
+                                "s3_secret_access_key": "XXX",
+                                "s3_url_style": "path",
+                                "s3_use_ssl": "False",
+                            },
+                        },
                     },
-                },
-            },
+                }
+            ),
         },
     )
     assert result.status == "201 CREATED", (result.status, result.json)
