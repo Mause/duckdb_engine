@@ -1,5 +1,4 @@
 #! /usr/bin/env python3
-# vim:fenc=utf-8
 
 """
 Test pandas functionality.
@@ -10,7 +9,7 @@ import random
 from collections import OrderedDict
 from datetime import datetime
 from itertools import product
-from typing import Dict, List, Optional, Tuple, Union, cast
+from typing import Optional, cast
 
 import pandas as pd
 from pandas.testing import assert_frame_equal
@@ -25,7 +24,7 @@ _possible_args = OrderedDict(
             None,
             "multi",
         ],  # TODO Implement a callable insert method?
-    }
+    },
 )
 
 args = {
@@ -34,14 +33,14 @@ args = {
 }
 params = {
     k: list(
-        product(*(_v for _k, _v in _possible_args.items() if _k in args[k]))  # type: ignore
+        product(*(_v for _k, _v in _possible_args.items() if _k in args[k])),  # type: ignore
     )
     for k in args
 }
 params_strings = {k: (",".join([str(_k) for _k in args[k]])) for k in args}
 
 # Generate a DataFrame of 100 rows.
-sample_data: Dict[str, List[Union[datetime, str, int, float]]] = {
+sample_data: dict[str, list[datetime | str | int | float]] = {
     "datetime": [],
     "int": [],
     "str": [],
@@ -49,10 +48,10 @@ sample_data: Dict[str, List[Union[datetime, str, int, float]]] = {
 }
 sample_rowcount = max(
     cs
-    for cs in cast(List[Optional[int]], _possible_args["chunksize"])
+    for cs in cast(list[Optional[int]], _possible_args["chunksize"])
     if cs is not None
 )
-for i in range(sample_rowcount):
+for _i in range(sample_rowcount):
     sample_data["datetime"].append(datetime.utcnow())
     sample_data["int"].append(random.randint(0, 100))
     sample_data["float"].append(round(random.random(), 5))
@@ -63,9 +62,9 @@ sample_df: pd.DataFrame = pd.DataFrame(sample_data)
 
 @mark.parametrize(params_strings["to_sql"], params["to_sql"])
 def test_to_sql(
-    chunksize: Optional[int],
+    chunksize: int | None,
     if_exists: str,
-    method: Optional[str],
+    method: str | None,
     index: bool = False,
 ) -> None:
     eng = create_engine("duckdb:///:memory:")
@@ -89,7 +88,7 @@ table_name = "test_read"
 # Once for reading the table name (testing reflection),
 @mark.parametrize(params_strings["read_sql"], params["read_sql"])
 def test_read_sql_reflection(
-    chunksize: Tuple[Optional[int]],
+    chunksize: tuple[int | None],
 ) -> None:
     run_query(table_name, chunksize[0])
 
@@ -97,12 +96,12 @@ def test_read_sql_reflection(
 # and once for directly executing a SQL query.
 @mark.parametrize(params_strings["read_sql"], params["read_sql"])
 def test_read_sql(
-    chunksize: Tuple[Optional[int]],
+    chunksize: tuple[int | None],
 ) -> None:
     run_query(f"SELECT * FROM {table_name}", chunksize[0])
 
 
-def run_query(query: str, chunksize: Optional[int]) -> None:
+def run_query(query: str, chunksize: int | None) -> None:
     eng = create_engine("duckdb:///:memory:")
 
     sample_df.to_sql(name=table_name, con=eng, if_exists="replace")
@@ -126,7 +125,7 @@ def test_read_sql_duckdb_table(tmp_path: pathlib.Path) -> None:
     db = str(tmp_path / "test_db.duckdb")
     con = duckdb.connect(database=db, read_only=False)
     df = pd.DataFrame(
-        {"a": [1, 2, 3, 4], "b": [0.1, 0.2, 0.3, 0.4], "c": ["a", "b", "c", "d"]}
+        {"a": [1, 2, 3, 4], "b": [0.1, 0.2, 0.3, 0.4], "c": ["a", "b", "c", "d"]},
     )
     con.register("df_view", df)
     con.execute("CREATE TABLE test_data AS SELECT * FROM df_view;")

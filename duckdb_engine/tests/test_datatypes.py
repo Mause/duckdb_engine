@@ -1,4 +1,3 @@
-from typing import Type
 
 from pytest import mark
 from sqlalchemy import Column, Integer
@@ -12,7 +11,7 @@ from ..datatypes import types
 
 @mark.parametrize("coltype", types)
 def test_unsigned_integer_type(
-    engine: Engine, session: Session, coltype: Type[Integer]
+    engine: Engine, session: Session, coltype: type[Integer],
 ) -> None:
     Base = declarative_base()
 

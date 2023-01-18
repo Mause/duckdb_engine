@@ -3,7 +3,7 @@ import os
 import zlib
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 import duckdb
 from hypothesis import assume, given, settings
@@ -33,7 +33,7 @@ from sqlalchemy.orm import Session, relationship, sessionmaker
 from .. import DBAPI
 
 
-@fixture
+@fixture()
 def engine() -> Engine:
     registry.register("duckdb", "duckdb_engine", "Dialect")
 
@@ -46,11 +46,11 @@ Base = declarative_base()
 
 
 class CompressedString(types.TypeDecorator):
-    """Custom Column Type"""
+    """Custom Column Type."""
 
     impl = types.BLOB
 
-    def process_bind_param(self, value: Optional[str], dialect: Any) -> Optional[bytes]:
+    def process_bind_param(self, value: str | None, dialect: Any) -> bytes | None:
         if value is None:
             return None
         return zlib.compress(value.encode("utf-8"), level=9)
@@ -93,7 +93,7 @@ class IntervalModel(Base):
     field = Column(Interval)
 
 
-@fixture
+@fixture()
 def session(engine: Engine) -> Session:
     return sessionmaker(bind=engine)()
 
@@ -158,7 +158,7 @@ def test_get_views(engine: Engine) -> None:
 
     con.execute(text("create view test as select 1"))
     con.execute(
-        text("create schema scheme; create view scheme.schema_test as select 1")
+        text("create schema scheme; create view scheme.schema_test as select 1"),
     )
 
     views = engine.dialect.get_view_names(con)
@@ -182,11 +182,11 @@ def test_preload_extension() -> None:
     # check that we get an error indicating that the extension was loaded
     with engine.connect() as conn, raises(Exception, match="HTTP HEAD"):
         conn.execute(
-            text("SELECT * FROM read_parquet('https://domain/path/to/file.parquet');")
+            text("SELECT * FROM read_parquet('https://domain/path/to/file.parquet');"),
         )
 
 
-@fixture
+@fixture()
 def inspector(engine: Engine, session: Session) -> Inspector:
     session.execute(text("create table test (id int);"))
     session.commit()
@@ -276,7 +276,7 @@ def test_binary(session: Session) -> None:
 
 
 def test_comment_support() -> None:
-    "comments not yet supported by duckdb"
+    "comments not yet supported by duckdb."
     with raises(DBAPI.ParserException, match="syntax error"):
         duckdb.default_connection.execute('comment on sqlite_master is "hello world";')
 
@@ -335,7 +335,7 @@ def test_config(tmp_path: Path) -> None:
 
 def test_do_ping(tmp_path: Path, caplog: LogCaptureFixture) -> None:
     engine = create_engine(
-        "duckdb:///" + str(tmp_path / "db"), pool_pre_ping=True, pool_size=1
+        "duckdb:///" + str(tmp_path / "db"), pool_pre_ping=True, pool_size=1,
     )
 
     logger = cast(logging.Logger, engine.pool.logger)  # type: ignore

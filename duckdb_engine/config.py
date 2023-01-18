@@ -1,16 +1,15 @@
 from functools import lru_cache
-from typing import Dict, Set, Type, Union
 
 import duckdb
 from sqlalchemy import Boolean, Integer, String
 from sqlalchemy.engine import Dialect
 from sqlalchemy.sql.type_api import TypeEngine
 
-TYPES: Dict[Type, TypeEngine] = {int: Integer(), str: String(), bool: Boolean()}
+TYPES: dict[type, TypeEngine] = {int: Integer(), str: String(), bool: Boolean()}
 
 
-@lru_cache()
-def get_core_config() -> Set[str]:
+@lru_cache
+def get_core_config() -> set[str]:
     rows = (
         duckdb.connect(":memory:")
         .execute("SELECT name FROM duckdb_settings()")
@@ -22,7 +21,7 @@ def get_core_config() -> Set[str]:
 def apply_config(
     dialect: Dialect,
     conn: duckdb.DuckDBPyConnection,
-    ext: Dict[str, Union[str, int, bool]],
+    ext: dict[str, str | int | bool],
 ) -> None:
     # TODO: does sqlalchemy have something that could do this for us?
     processors = {k: v.literal_processor(dialect=dialect) for k, v in TYPES.items()}

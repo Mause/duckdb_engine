@@ -1,10 +1,9 @@
 import warnings
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Type, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import duckdb
-from sqlalchemy import pool, text
+from sqlalchemy import pool, text, util
 from sqlalchemy import types as sqltypes
-from sqlalchemy import util
 from sqlalchemy.dialects.postgresql.base import PGInspector
 from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
 from sqlalchemy.engine.url import URL
@@ -39,8 +38,8 @@ class DBAPI:
 
 class DuckDBInspector(PGInspector):
     def get_check_constraints(
-        self, table_name: str, schema: Optional[str] = None, **kw: Any
-    ) -> List[Dict[str, Any]]:
+        self, table_name: str, schema: str | None = None, **kw: Any,
+    ) -> list[dict[str, Any]]:
         try:
             return super().get_check_constraints(table_name, schema, **kw)
         except Exception as e:
@@ -49,18 +48,18 @@ class DuckDBInspector(PGInspector):
 
 class ConnectionWrapper:
     __c: duckdb.DuckDBPyConnection
-    notices: List[str]
+    notices: list[str]
     autocommit = None  # duckdb doesn't support setting autocommit
     closed = False
 
     def __init__(self, c: duckdb.DuckDBPyConnection) -> None:
         self.__c = c
-        self.notices = list()
+        self.notices = []
 
     def cursor(self) -> "Connection":
         return self
 
-    def fetchmany(self, size: Optional[int] = None) -> List:
+    def fetchmany(self, size: int | None = None) -> list:
         if hasattr(self.__c, "fetchmany"):
             # fetchmany was only added in 0.5.0
             if size is None:
@@ -72,7 +71,7 @@ class ConnectionWrapper:
             return cast(list, self.__c.fetch_df_chunk().values.tolist())
         except RuntimeError as e:
             if e.args[0].startswith(
-                "Invalid Input Error: Attempting to fetch from an unsuccessful or closed streaming query result"
+                "Invalid Input Error: Attempting to fetch from an unsuccessful or closed streaming query result",
             ):
                 return []
             else:
@@ -104,16 +103,16 @@ class ConnectionWrapper:
     def executemany(
         self,
         statement: str,
-        parameters: Optional[List[Dict]] = None,
-        context: Optional[Any] = None,
+        parameters: list[dict] | None = None,
+        context: Any | None = None,
     ) -> None:
         self.__c.executemany(statement, parameters)
 
     def execute(
         self,
         statement: str,
-        parameters: Optional[Tuple] = None,
-        context: Optional[Any] = None,
+        parameters: tuple | None = None,
+        context: Any | None = None,
     ) -> None:
         try:
             if statement.lower() == "commit":  # this is largely for ipython-sql
@@ -188,17 +187,17 @@ class Dialect(PGDialect_psycopg2):
         pass
 
     @classmethod
-    def get_pool_class(cls, url: URL) -> Type[pool.Pool]:
+    def get_pool_class(cls, url: URL) -> type[pool.Pool]:
         if url.database == ":memory:":
             return pool.SingletonThreadPool
         else:
             return pool.QueuePool
 
     @staticmethod
-    def dbapi(**kwargs: Any) -> Type[DBAPI]:
+    def dbapi(**kwargs: Any) -> type[DBAPI]:
         return DBAPI
 
-    def _get_server_version_info(self, connection: "Connection") -> Tuple[int, int]:
+    def _get_server_version_info(self, connection: "Connection") -> tuple[int, int]:
         return (8, 0)
 
     def get_default_isolation_level(self, connection: "Connection") -> None:
@@ -220,13 +219,13 @@ class Dialect(PGDialect_psycopg2):
     def get_view_names(
         self,
         connection: Any,
-        schema: Optional[Any] = None,
-        include: Optional[Any] = None,
+        schema: Any | None = None,
+        include: Any | None = None,
         **kw: Any,
     ) -> Any:
         s = "SELECT table_name FROM information_schema.tables WHERE table_type='VIEW' and table_schema=:schema_name"
         rs = connection.execute(
-            text(s), {"schema_name": schema if schema is not None else "main"}
+            text(s), {"schema_name": schema if schema is not None else "main"},
         )
 
         return [row[0] for row in rs]
@@ -235,9 +234,9 @@ class Dialect(PGDialect_psycopg2):
         self,
         connection: "Connection",
         table_name: str,
-        schema: Optional[str] = None,
+        schema: str | None = None,
         **kw: Any,
-    ) -> List["_IndexDict"]:
+    ) -> list["_IndexDict"]:
         warnings.warn(
             "duckdb-engine doesn't yet support reflection on indices",
             DuckDBEngineWarning,

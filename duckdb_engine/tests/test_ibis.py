@@ -1,5 +1,5 @@
 """
-these are largely just smoke tests
+these are largely just smoke tests.
 """
 
 from csv import DictWriter
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from ibis.backends.duckdb import Backend
 
 
-@fixture
+@fixture()
 def ibis_conn() -> "Backend":
     import ibis
 

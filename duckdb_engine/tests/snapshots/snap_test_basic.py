@@ -12,5 +12,5 @@ snapshots["test_get_columns 1"] = [
         "name": "id",
         "nullable": True,
         "type": GenericRepr("INTEGER()"),
-    }
+    },
 ]

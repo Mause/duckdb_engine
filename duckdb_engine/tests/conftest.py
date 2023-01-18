@@ -13,14 +13,14 @@ P = ParamSpec("P")
 FuncT = TypeVar("FuncT", bound=Callable[..., Any])
 
 
-@fixture
+@fixture()
 def engine() -> Engine:
     registry.register("duckdb", "duckdb_engine", "Dialect")
 
     return create_engine("duckdb:///:memory:")
 
 
-@fixture
+@fixture()
 def session(engine: Engine) -> Session:
     return sessionmaker(bind=engine)()
 

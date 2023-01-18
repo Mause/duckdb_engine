@@ -1,5 +1,5 @@
 """
-See https://duckdb.org/docs/sql/data_types/numeric for more information
+See https://duckdb.org/docs/sql/data_types/numeric for more information.
 
 Also
 ```sql
@@ -28,7 +28,7 @@ class UInt32(Integer):
 
 
 class UInt16(Integer):
-    "AKA USMALLINT"
+    "AKA USMALLINT."
 
 
 class UInt8(Integer):
@@ -36,13 +36,15 @@ class UInt8(Integer):
 
 
 class UTinyInteger(Integer):
-    "AKA UInt1"
+    "AKA UInt1."
+
     name = "UTinyInt"
     # UTINYINT	-	0	255
 
 
 class TinyInteger(Integer):
-    "AKA Int1"
+    "AKA Int1."
+
     name = "TinyInt"
     # TINYINT	INT1	-128	127
 
