@@ -52,6 +52,7 @@ profile = "black"
 
 [tool.ruff]
 select = ["ALL"]
+fix = true
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
