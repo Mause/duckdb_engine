@@ -51,3 +51,10 @@ repos:
       args:
         - --jobs=1
         - --extend-ignore=W503,E203,E501
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    # Ruff version.
+    rev: 'v0.0.224'
+    hooks:
+      - id: ruff
+        # Respect `exclude` and `extend-exclude` settings.
+        args: ["--force-exclude"]
