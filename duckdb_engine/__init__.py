@@ -24,7 +24,7 @@ from sqlalchemy.engine.url import URL
 from .config import apply_config, get_core_config
 from .datatypes import register_extension_types
 
-__version__ = "0.6.6"
+__version__ = "0.6.8"
 
 if TYPE_CHECKING:
     from sqlalchemy.base import Connection
@@ -178,6 +178,7 @@ class Dialect(PGDialect_psycopg2):
             # postgres type_codes (such as 701 for float) that duckdb doesn't have
             sqltypes.Numeric: sqltypes.Numeric,
             sqltypes.Interval: sqltypes.Interval,
+            sqltypes.JSON: sqltypes.JSON,
         },
     )
 
