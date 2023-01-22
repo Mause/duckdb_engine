@@ -27,9 +27,7 @@ def get_app() -> "SupersetApp":
     app = SupersetApp(__name__)
     app.config.from_object("superset.config")
     app.config["WTF_CSRF_METHODS"] = {}
-    init = SupersetAppInitializer(app)
-    init.pre_init()
-    init.init_app()
+    SupersetAppInitializer(app).init_app()
 
     with app.app_context():
         upgrade()
