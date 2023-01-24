@@ -19,7 +19,7 @@ numpy = "*"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.2.1"
-pre-commit = "^2.21.0"
+pre-commit = "^3.0.0"
 pdbpp = "^0.10.3"
 mypy = "^0.991"
 hypothesis = "^6.62.1"
