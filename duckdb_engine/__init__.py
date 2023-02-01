@@ -178,6 +178,7 @@ class Dialect(PGDialect_psycopg2):
         conn = duckdb.connect(*cargs, **cparams)
 
         for extension in preload_extensions:
+            conn.execute(f"INSTALL {extension}")
             conn.execute(f"LOAD {extension}")
 
         apply_config(self, conn, ext)
