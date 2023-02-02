@@ -168,15 +168,18 @@ class Dialect(PGDialect_psycopg2):
         super().__init__(*args, **kwargs)
 
     def connect(self, *cargs: Any, **cparams: Any) -> "Connection":
-
         core_keys = get_core_config()
-        preload_extensions = cparams.pop("preload_extensions", [])
+        install_extensions = cparams.pop("install_extensions", [])        
+        preload_extensions = cparams.pop("preload_extensions", [])       
         config = cparams.get("config", {})
 
         ext = {k: config.pop(k) for k in list(config) if k not in core_keys}
 
         conn = duckdb.connect(*cargs, **cparams)
 
+        for extension in install_extensions:
+            conn.execute(f"INSTALL {extension}")        
+        
         for extension in preload_extensions:
             conn.execute(f"LOAD {extension}")
 
