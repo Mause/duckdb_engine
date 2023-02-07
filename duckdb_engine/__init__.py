@@ -168,7 +168,6 @@ class Dialect(PGDialect_psycopg2):
         super().__init__(*args, **kwargs)
 
     def connect(self, *cargs: Any, **cparams: Any) -> "Connection":
-
         core_keys = get_core_config()
         preload_extensions = cparams.pop("preload_extensions", [])
         config = cparams.get("config", {})
