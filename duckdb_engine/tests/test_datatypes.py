@@ -5,6 +5,7 @@ from sqlalchemy import Column, Integer
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session
+from sqlalchemy.types import JSON
 
 from ..datatypes import types
 
@@ -32,3 +33,22 @@ def test_unsigned_integer_type(
     session.commit()
 
     assert session.query(table).one()
+
+
+def test_json(engine: Engine, session: Session) -> None:
+    base = declarative_base()
+
+    class Entry(base):
+        __tablename__ = "test_json"
+
+        id = Column(Integer, primary_key=True, default=0)
+        meta = Column(JSON, nullable=False)
+
+    base.metadata.create_all(bind=engine)
+
+    session.add(Entry(meta={"hello": "world"}))  # type: ignore[call-arg]
+    session.commit()
+
+    result = session.query(Entry).one()
+
+    assert result.meta == {"hello": "world"}
