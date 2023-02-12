@@ -42,7 +42,7 @@ repos:
           - "duckdb==0.5.0"
           - "pytest==6.2.4"
           - "hypothesis==6.14.1"
-          - "sqlalchemy[mypy]"
+          - "sqlalchemy[mypy]==1.4.46"
           - "types-setuptools==57.4.17"
   - repo: https://github.com/PyCQA/flake8
     rev: '6.0.0'  # pick a git hash / tag to point to
