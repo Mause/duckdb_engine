@@ -72,7 +72,6 @@ class CompressedString(types.TypeDecorator):
 
 
 class TableWithBinary(Base):
-
     __tablename__ = "table_with_binary"
 
     id = Column(Integer(), Sequence("id_seq"), primary_key=True)
@@ -294,7 +293,6 @@ def test_intervals(session: Session) -> None:
 
 
 def test_binary(session: Session) -> None:
-
     a = TableWithBinary(text="Hello World!")
     session.add(a)
     session.commit()
