@@ -7,6 +7,7 @@ from typing import (
     Iterable,
     List,
     Optional,
+    Set,
     Tuple,
     Type,
     cast,
@@ -280,14 +281,41 @@ class Dialect(PGDialect_psycopg2):
     def import_dbapi(cls: Type["Dialect"]) -> Type[DBAPI]:
         return cls.dbapi()
 
-    # FIXME: these two methods are a hack around the fact that we use a single cursor all questions inside a connection
-    # and these are required to fix get_multi_columns. they need to be fixed somehow
-    def _load_enums(
-        self, connection: "Connection", schema: Optional[str] = None, **kw: Any
-    ) -> list:
-        return []
+    # FIXME: this method is a hack around the fact that we use a single cursor for all queries inside a connection,
+    #   and this is required to fix get_multi_columns
+    def get_multi_columns(
+        self,
+        connection: "Connection",
+        schema: str,
+        filter_names: Set[str],
+        scope: str,
+        kind: str,
+        **kw: Any,
+    ) -> List:
+        has_filter_names, params = self._prepare_filter_names(filter_names)  # type: ignore[attr-defined]
+        query = self._columns_query(schema, has_filter_names, scope, kind)  # type: ignore[attr-defined]
+        rows = list(connection.execute(query, params).mappings())
 
-    def _load_domains(
-        self, connection: "Connection", schema: Optional[str] = None, **kw: Any
-    ) -> list:
-        return []
+        # dictionary with (name, ) if default search path or (schema, name)
+        # as keys
+        domains = {
+            ((d["schema"], d["name"]) if not d["visible"] else (d["name"],)): d
+            for d in self._load_domains(  # type: ignore[attr-defined]
+                connection, schema="*", info_cache=kw.get("info_cache")
+            )
+        }
+
+        # dictionary with (name, ) if default search path or (schema, name)
+        # as keys
+        enums = dict(
+            ((rec["name"],), rec)
+            if rec["visible"]
+            else ((rec["schema"], rec["name"]), rec)
+            for rec in self._load_enums(  # type: ignore[attr-defined]
+                connection, schema="*", info_cache=kw.get("info_cache")
+            )
+        )
+
+        columns = self._get_columns_info(rows, domains, enums, schema)  # type: ignore[attr-defined]
+
+        return columns.items()
