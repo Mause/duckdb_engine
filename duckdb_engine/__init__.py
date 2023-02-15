@@ -281,6 +281,13 @@ class Dialect(PGDialect_psycopg2):
     def import_dbapi(cls: Type["Dialect"]) -> Type[DBAPI]:
         return cls.dbapi()
 
+    def do_executemany(
+        self, cursor: Any, statement: Any, parameters: Any, context: Optional[Any] = ...
+    ) -> None:
+        return DefaultDialect.do_executemany(
+            self, cursor, statement, parameters, context
+        )
+
     # FIXME: this method is a hack around the fact that we use a single cursor for all queries inside a connection,
     #   and this is required to fix get_multi_columns
     def get_multi_columns(
