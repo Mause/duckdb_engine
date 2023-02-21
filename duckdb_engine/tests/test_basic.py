@@ -236,10 +236,10 @@ def test_reflect(session: Session, engine: Engine) -> None:
 def test_get_multi_columns(engine: Engine) -> None:
     importorskip("sqlalchemy", "2.0.0-rc1")
     with engine.connect() as conn:
-        assert cast(Dialect, engine.dialect).get_multi_columns(  # type: ignore[attr-defined]
+        assert cast(Dialect, engine.dialect).get_multi_columns(
             connection=conn,
             schema=None,
-            filter_names=[],
+            filter_names=set(),
             scope=None,
             kind=(ObjectKind.TABLE,),
         )
