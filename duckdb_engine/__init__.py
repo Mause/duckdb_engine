@@ -293,10 +293,10 @@ class Dialect(PGDialect_psycopg2):
     def get_multi_columns(
         self,
         connection: "Connection",
-        schema: str,
-        filter_names: Set[str],
-        scope: str,
-        kind: str,
+        schema: Optional[str] = None,
+        filter_names: Optional[Set[str]] = None,
+        scope: Optional[str] = None,
+        kind: Optional[str] = None,
         **kw: Any,
     ) -> List:
         has_filter_names, params = self._prepare_filter_names(filter_names)  # type: ignore[attr-defined]
