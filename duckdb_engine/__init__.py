@@ -296,7 +296,7 @@ class Dialect(PGDialect_psycopg2):
         schema: Optional[str] = None,
         filter_names: Optional[Set[str]] = None,
         scope: Optional[str] = None,
-        kind: Optional[str] = None,
+        kind: Optional[Tuple[str, ...]] = None,
         **kw: Any,
     ) -> List:
         has_filter_names, params = self._prepare_filter_names(filter_names)  # type: ignore[attr-defined]
