@@ -5,6 +5,7 @@ import duckdb
 from sqlalchemy import pool, text
 from sqlalchemy import types as sqltypes
 from sqlalchemy import util
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.dialects.postgresql.base import PGInspector
 from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
 from sqlalchemy.engine.url import URL
@@ -160,6 +161,7 @@ class Dialect(PGDialect_psycopg2):
             sqltypes.Numeric: sqltypes.Numeric,
             sqltypes.Interval: sqltypes.Interval,
             sqltypes.JSON: sqltypes.JSON,
+            UUID: UUID,
         },
     )
 
