@@ -1,11 +1,13 @@
 from typing import Type
 
+from uuid import uuid4
 from pytest import mark
 from sqlalchemy import Column, Integer
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session
 from sqlalchemy.types import JSON
+from sqlalchemy.dialects.postgresql import UUID
 
 from ..datatypes import types
 
@@ -52,3 +54,23 @@ def test_json(engine: Engine, session: Session) -> None:
     result = session.query(Entry).one()
 
     assert result.meta == {"hello": "world"}
+
+
+def test_uuid(engine: Engine, session: Session) -> None:
+    base = declarative_base()
+
+    class Entry(base):
+        __tablename__ = "test_uuid"
+
+        id = Column(UUID, primary_key=True, default=0)
+
+    base.metadata.create_all(bind=engine)
+
+    ident = uuid4()
+
+    session.add(Entry(id=(ident)))
+    session.commit()
+
+    result = session.query(Entry).one()
+
+    assert result.id == ident

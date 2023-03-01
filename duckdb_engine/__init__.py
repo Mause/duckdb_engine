@@ -137,6 +137,7 @@ class ConnectionWrapper:
             else:
                 raise e
 
+from sqlalchemy.dialects.postgresql import UUID
 
 class DuckDBEngineWarning(Warning):
     pass
@@ -160,6 +161,7 @@ class Dialect(PGDialect_psycopg2):
             sqltypes.Numeric: sqltypes.Numeric,
             sqltypes.Interval: sqltypes.Interval,
             sqltypes.JSON: sqltypes.JSON,
+            UUID: UUID
         },
     )
 
