@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.6.9](https://github.com/Mause/duckdb_engine/compare/v0.6.8...v0.6.9) (2023-03-01)
+
+
+### Bug Fixes
+
+* properly support UUID type ([b138b85](https://github.com/Mause/duckdb_engine/commit/b138b8512b972c8b8ec9c229d86ae18706c8b18e)), closes [#530](https://github.com/Mause/duckdb_engine/issues/530)
+
+
+### Documentation
+
+* update README toc ([42a0192](https://github.com/Mause/duckdb_engine/commit/42a0192b8f948b610303a63f1a490c4ffe1ead95))
+* update readme with link to duckdb's docs ([4fcb730](https://github.com/Mause/duckdb_engine/commit/4fcb730c9f87d2d3ebd383717fb90b329fd50708))
+
 ## [0.6.8](https://github.com/Mause/duckdb_engine/compare/v0.6.7...v0.6.8) (2023-01-08)
 
 
