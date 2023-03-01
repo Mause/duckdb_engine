@@ -68,7 +68,7 @@ def test_uuid(engine: Engine, session: Session) -> None:
 
     ident = uuid4()
 
-    session.add(Entry(id=(ident)))
+    session.add(Entry(id=ident))  # type: ignore[call-arg]
     session.commit()
 
     result = session.query(Entry).one()
