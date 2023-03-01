@@ -58,8 +58,8 @@ assert frank.name == "Frank"
 
 ## Usage in IPython/Jupyter
 
-With IPython-SQL and DuckDB-Engine you can query DuckDB natively in your notebook!
-Alex Monahan has a great demo of this on [his blog](https://alex-monahan.github.io/2021/08/22/Python_and_SQL_Better_Together.html#an-example-workflow-with-duckdb)
+With IPython-SQL and DuckDB-Engine you can query DuckDB natively in your notebook! Check out [DuckDB's documentation](https://duckdb.org/docs/guides/python/jupyter) or
+Alex Monahan's great demo of this on [his blog](https://alex-monahan.github.io/2021/08/22/Python_and_SQL_Better_Together.html#an-example-workflow-with-duckdb).
 
 ## Configuration
 
