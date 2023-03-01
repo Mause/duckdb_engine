@@ -1,13 +1,13 @@
 from typing import Type
-
 from uuid import uuid4
+
 from pytest import mark
 from sqlalchemy import Column, Integer
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session
 from sqlalchemy.types import JSON
-from sqlalchemy.dialects.postgresql import UUID
 
 from ..datatypes import types
 
