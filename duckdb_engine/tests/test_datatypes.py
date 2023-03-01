@@ -1,7 +1,7 @@
 from typing import Type
 from uuid import uuid4
 
-from pytest import mark
+from pytest import mark, importorskip
 from sqlalchemy import Column, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.engine import Engine
@@ -57,6 +57,7 @@ def test_json(engine: Engine, session: Session) -> None:
 
 
 def test_uuid(engine: Engine, session: Session) -> None:
+    importorskip('duckdb', '0.7.1')
     base = declarative_base()
 
     class Entry(base):
