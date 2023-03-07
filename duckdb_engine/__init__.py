@@ -1,5 +1,17 @@
 import warnings
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Type, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Collection,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    cast,
+)
 
 import duckdb
 from sqlalchemy import pool, text
@@ -8,6 +20,7 @@ from sqlalchemy import util
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.dialects.postgresql.base import PGInspector
 from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
+from sqlalchemy.engine.default import DefaultDialect
 from sqlalchemy.engine.url import URL
 
 from .config import apply_config, get_core_config
@@ -119,7 +132,7 @@ class ConnectionWrapper:
         try:
             if statement.lower() == "commit":  # this is largely for ipython-sql
                 self.__c.commit()
-            elif statement.lower() == "register":
+            elif statement.lower() in ("register", "register(?, ?)"):
                 assert parameters and len(parameters) == 2, parameters
                 view_name, df = parameters
                 self.__c.register(view_name, df)
@@ -141,6 +154,13 @@ class ConnectionWrapper:
 
 class DuckDBEngineWarning(Warning):
     pass
+
+
+def index_warning() -> None:
+    warnings.warn(
+        "duckdb-engine doesn't yet support reflection on indices",
+        DuckDBEngineWarning,
+    )
 
 
 class Dialect(PGDialect_psycopg2):
@@ -239,8 +259,94 @@ class Dialect(PGDialect_psycopg2):
         schema: Optional[str] = None,
         **kw: Any,
     ) -> List["_IndexDict"]:
-        warnings.warn(
-            "duckdb-engine doesn't yet support reflection on indices",
-            DuckDBEngineWarning,
-        )
+        index_warning()
         return []
+
+    # the following methods are for SQLA2 compatibility
+    def get_multi_indexes(
+        self,
+        connection: "Connection",
+        schema: Optional[str] = None,
+        filter_names: Optional[Collection[str]] = None,
+        **kw: Any,
+    ) -> Iterable[Tuple]:
+        index_warning()
+        return []
+
+    def initialize(self, connection: "Connection") -> None:
+        DefaultDialect.initialize(self, connection)
+
+    def create_connect_args(self, url: URL) -> Tuple[tuple, dict]:
+        return (), url.translate_connect_args(database="database")
+
+    @classmethod
+    def import_dbapi(cls: Type["Dialect"]) -> Type[DBAPI]:
+        return cls.dbapi()
+
+    def do_executemany(
+        self, cursor: Any, statement: Any, parameters: Any, context: Optional[Any] = ...
+    ) -> None:
+        return DefaultDialect.do_executemany(
+            self, cursor, statement, parameters, context
+        )
+
+    # FIXME: this method is a hack around the fact that we use a single cursor for all queries inside a connection,
+    #   and this is required to fix get_multi_columns
+    def get_multi_columns(
+        self,
+        connection: "Connection",
+        schema: Optional[str] = None,
+        filter_names: Optional[Set[str]] = None,
+        scope: Optional[str] = None,
+        kind: Optional[Tuple[str, ...]] = None,
+        **kw: Any,
+    ) -> List:
+        """
+        Copyright 2005-2023 SQLAlchemy authors and contributors <see AUTHORS file>.
+
+        Permission is hereby granted, free of charge, to any person obtaining a copy of
+        this software and associated documentation files (the "Software"), to deal in
+        the Software without restriction, including without limitation the rights to
+        use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+        of the Software, and to permit persons to whom the Software is furnished to do
+        so, subject to the following conditions:
+
+        The above copyright notice and this permission notice shall be included in all
+        copies or substantial portions of the Software.
+
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        SOFTWARE.
+        """
+
+        has_filter_names, params = self._prepare_filter_names(filter_names)  # type: ignore[attr-defined]
+        query = self._columns_query(schema, has_filter_names, scope, kind)  # type: ignore[attr-defined]
+        rows = list(connection.execute(query, params).mappings())
+
+        # dictionary with (name, ) if default search path or (schema, name)
+        # as keys
+        domains = {
+            ((d["schema"], d["name"]) if not d["visible"] else (d["name"],)): d
+            for d in self._load_domains(  # type: ignore[attr-defined]
+                connection, schema="*", info_cache=kw.get("info_cache")
+            )
+        }
+
+        # dictionary with (name, ) if default search path or (schema, name)
+        # as keys
+        enums = dict(
+            ((rec["name"],), rec)
+            if rec["visible"]
+            else ((rec["schema"], rec["name"]), rec)
+            for rec in self._load_enums(  # type: ignore[attr-defined]
+                connection, schema="*", info_cache=kw.get("info_cache")
+            )
+        )
+
+        columns = self._get_columns_info(rows, domains, enums, schema)  # type: ignore[attr-defined]
+
+        return columns.items()

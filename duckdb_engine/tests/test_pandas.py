@@ -17,6 +17,10 @@ from pandas.testing import assert_frame_equal
 from pytest import importorskip, mark
 from sqlalchemy import create_engine
 
+from .util import sqlalchemy_1_only
+
+pytestmark = sqlalchemy_1_only
+
 _possible_args = OrderedDict(
     {
         "chunksize": [None, 1, 10, 100],

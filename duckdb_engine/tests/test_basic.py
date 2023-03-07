@@ -3,11 +3,13 @@ import os
 import zlib
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Optional, cast
+from typing import Any, Generic, Optional, TypeVar, cast
 
 import duckdb
+import sqlalchemy
 from hypothesis import assume, given, settings
 from hypothesis.strategies import text as text_strat
+from packaging.version import Version
 from pytest import LogCaptureFixture, fixture, importorskip, mark, raises
 from sqlalchemy import (
     Column,
@@ -30,7 +32,19 @@ from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, relationship, sessionmaker
 
-from .. import DBAPI
+from .. import DBAPI, Dialect
+from .util import sqlalchemy_1_only
+
+try:
+    # sqlalchemy 2
+    from sqlalchemy.engine import ObjectKind  # type: ignore[attr-defined]
+    from sqlalchemy.orm import Mapped
+except ImportError:
+    # sqlalchemy 1
+    T = TypeVar("T")
+
+    class Mapped(Generic[T]):  # type: ignore[no-redef]
+        pass
 
 
 @fixture
@@ -73,7 +87,7 @@ class FakeModel(Base):
     id = Column(Integer, Sequence("fakemodel_id_sequence"), primary_key=True)
     name = Column(String)
 
-    owner: "Owner" = relationship("Owner")
+    owner: Mapped["Owner"] = relationship("Owner")
 
 
 class Owner(Base):
@@ -81,7 +95,7 @@ class Owner(Base):
     id = Column(Integer, Sequence("owner_id"), primary_key=True)
 
     fake_id = Column(Integer, ForeignKey("fake.id"))
-    owned: FakeModel = relationship(FakeModel, back_populates="owner")
+    owned: Mapped[FakeModel] = relationship(FakeModel, back_populates="owner")
 
 
 class IntervalModel(Base):
@@ -204,9 +218,12 @@ def test_get_foreign_keys(inspector: Inspector) -> None:
     inspector.get_foreign_keys("test", None)
 
 
-@mark.xfail(reason="reflection not yet supported in duckdb", raises=NotImplementedError)
+@mark.skipif(
+    Version(sqlalchemy.__version__) < Version("2.0.0"),
+    reason="2-arg pg_getconstraintdef not yet supported in duckdb",
+)
 def test_get_check_constraints(inspector: Inspector) -> None:
-    inspector.get_check_constraints("test", None)
+    assert inspector.get_check_constraints("test", None) == []
 
 
 def test_get_unique_constraints(inspector: Inspector) -> None:
@@ -217,10 +234,23 @@ def test_reflect(session: Session, engine: Engine) -> None:
     session.execute(text("create table test (id int);"))
     session.commit()
 
-    meta = MetaData(engine)
-    meta.reflect(only=["test"])
+    meta = MetaData()
+    meta.reflect(only=["test"], bind=engine)
 
 
+def test_get_multi_columns(engine: Engine) -> None:
+    importorskip("sqlalchemy", "2.0.0-rc1")
+    with engine.connect() as conn:
+        assert cast(Dialect, engine.dialect).get_multi_columns(
+            connection=conn,
+            schema=None,
+            filter_names=set(),
+            scope=None,
+            kind=(ObjectKind.TABLE,),
+        )
+
+
+@sqlalchemy_1_only
 def test_commit(session: Session, engine: Engine) -> None:
     session.execute(text("commit;"))
 
@@ -240,7 +270,10 @@ def test_table_reflect(session: Session, engine: Engine) -> None:
     user_table = Table("test", meta)
     insp = inspect(engine)
 
-    insp.reflecttable(user_table, None)
+    reflect_table = (
+        insp.reflecttable if hasattr(insp, "reflecttable") else insp.reflect_table
+    )
+    reflect_table(user_table, None)
 
 
 def test_fetch_df_chunks() -> None:
