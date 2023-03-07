@@ -6,8 +6,10 @@ from pathlib import Path
 from typing import Any, Generic, Optional, TypeVar, cast
 
 import duckdb
+import sqlalchemy
 from hypothesis import assume, given, settings
 from hypothesis.strategies import text as text_strat
+from packaging.version import Version
 from pytest import LogCaptureFixture, fixture, importorskip, mark, raises
 from sqlalchemy import (
     Column,
@@ -216,9 +218,12 @@ def test_get_foreign_keys(inspector: Inspector) -> None:
     inspector.get_foreign_keys("test", None)
 
 
-@mark.xfail(reason="reflection not yet supported in duckdb", raises=NotImplementedError)
+@mark.skipif(
+    Version(sqlalchemy.__version__) < Version("2.0.0"),
+    reason="2-arg pg_getconstraintdef not yet supported in duckdb",
+)
 def test_get_check_constraints(inspector: Inspector) -> None:
-    inspector.get_check_constraints("test", None)
+    assert inspector.get_check_constraints("test", None) == []
 
 
 def test_get_unique_constraints(inspector: Inspector) -> None:
