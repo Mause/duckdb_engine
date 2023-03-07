@@ -570,14 +570,14 @@ i18n = ["Babel (>=2.7)"]
 
 [[package]]
 name = "jupysql"
-version = "0.6.1"
+version = "0.6.2"
 description = "Better SQL in Jupyter"
 category = "dev"
 optional = false
 python-versions = "*"
 files = [
-    {file = "jupysql-0.6.1-py3-none-any.whl", hash = "sha256:aa431fe1f94798d50998188dcdefb973b60920a0a6b395a0a3d5c7e3085afb36"},
-    {file = "jupysql-0.6.1.tar.gz", hash = "sha256:42228d23b06547ba96a5c046249406690830574e12d2568d2ef007b5e1e43691"},
+    {file = "jupysql-0.6.2-py3-none-any.whl", hash = "sha256:0de2bbb60d4e3d2b523f18aeeb3039d3a5cd588e515582a589aa7ba44da6fdd5"},
+    {file = "jupysql-0.6.2.tar.gz", hash = "sha256:32db1fdb0706344b6baf664d7484b56ff3deb4a23bc83351aa75f7ba09c2edd2"},
 ]
 
 [package.dependencies]
@@ -1605,4 +1605,4 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=4.6)", "pytest-black (
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.7"
-content-hash = "7be8b6894ea9df112e3cbcaac9506ccf5ae214c959f0d82d4916fe7db6780bb9"
+content-hash = "c89981fd53b7ac87db8e36c50dbdea06bae4ee06f110ea0ade3305689c03aeb3"
