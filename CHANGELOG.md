@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.0-rc1](https://github.com/Mause/duckdb_engine/compare/v0.6.9...v0.7.0-rc1) (2023-03-07)
+
+
+### Features
+
+* support sqlalchemy 2.0 ([fe6be80](https://github.com/Mause/duckdb_engine/commit/fe6be8034aa0d3cdfce03f67cf885eafe3dd9d64))
+
+
+### Miscellaneous Chores
+
+* release 0.7.0-rc1 ([691fdf9](https://github.com/Mause/duckdb_engine/commit/691fdf918ff3caee21395ab35a1a7840a8a7f833))
+
 ## [0.6.9](https://github.com/Mause/duckdb_engine/compare/v0.6.8...v0.6.9) (2023-03-01)
 
 
