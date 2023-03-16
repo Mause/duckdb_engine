@@ -570,14 +570,14 @@ i18n = ["Babel (>=2.7)"]
 
 [[package]]
 name = "jupysql"
-version = "0.6.3"
+version = "0.6.5"
 description = "Better SQL in Jupyter"
 category = "dev"
 optional = false
 python-versions = "*"
 files = [
-    {file = "jupysql-0.6.3-py3-none-any.whl", hash = "sha256:f3031d2b2b3cc6d4a91d0400bf53d2e7df1399ab9bbb9f570928071788e45db1"},
-    {file = "jupysql-0.6.3.tar.gz", hash = "sha256:fd82636d286cefb4c496d3609b74f97da7229435972693222c867dfed7791af0"},
+    {file = "jupysql-0.6.5-py3-none-any.whl", hash = "sha256:4cf57fdc669e3bb71d6422144b238f642933ffe79ce28a83614602e8d3844745"},
+    {file = "jupysql-0.6.5.tar.gz", hash = "sha256:8c4cf8cdf8de37670dafc6978cd7433d5c2595e1639f40d8ac2d1ea23c05628e"},
 ]
 
 [package.dependencies]
@@ -587,7 +587,7 @@ ipython-genutils = ">=0.1.0"
 jinja2 = "*"
 ploomber-core = ">=0.2.4"
 prettytable = "*"
-sqlalchemy = ">=0.6.7,<2.0"
+sqlalchemy = "*"
 sqlparse = "*"
 
 [package.extras]
@@ -1605,4 +1605,4 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=4.6)", "pytest-black (
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.7"
-content-hash = "f5ae7442b59d58862d7b440e1e5cf642971d7c9090332486e8c565c991534492"
+content-hash = "b890eb329cbad135e6af44c50b382b9cb17779ec38c9f862b1b442e78f822ccb"
