@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/Mause/duckdb_engine/compare/v0.7.0-rc1...v0.7.0) (2023-03-16)
+
+
+### Miscellaneous Chores
+
+* release 0.7.0 ([c790424](https://github.com/Mause/duckdb_engine/commit/c790424aee5f2bfcfe589ad7f27b4f2e18b4d1e2))
+
 ## [0.7.0-rc1](https://github.com/Mause/duckdb_engine/compare/v0.6.9...v0.7.0-rc1) (2023-03-07)
 
 
