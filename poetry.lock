@@ -392,14 +392,14 @@ docs = ["Sphinx"]
 
 [[package]]
 name = "hypothesis"
-version = "6.68.2"
+version = "6.70.0"
 description = "A library for property-based testing"
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "hypothesis-6.68.2-py3-none-any.whl", hash = "sha256:2a41cc766cde52705895e54547374af89c617e8ec7bc4186cb7f03884a667d4e"},
-    {file = "hypothesis-6.68.2.tar.gz", hash = "sha256:a7eb2b0c9a18560d8197fe35047ceb58e7e8ab7623a3e5a82613f6a2cd71cffa"},
+    {file = "hypothesis-6.70.0-py3-none-any.whl", hash = "sha256:be395f71d6337a5e8ed2f695c568360a686056c3b00c98bd818874c674b24586"},
+    {file = "hypothesis-6.70.0.tar.gz", hash = "sha256:f5cae09417d0ffc7711f602cdcfa3b7baf344597a672a84658186605b04f4a4f"},
 ]
 
 [package.dependencies]
@@ -1605,4 +1605,4 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=4.6)", "pytest-black (
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.7"
-content-hash = "b890eb329cbad135e6af44c50b382b9cb17779ec38c9f862b1b442e78f822ccb"
+content-hash = "0d784fb0ec32ab4ae35a12480a9051258f8a7c4c74ab28bfbe63e32268cf8ce1"
