@@ -570,14 +570,14 @@ i18n = ["Babel (>=2.7)"]
 
 [[package]]
 name = "jupysql"
-version = "0.6.6"
+version = "0.7.0"
 description = "Better SQL in Jupyter"
 category = "dev"
 optional = false
 python-versions = "*"
 files = [
-    {file = "jupysql-0.6.6-py3-none-any.whl", hash = "sha256:bbe44fdfa1d032f548e76b8128722cefa0253db4dac38200be05760647d88c85"},
-    {file = "jupysql-0.6.6.tar.gz", hash = "sha256:8c328e18ff43f566905aaa8a26c7c4693d83be5ba5e69bd2bb6c1d6a3c3af865"},
+    {file = "jupysql-0.7.0-py3-none-any.whl", hash = "sha256:ee00ca855af1feb49f0d3b09a09c181fc1f377a319353a899f1207b01014a450"},
+    {file = "jupysql-0.7.0.tar.gz", hash = "sha256:7661403dcb4736f529e152abbb9f0a33e28ab1da41e85dab44cf316f68d49986"},
 ]
 
 [package.dependencies]
@@ -585,13 +585,15 @@ importlib-metadata = {version = "*", markers = "python_version < \"3.8\""}
 ipython = ">=1.0"
 ipython-genutils = ">=0.1.0"
 jinja2 = "*"
-ploomber-core = ">=0.2.4"
+ploomber-core = ">=0.2.7"
 prettytable = "*"
 sqlalchemy = "<2"
+sqlglot = ">=11.3.7"
 sqlparse = "*"
 
 [package.extras]
-dev = ["black", "duckdb", "duckdb-engine", "flake8", "invoke", "matplotlib", "pandas", "pkgmt", "polars", "pytest", "twine"]
+dev = ["black", "duckdb", "duckdb-engine", "flake8", "invoke", "ipywidgets", "matplotlib", "pandas", "pkgmt", "polars (==0.16.14)", "pyodbc", "pytest", "twine"]
+integration = ["black", "dockerctx", "duckdb", "duckdb-engine", "flake8", "invoke", "ipywidgets", "matplotlib", "pandas", "pgspecial (==2.0.1)", "pkgmt", "polars (==0.16.14)", "psycopg2-binary", "pyarrow", "pymysql", "pyodbc", "pytest", "twine"]
 
 [[package]]
 name = "markupsafe"
@@ -919,14 +921,14 @@ test = ["appdirs (==1.4.4)", "pytest (>=7.2)", "pytest-cov (>=4)", "pytest-mock 
 
 [[package]]
 name = "ploomber-core"
-version = "0.2.6"
+version = "0.2.9"
 description = ""
 category = "dev"
 optional = false
 python-versions = "*"
 files = [
-    {file = "ploomber-core-0.2.6.tar.gz", hash = "sha256:e2c490d09e271e3ec042344e64f1e100e464b8882a1ea8f41cd5eac64e665b67"},
-    {file = "ploomber_core-0.2.6-py3-none-any.whl", hash = "sha256:30478b467f1cafe120d3b05a4453cb4345aad4acd2dad7c9e6fc05f02b844f00"},
+    {file = "ploomber-core-0.2.9.tar.gz", hash = "sha256:8d8a37a9f16d028e27f79b40ec625062967183a84b1116ca74e162f0d5742ce2"},
+    {file = "ploomber_core-0.2.9-py3-none-any.whl", hash = "sha256:412e34e5714fce82ead660d0cecdd240373f0ceebf145b01f5c106905d19679d"},
 ]
 
 [package.dependencies]
@@ -1373,6 +1375,21 @@ files = [
 typing-extensions = ">=3.7.4"
 
 [[package]]
+name = "sqlglot"
+version = "11.5.3"
+description = "An easily customizable SQL parser and transpiler"
+category = "dev"
+optional = false
+python-versions = "*"
+files = [
+    {file = "sqlglot-11.5.3-py3-none-any.whl", hash = "sha256:56a97e7c693ee541eb1866809c75e1fb3558e648d758f79a60abe11eabdafcad"},
+    {file = "sqlglot-11.5.3.tar.gz", hash = "sha256:be37b832fc138a53a9465c730ddb1ccb1c39193aece40557066b1af0a41b0cee"},
+]
+
+[package.extras]
+dev = ["autoflake", "black", "duckdb", "isort", "mypy (>=0.990)", "pandas", "pdoc", "pre-commit", "pyspark", "python-dateutil"]
+
+[[package]]
 name = "sqlparse"
 version = "0.4.2"
 description = "A non-validating SQL parser."
@@ -1609,4 +1626,4 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=4.6)", "pytest-black (
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.7"
-content-hash = "1072e3d4dc63c606c43b4a5684e972cc94d64b9bf3c56204a4f4e038bf038a5f"
+content-hash = "c14edc23c187d228923ab9286384a31c724fc15790127bf9095dba041aac3758"
