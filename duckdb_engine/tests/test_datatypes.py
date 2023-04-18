@@ -5,8 +5,7 @@ from pytest import importorskip, mark
 from sqlalchemy import Column, Integer, inspect
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.engine import Engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, declarative_base
 from sqlalchemy.types import JSON
 
 from ..datatypes import types
@@ -30,8 +29,9 @@ def test_unsigned_integer_type(
     )
     Base.metadata.create_all(engine)
 
+    inspector = inspect(engine)
     has_table = (
-        engine.has_table if hasattr(engine, "has_table") else inspect(engine).has_table
+        inspector.has_table if hasattr(inspector, "has_table") else engine.has_table
     )
 
     assert has_table(tname)

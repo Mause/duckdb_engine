@@ -29,8 +29,7 @@ from sqlalchemy.dialects import registry  # type: ignore
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.exc import DBAPIError
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session, relationship, sessionmaker
+from sqlalchemy.orm import Session, relationship, sessionmaker, declarative_base
 
 from .. import DBAPI, Dialect
 from .util import sqlalchemy_1_only
@@ -51,7 +50,7 @@ except ImportError:
 def engine() -> Engine:
     registry.register("duckdb", "duckdb_engine", "Dialect")
 
-    eng = create_engine("duckdb:///:memory:")
+    eng = create_engine("duckdb:///:memory:", future=True)
     Base.metadata.create_all(eng)
     return eng
 
@@ -108,7 +107,7 @@ class IntervalModel(Base):
 
 @fixture
 def session(engine: Engine) -> Session:
-    return sessionmaker(bind=engine)()
+    return sessionmaker(bind=engine)(future=True)
 
 
 def test_basic(session: Session) -> None:
@@ -165,20 +164,22 @@ def test_get_tables(inspector: Inspector) -> None:
 
 
 def test_get_views(engine: Engine) -> None:
-    con = engine.connect()
-    views = engine.dialect.get_view_names(con)
+    with engine.connect() as con:
+        views = engine.dialect.get_view_names(con)
     assert views == []
 
-    con.execute(text("create view test as select 1"))
-    con.execute(
-        text("create schema scheme; create view scheme.schema_test as select 1")
-    )
+    with  engine.connect()  as con:
+        con.execute(text("create view test as select 1"))
+        con.execute(
+            text("create schema scheme; create view scheme.schema_test as select 1")
+        )
 
-    views = engine.dialect.get_view_names(con)
-    assert views == ["test"]
+    with engine.connect() as con:
+        views = engine.dialect.get_view_names(con)
+        assert views == ["test"]
 
-    views = engine.dialect.get_view_names(con, schema="scheme")
-    assert views == ["schema_test"]
+        views = engine.dialect.get_view_names(con, schema="scheme")
+        assert views == ["schema_test"]
 
 
 @mark.skipif(os.uname().machine == "aarch64", reason="not supported on aarch64")
@@ -271,7 +272,7 @@ def test_table_reflect(session: Session, engine: Engine) -> None:
     insp = inspect(engine)
 
     reflect_table = (
-        insp.reflecttable if hasattr(insp, "reflecttable") else insp.reflect_table
+        insp.reflect_table if hasattr(insp, "reflect_table") else insp.reflecttable
     )
     reflect_table(user_table, None)
 
@@ -324,7 +325,7 @@ def test_sessions(session: Session) -> None:
     session.add(c)
     session.commit()
 
-    c2 = session.query(IntervalModel).get(1)
+    c2 = session.get(IntervalModel, 1)
     assert c2
     c2.field = timedelta(days=5)
     session.flush()
