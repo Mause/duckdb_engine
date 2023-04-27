@@ -250,8 +250,8 @@ def test_get_multi_columns(engine: Engine) -> None:
         )
 
 
-@sqlalchemy_1_only
 def test_commit(session: Session, engine: Engine) -> None:
+    importorskip('sqlalchemy', '1.4.0')
     session.execute(text("commit;"))
 
     InteractiveShell = importorskip("IPython.core.interactiveshell").InteractiveShell
