@@ -1,15 +1,10 @@
 import warnings
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Collection,
-    Iterable,
-    cast,
-)
+from typing import TYPE_CHECKING, Any, Collection, Iterable, cast
 
 import duckdb
-from sqlalchemy import pool, text, util
+from sqlalchemy import pool, text
 from sqlalchemy import types as sqltypes
+from sqlalchemy import util
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.dialects.postgresql.base import PGInspector
 from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
@@ -281,10 +276,18 @@ class Dialect(PGDialect_psycopg2):
         return cls.dbapi()
 
     def do_executemany(
-        self, cursor: Any, statement: Any, parameters: Any, context: Any | None = ...,
+        self,
+        cursor: Any,
+        statement: Any,
+        parameters: Any,
+        context: Any | None = ...,
     ) -> None:
         return DefaultDialect.do_executemany(
-            self, cursor, statement, parameters, context,
+            self,
+            cursor,
+            statement,
+            parameters,
+            context,
         )
 
     # FIXME: this method is a hack around the fact that we use a single cursor for all queries inside a connection,
@@ -328,7 +331,9 @@ class Dialect(PGDialect_psycopg2):
         domains = {
             ((d["schema"], d["name"]) if not d["visible"] else (d["name"],)): d
             for d in self._load_domains(  # type: ignore[attr-defined]
-                connection, schema="*", info_cache=kw.get("info_cache"),
+                connection,
+                schema="*",
+                info_cache=kw.get("info_cache"),
             )
         }
 
@@ -339,7 +344,9 @@ class Dialect(PGDialect_psycopg2):
             if rec["visible"]
             else ((rec["schema"], rec["name"]), rec)
             for rec in self._load_enums(  # type: ignore[attr-defined]
-                connection, schema="*", info_cache=kw.get("info_cache"),
+                connection,
+                schema="*",
+                info_cache=kw.get("info_cache"),
             )
         )
 
