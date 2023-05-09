@@ -2,7 +2,7 @@ from typing import Type
 from uuid import uuid4
 
 from pytest import importorskip, mark
-from sqlalchemy import Column, Integer, inspect
+from sqlalchemy import Column, Integer, MetaData, Table, inspect, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -80,3 +80,16 @@ def test_uuid(engine: Engine, session: Session) -> None:
     result = session.query(Entry).one()
 
     assert result.id == ident
+
+
+def test_double_in_sqla_v2(engine: Engine) -> None:
+    with engine.begin() as con:
+        con.execute(text("CREATE TABLE t (x DOUBLE)"))
+        con.execute(text("INSERT INTO t VALUES (1.0), (2.0), (3.0)"))
+
+    md = MetaData()
+
+    t = Table("t", md, autoload_with=engine)
+
+    with engine.begin() as con:
+        con.execute(t.select())
