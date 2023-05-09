@@ -2,9 +2,8 @@ import warnings
 from typing import TYPE_CHECKING, Any, Collection, Iterable, cast
 
 import duckdb
-from sqlalchemy import pool, text
+from sqlalchemy import pool, text, util
 from sqlalchemy import types as sqltypes
-from sqlalchemy import util
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.dialects.postgresql.base import PGInspector
 from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
@@ -49,7 +48,7 @@ class DuckDBInspector(PGInspector):
         try:
             return super().get_check_constraints(table_name, schema, **kw)
         except Exception as e:
-            raise NotImplementedError() from e
+            raise NotImplementedError from e
 
 
 class ConnectionWrapper:
@@ -214,7 +213,7 @@ class Dialect(PGDialect_psycopg2):
         return (8, 0)
 
     def get_default_isolation_level(self, connection: "Connection") -> None:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def do_rollback(self, connection: "Connection") -> None:
         try:
@@ -301,8 +300,7 @@ class Dialect(PGDialect_psycopg2):
         kind: tuple[str, ...] | None = None,
         **kw: Any,
     ) -> list:
-        """
-        Copyright 2005-2023 SQLAlchemy authors and contributors <see AUTHORS file>.
+        """Copyright 2005-2023 SQLAlchemy authors and contributors <see AUTHORS file>.
 
         Permission is hereby granted, free of charge, to any person obtaining a copy of
         this software and associated documentation files (the "Software"), to deal in

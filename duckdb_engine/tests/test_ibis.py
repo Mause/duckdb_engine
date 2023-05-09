@@ -1,6 +1,4 @@
-"""
-these are largely just smoke tests.
-"""
+"""these are largely just smoke tests."""
 
 from csv import DictWriter
 from pathlib import Path

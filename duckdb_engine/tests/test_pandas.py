@@ -1,8 +1,6 @@
 #! /usr/bin/env python3
 
-"""
-Test pandas functionality.
-"""
+"""Test pandas functionality."""
 
 import pathlib
 import random

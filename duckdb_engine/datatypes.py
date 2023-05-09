@@ -1,5 +1,4 @@
-"""
-See https://duckdb.org/docs/sql/data_types/numeric for more information.
+"""See https://duckdb.org/docs/sql/data_types/numeric for more information.
 
 Also
 ```sql

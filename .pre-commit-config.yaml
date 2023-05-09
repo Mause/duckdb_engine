@@ -56,6 +56,6 @@ repos:
     rev: 'v0.0.265'
     hooks:
       - id: ruff
-        args: 
+        args:
          - --fix
          - --exit-non-zero-on-fix

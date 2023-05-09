@@ -32,7 +32,7 @@ from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, relationship, sessionmaker
 
-from .. import DBAPI, Dialect
+from duckdb_engine import DBAPI, Dialect
 
 try:
     # sqlalchemy 2
@@ -306,7 +306,7 @@ def test_binary(session: Session) -> None:
 
 
 def test_comment_support() -> None:
-    "comments not yet supported by duckdb."
+    "Comments not yet supported by duckdb."
     with raises(DBAPI.ParserException, match="syntax error"):
         duckdb.default_connection.execute('comment on sqlite_master is "hello world";')
 
