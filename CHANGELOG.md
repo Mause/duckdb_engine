@@ -5,8 +5,6 @@
 
 ### Bug Fixes
 
-* **deps:** update dependency sqlalchemy to 1.4.46 ([4f753e4](https://github.com/Mause/duckdb_engine/commit/4f753e401078cf8e3897a7e156fbb20d8c06b077))
-* **deps:** update dependency sqlalchemy to v2 ([968c628](https://github.com/Mause/duckdb_engine/commit/968c628f20c186b12dd1f2f847ab0e8f0be011e5))
 * reuse base dialect colspecs ([faba775](https://github.com/Mause/duckdb_engine/commit/faba77590690cd026384a1e310373661554b903a)), closes [#632](https://github.com/Mause/duckdb_engine/issues/632)
 
 
