@@ -3,20 +3,13 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Collection,
-    Dict,
     Iterable,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    Type,
     cast,
 )
 
 import duckdb
 from sqlalchemy import pool, text, util
 from sqlalchemy import types as sqltypes
-from sqlalchemy import util
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.dialects.postgresql.base import PGInspector
 from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
@@ -53,7 +46,10 @@ class DBAPI:
 
 class DuckDBInspector(PGInspector):
     def get_check_constraints(
-        self, table_name: str, schema: str | None = None, **kw: Any,
+        self,
+        table_name: str,
+        schema: str | None = None,
+        **kw: Any,
     ) -> list[dict[str, Any]]:
         try:
             return super().get_check_constraints(table_name, schema, **kw)
@@ -247,7 +243,8 @@ class Dialect(PGDialect_psycopg2):
     ) -> Any:
         s = "SELECT table_name FROM information_schema.tables WHERE table_type='VIEW' and table_schema=:schema_name"
         rs = connection.execute(
-            text(s), {"schema_name": schema if schema is not None else "main"},
+            text(s),
+            {"schema_name": schema if schema is not None else "main"},
         )
 
         return [row[0] for row in rs]
@@ -258,7 +255,7 @@ class Dialect(PGDialect_psycopg2):
         table_name: str,
         schema: str | None = None,
         **kw: Any,
-    ) -> List["_IndexDict"]:
+    ) -> list["_IndexDict"]:
         index_warning()
         return []
 
@@ -266,28 +263,28 @@ class Dialect(PGDialect_psycopg2):
     def get_multi_indexes(
         self,
         connection: "Connection",
-        schema: Optional[str] = None,
-        filter_names: Optional[Collection[str]] = None,
+        schema: str | None = None,
+        filter_names: Collection[str] | None = None,
         **kw: Any,
-    ) -> Iterable[Tuple]:
+    ) -> Iterable[tuple]:
         index_warning()
         return []
 
     def initialize(self, connection: "Connection") -> None:
         DefaultDialect.initialize(self, connection)
 
-    def create_connect_args(self, url: URL) -> Tuple[tuple, dict]:
+    def create_connect_args(self, url: URL) -> tuple[tuple, dict]:
         return (), url.translate_connect_args(database="database")
 
     @classmethod
-    def import_dbapi(cls: Type["Dialect"]) -> Type[DBAPI]:
+    def import_dbapi(cls: type["Dialect"]) -> type[DBAPI]:
         return cls.dbapi()
 
     def do_executemany(
-        self, cursor: Any, statement: Any, parameters: Any, context: Optional[Any] = ...
+        self, cursor: Any, statement: Any, parameters: Any, context: Any | None = ...,
     ) -> None:
         return DefaultDialect.do_executemany(
-            self, cursor, statement, parameters, context
+            self, cursor, statement, parameters, context,
         )
 
     # FIXME: this method is a hack around the fact that we use a single cursor for all queries inside a connection,
@@ -295,12 +292,12 @@ class Dialect(PGDialect_psycopg2):
     def get_multi_columns(
         self,
         connection: "Connection",
-        schema: Optional[str] = None,
-        filter_names: Optional[Set[str]] = None,
-        scope: Optional[str] = None,
-        kind: Optional[Tuple[str, ...]] = None,
+        schema: str | None = None,
+        filter_names: set[str] | None = None,
+        scope: str | None = None,
+        kind: tuple[str, ...] | None = None,
         **kw: Any,
-    ) -> List:
+    ) -> list:
         """
         Copyright 2005-2023 SQLAlchemy authors and contributors <see AUTHORS file>.
 
@@ -322,7 +319,6 @@ class Dialect(PGDialect_psycopg2):
         OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
         SOFTWARE.
         """
-
         has_filter_names, params = self._prepare_filter_names(filter_names)  # type: ignore[attr-defined]
         query = self._columns_query(schema, has_filter_names, scope, kind)  # type: ignore[attr-defined]
         rows = list(connection.execute(query, params).mappings())
@@ -332,7 +328,7 @@ class Dialect(PGDialect_psycopg2):
         domains = {
             ((d["schema"], d["name"]) if not d["visible"] else (d["name"],)): d
             for d in self._load_domains(  # type: ignore[attr-defined]
-                connection, schema="*", info_cache=kw.get("info_cache")
+                connection, schema="*", info_cache=kw.get("info_cache"),
             )
         }
 
@@ -343,7 +339,7 @@ class Dialect(PGDialect_psycopg2):
             if rec["visible"]
             else ((rec["schema"], rec["name"]), rec)
             for rec in self._load_enums(  # type: ignore[attr-defined]
-                connection, schema="*", info_cache=kw.get("info_cache")
+                connection, schema="*", info_cache=kw.get("info_cache"),
             )
         )
 

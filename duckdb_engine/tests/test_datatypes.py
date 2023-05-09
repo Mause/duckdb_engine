@@ -1,4 +1,3 @@
-from typing import Type
 from uuid import uuid4
 
 from pytest import importorskip, mark
@@ -14,7 +13,9 @@ from ..datatypes import types
 
 @mark.parametrize("coltype", types)
 def test_unsigned_integer_type(
-    engine: Engine, session: Session, coltype: type[Integer],
+    engine: Engine,
+    session: Session,
+    coltype: type[Integer],
 ) -> None:
     Base = declarative_base()
 

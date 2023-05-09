@@ -3,7 +3,7 @@ import os
 import zlib
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Generic, Optional, TypeVar, cast
+from typing import Any, Generic, TypeVar, cast
 
 import duckdb
 import sqlalchemy
@@ -365,7 +365,9 @@ def test_config(tmp_path: Path) -> None:
 
 def test_do_ping(tmp_path: Path, caplog: LogCaptureFixture) -> None:
     engine = create_engine(
-        "duckdb:///" + str(tmp_path / "db"), pool_pre_ping=True, pool_size=1,
+        "duckdb:///" + str(tmp_path / "db"),
+        pool_pre_ping=True,
+        pool_size=1,
     )
 
     logger = cast(logging.Logger, engine.pool.logger)  # type: ignore
