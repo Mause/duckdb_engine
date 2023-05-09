@@ -54,7 +54,6 @@ profile = "black"
 [tool.ruff]
 select = ["ALL"]
 target-version = "py37"
-fix = true
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
