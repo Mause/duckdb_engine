@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.7.1](https://github.com/Mause/duckdb_engine/compare/v0.7.0...v0.7.1) (2023-05-09)
+
+
+### Bug Fixes
+
+* **deps:** update dependency sqlalchemy to 1.4.46 ([4f753e4](https://github.com/Mause/duckdb_engine/commit/4f753e401078cf8e3897a7e156fbb20d8c06b077))
+* **deps:** update dependency sqlalchemy to v2 ([968c628](https://github.com/Mause/duckdb_engine/commit/968c628f20c186b12dd1f2f847ab0e8f0be011e5))
+* reuse base dialect colspecs ([faba775](https://github.com/Mause/duckdb_engine/commit/faba77590690cd026384a1e310373661554b903a)), closes [#632](https://github.com/Mause/duckdb_engine/issues/632)
+
+
+### Dependencies
+
+* raise sqlalchemy lower bound to fix [#609](https://github.com/Mause/duckdb_engine/issues/609) ([16cc7d8](https://github.com/Mause/duckdb_engine/commit/16cc7d88f6982d572648c142a25a9e8681bb46f2))
+
 ## [0.7.0](https://github.com/Mause/duckdb_engine/compare/v0.7.0-rc1...v0.7.0) (2023-03-16)
 
 
