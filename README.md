@@ -1,6 +1,6 @@
 # duckdb_engine
 
-[![Supported Python Versions](https://img.shields.io/pypi/pyversions/duckdb-engine)](https://pypi.org/project/duckdb-engine/) [![PyPI version](https://badge.fury.io/py/duckdb-engine.svg)](https://badge.fury.io/py/duckdb-engine) [![PyPI Downloads](https://img.shields.io/pypi/dm/duckdb-engine.svg)](https://pypi.org/project/duckdb-engine/) [![codecov](https://codecov.io/gh/Mause/duckdb_engine/branch/master/graph/badge.svg)](https://codecov.io/gh/Mause/duckdb_engine)
+[![Supported Python Versions](https://img.shields.io/pypi/pyversions/duckdb-engine)](https://pypi.org/project/duckdb-engine/) [![PyPI version](https://badge.fury.io/py/duckdb-engine.svg)](https://badge.fury.io/py/duckdb-engine) [![PyPI Downloads](https://img.shields.io/pypi/dm/duckdb-engine.svg)](https://pypi.org/project/duckdb-engine/) [![codecov](https://codecov.io/gh/Mause/duckdb_engine/graph/badge.svg)](https://codecov.io/gh/Mause/duckdb_engine)
 
 Basic SQLAlchemy driver for [DuckDB](https://duckdb.org/)
 
@@ -8,6 +8,7 @@ Basic SQLAlchemy driver for [DuckDB](https://duckdb.org/)
 * [duckdb_engine](#duckdb_engine)
    * [Installation](#installation)
    * [Usage](#usage)
+   * [Usage in IPython/Jupyter](#usage-in-ipythonjupyter)
    * [Configuration](#configuration)
    * [How to register a pandas DataFrame](#how-to-register-a-pandas-dataframe)
    * [Things to keep in mind](#things-to-keep-in-mind)
@@ -58,8 +59,8 @@ assert frank.name == "Frank"
 
 ## Usage in IPython/Jupyter
 
-With IPython-SQL and DuckDB-Engine you can query DuckDB natively in your notebook!
-Alex Monahan has a great demo of this on [his blog](https://alex-monahan.github.io/2021/08/22/Python_and_SQL_Better_Together.html#an-example-workflow-with-duckdb)
+With IPython-SQL and DuckDB-Engine you can query DuckDB natively in your notebook! Check out [DuckDB's documentation](https://duckdb.org/docs/guides/python/jupyter) or
+Alex Monahan's great demo of this on [his blog](https://alex-monahan.github.io/2021/08/22/Python_and_SQL_Better_Together.html#an-example-workflow-with-duckdb).
 
 ## Configuration
 

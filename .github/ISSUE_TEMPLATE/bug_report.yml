@@ -32,6 +32,9 @@ body:
       description: What version of duckdb are you running?
     validations:
       required: true
+  - type: input
+    attributes:
+      label: SQLAlchemy Version
   - type: textarea
     id: logs
     attributes:
