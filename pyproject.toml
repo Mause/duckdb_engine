@@ -53,6 +53,7 @@ profile = "black"
 
 [tool.ruff]
 select = ["ALL"]
+target-version = "py37"
 fix = true
 
 [build-system]
