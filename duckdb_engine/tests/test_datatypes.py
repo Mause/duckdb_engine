@@ -99,7 +99,7 @@ def test_double_in_sqla_v2(engine: Engine) -> None:
 
 def test_all_types_reflection(engine: Engine) -> None:
     with warnings.catch_warnings() as capture, engine.connect() as conn:
-        conn.execute(text("create table t2 as from test_all_types()"))
+        conn.execute(text("create table t2 as select * from test_all_types()"))
         table = Table("t2", MetaData(), autoload_with=conn)
         for col in table.columns:
             assert col.type != sqltypes.NULLTYPE, col.name
