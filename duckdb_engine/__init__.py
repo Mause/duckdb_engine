@@ -24,7 +24,7 @@ from sqlalchemy.engine.default import DefaultDialect
 from sqlalchemy.engine.url import URL
 
 from .config import apply_config, get_core_config
-from .datatypes import register_extension_types
+from .datatypes import ISCHEMA_NAMES, register_extension_types
 
 __version__ = "0.7.1"
 
@@ -183,6 +183,10 @@ class Dialect(PGDialect_psycopg2):
             sqltypes.JSON: sqltypes.JSON,
             UUID: UUID,
         },
+    )
+    ischema_names = util.update_copy(
+        PGDialect.ischema_names,
+        ISCHEMA_NAMES,
     )
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
