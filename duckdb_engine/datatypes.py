@@ -11,6 +11,8 @@ from typing import Any
 
 from sqlalchemy.dialects.postgresql.base import PGTypeCompiler
 from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.sql import sqltypes
+from sqlalchemy.sql.type_api import TypeEngine
 from sqlalchemy.types import BigInteger, Integer, SmallInteger
 
 # INTEGER	INT4, INT, SIGNED	-2147483648	2147483647
@@ -81,6 +83,31 @@ types = [
     if subclass.__module__ == UInt64.__module__
 ]
 assert types
+
+
+class Struct(TypeEngine):
+    pass
+
+
+class Map(TypeEngine):
+    pass
+
+
+ISCHEMA_NAMES = {
+    "hugeint": HugeInteger,
+    "tinyint": TinyInteger,
+    "utinyint": UTinyInteger,
+    "usmallint": USmallInteger,
+    "uinteger": UInt8,
+    "ubigint": UBigInteger,
+    "timestamp_s": sqltypes.TIMESTAMP,
+    "timestamp_ms": sqltypes.TIMESTAMP,
+    "timestamp_ns": sqltypes.TIMESTAMP,
+    "enum": sqltypes.Enum,
+    "list": lambda: sqltypes.ARRAY(sqltypes.NULLTYPE),
+    "struct": Struct,
+    "map": Map,
+}
 
 
 def register_extension_types() -> None:
