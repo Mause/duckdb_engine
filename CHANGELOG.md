@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.2](https://github.com/Mause/duckdb_engine/compare/v0.7.1...v0.7.2) (2023-05-17)
+
+
+### Bug Fixes
+
+* add missing ischema_names entries ([20e30cf](https://github.com/Mause/duckdb_engine/commit/20e30cf4062cf3927b6dab86b0e609ca1e3d4d68))
+
 ## [0.7.1](https://github.com/Mause/duckdb_engine/compare/v0.7.0...v0.7.1) (2023-05-09)
 
 
