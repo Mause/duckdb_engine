@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.3](https://github.com/Mause/duckdb_engine/compare/v0.7.2...v0.7.3) (2023-05-19)
+
+
+### Bug Fixes
+
+* don't reflect nested types for now ([3a01f9d](https://github.com/Mause/duckdb_engine/commit/3a01f9d9d8d459c7b185b8c95f0eabe6ae21c56e))
+
 ## [0.7.2](https://github.com/Mause/duckdb_engine/compare/v0.7.1...v0.7.2) (2023-05-17)
 
 
