@@ -104,9 +104,6 @@ ISCHEMA_NAMES = {
     "timestamp_ms": sqltypes.TIMESTAMP,
     "timestamp_ns": sqltypes.TIMESTAMP,
     "enum": sqltypes.Enum,
-    "list": lambda: sqltypes.ARRAY(sqltypes.NULLTYPE),
-    "struct": Struct,
-    "map": Map,
 }
 
 

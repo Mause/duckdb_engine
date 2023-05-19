@@ -106,7 +106,11 @@ def test_all_types_reflection(engine: Engine) -> None:
         conn.execute(text("create table t2 as select * from test_all_types()"))
         table = Table("t2", MetaData(), autoload_with=conn)
         for col in table.columns:
-            if col.name.endswith("_enum") and duckdb.__version__ < "0.7.1":  # type: ignore[attr-defined]
+            name = col.name
+            if name.endswith("_enum") and duckdb.__version__ < "0.7.1":  # type: ignore[attr-defined]
                 continue
-            assert col.type != sqltypes.NULLTYPE, col.name
+            if "array" in name or "struct" in name or "map" in name:
+                assert col.type == sqltypes.NULLTYPE, name
+            else:
+                assert col.type != sqltypes.NULLTYPE, name
         assert not capture
