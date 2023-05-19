@@ -1,3 +1,4 @@
+import warnings
 from functools import wraps
 from typing import Any, Callable, TypeVar
 
@@ -8,6 +9,11 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 from typing_extensions import ParamSpec
 
+warnings.filterwarnings(
+    "ignore",
+    "distutils Version classes are deprecated. Use packaging.version instead.",
+    DeprecationWarning,
+)
 P = ParamSpec("P")
 
 FuncT = TypeVar("FuncT", bound=Callable[..., Any])
