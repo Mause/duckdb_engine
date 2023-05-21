@@ -117,6 +117,7 @@ def test_all_types_reflection(engine: Engine) -> None:
 
 
 def test_nested_types(engine: Engine, session: Session) -> None:
+    importorskip("duckdb", "0.5.0")  # nested types require at least duckdb 0.5.0
     base = declarative_base()
 
     class Entry(base):
