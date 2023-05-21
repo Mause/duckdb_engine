@@ -6,12 +6,14 @@ Also
 select * from duckdb_types where type_category = 'NUMERIC';
 ```
 """
+import typing
+from typing import Any, Callable, Dict, Optional, Type
 
-from typing import Any
-
-from sqlalchemy.dialects.postgresql.base import PGTypeCompiler
+from sqlalchemy import exc
+from sqlalchemy.dialects.postgresql.base import PGIdentifierPreparer, PGTypeCompiler
+from sqlalchemy.engine import Dialect
 from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.sql import sqltypes
+from sqlalchemy.sql import sqltypes, type_api
 from sqlalchemy.sql.type_api import TypeEngine
 from sqlalchemy.types import BigInteger, Integer, SmallInteger
 
@@ -85,12 +87,88 @@ types = [
 assert types
 
 
+TV = typing.Union[Type[TypeEngine], TypeEngine]
+
+
 class Struct(TypeEngine):
-    pass
+    """
+    Represents a STRUCT type in DuckDB
+
+    ```python
+    from duckdb_engine.datatypes import Struct
+    from sqlalchemy import Table, Column, String
+
+    Table(
+        'hello',
+        Column('name', Struct({'first': String, 'last': String})
+    )
+    ```
+
+    :param fields: only optional due to limitations with how much type information DuckDB returns to us in the description field
+    """
+
+    __visit_name__ = "struct"
+
+    def __init__(self, fields: Optional[Dict[str, TV]] = None):
+        self.fields = fields
 
 
 class Map(TypeEngine):
-    pass
+    """
+    Represents a MAP type in DuckDB
+
+    ```python
+    from duckdb_engine.datatypes import Map
+    from sqlalchemy import Table, Column, String
+
+    Table(
+        'hello',
+        Column('name', Map(String, String)
+    )
+    ```
+    """
+
+    __visit_name__ = "map"
+    key_type: TV
+    value_type: TV
+
+    def __init__(self, key_type: TV, value_type: TV):
+        self.key_type = key_type
+        self.value_type = value_type
+
+    def bind_processor(
+        self, dialect: Dialect
+    ) -> Optional[Callable[[Optional[dict]], Optional[dict]]]:
+        return lambda value: (
+            {"key": list(value), "value": list(value.values())} if value else None
+        )
+
+    def result_processor(
+        self, dialect: Dialect, coltype: str
+    ) -> Optional[Callable[[Optional[dict]], Optional[dict]]]:
+        return lambda value: dict(zip(value["key"], value["value"])) if value else {}
+
+
+class Union(TypeEngine):
+    """
+    Represents a UNION type in DuckDB
+
+    ```python
+    from duckdb_engine.datatypes import Union
+    from sqlalchemy import Table, Column, String
+
+    Table(
+        'hello',
+        Column('name', Union({"name": String, "age": String})
+    )
+    ```
+    """
+
+    __visit_name__ = "union"
+    fields: Dict[str, TV]
+
+    def __init__(self, fields: Dict[str, TV]):
+        self.fields = fields
 
 
 ISCHEMA_NAMES = {
@@ -110,3 +188,56 @@ ISCHEMA_NAMES = {
 def register_extension_types() -> None:
     for subclass in types:
         compiles(subclass, "duckdb")(compile_uint)
+
+
+@compiles(Struct, "duckdb")  # type: ignore[misc]
+def visit_struct(
+    instance: Struct,
+    compiler: PGTypeCompiler,
+    identifier_preparer: PGIdentifierPreparer,
+    **kw: Any,
+) -> str:
+    return "STRUCT" + struct_or_union(instance, compiler, identifier_preparer)
+
+
+@compiles(Union, "duckdb")  # type: ignore[misc]
+def visit_union(
+    instance: Union,
+    compiler: PGTypeCompiler,
+    identifier_preparer: PGIdentifierPreparer,
+    **kw: Any,
+) -> str:
+    return "UNION" + struct_or_union(instance, compiler, identifier_preparer)
+
+
+def struct_or_union(
+    instance: typing.Union[Union, Struct],
+    compiler: PGTypeCompiler,
+    identifier_preparer: PGIdentifierPreparer,
+) -> str:
+    fields = instance.fields
+    if fields is None:
+        raise exc.CompileError(f"DuckDB {repr(instance)} type requires fields")
+    return "({})".format(
+        ", ".join(
+            "{} {}".format(
+                identifier_preparer.quote_identifier(key), process_type(value, compiler)
+            )
+            for key, value in fields.items()
+        )
+    )
+
+
+def process_type(
+    value: typing.Union[TypeEngine, Type[TypeEngine]],
+    compiler: PGTypeCompiler,
+) -> str:
+    return compiler.process(type_api.to_instance(value))
+
+
+@compiles(Map, "duckdb")  # type: ignore[misc]
+def visit_map(instance: Map, compiler: PGTypeCompiler, **kw: Any) -> str:
+    return "MAP({}, {})".format(
+        process_type(instance.key_type, compiler),
+        process_type(instance.value_type, compiler),
+    )

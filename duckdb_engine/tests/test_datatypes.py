@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import duckdb
 from pytest import importorskip, mark
-from sqlalchemy import Column, Integer, MetaData, Table, inspect, text
+from sqlalchemy import Column, Integer, MetaData, String, Table, inspect, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import sqltypes
 from sqlalchemy.types import JSON
 
-from ..datatypes import types
+from ..datatypes import Map, Struct, types
 
 
 @mark.parametrize("coltype", types)
@@ -114,3 +114,28 @@ def test_all_types_reflection(engine: Engine) -> None:
             else:
                 assert col.type != sqltypes.NULLTYPE, name
         assert not capture
+
+
+def test_nested_types(engine: Engine, session: Session) -> None:
+    base = declarative_base()
+
+    class Entry(base):
+        __tablename__ = "test_struct"
+
+        id = Column(Integer, primary_key=True, default=0)
+        struct = Column(Struct(fields={"name": String}))
+        map = Column(Map(String, Integer))
+        # union = Column(Union(fields={"name": String, "age": Integer}))
+
+    base.metadata.create_all(bind=engine)
+
+    struct_data = {"name": "Edgar"}
+    map_data = {"one": 1, "two": 2}
+
+    session.add(Entry(struct=struct_data, map=map_data))  # type: ignore[call-arg]
+    session.commit()
+
+    result = session.query(Entry).one()
+
+    assert result.struct == struct_data
+    assert result.map == map_data
