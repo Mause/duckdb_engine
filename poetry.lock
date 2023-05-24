@@ -570,19 +570,22 @@ i18n = ["Babel (>=2.7)"]
 
 [[package]]
 name = "jupysql"
-version = "0.7.4"
+version = "0.7.5"
 description = "Better SQL in Jupyter"
 category = "dev"
 optional = false
 python-versions = "*"
 files = [
-    {file = "jupysql-0.7.4-py3-none-any.whl", hash = "sha256:901a26732258ffce97dd1c24979c7c49e31adb7202ec2d0834e2bd2b4b0dec58"},
-    {file = "jupysql-0.7.4.tar.gz", hash = "sha256:f16ee443d0ca19112a3e2701c039ded00bcee3d9adb7cdb752ab09ab3622a43c"},
+    {file = "jupysql-0.7.5-py3-none-any.whl", hash = "sha256:3323a9e88f02c1976673d87e09c4821e7199b57a583b1dee8e58d76739a21e2d"},
+    {file = "jupysql-0.7.5.tar.gz", hash = "sha256:2474efa4a4b5bbb849fbdef9fa33514ef081a0ff043f1e9c626791e53bb93094"},
 ]
 
 [package.dependencies]
 importlib-metadata = {version = "*", markers = "python_version < \"3.8\""}
-ipython = {version = "<=8.12.0", markers = "python_version == \"3.8\""}
+ipython = [
+    {version = "*", markers = "python_version > \"3.8\""},
+    {version = "<=8.12.0", markers = "python_version <= \"3.8\""},
+]
 ipython-genutils = ">=0.1.0"
 jinja2 = "*"
 ploomber-core = ">=0.2.7"
@@ -592,8 +595,8 @@ sqlglot = ">=11.3.7"
 sqlparse = "*"
 
 [package.extras]
-dev = ["black", "duckdb", "duckdb-engine", "flake8", "invoke", "ipywidgets", "matplotlib", "pandas", "pkgmt", "polars (==0.17.2)", "pyodbc", "pytest", "twine"]
-integration = ["black", "dockerctx", "duckdb", "duckdb-engine", "flake8", "invoke", "ipywidgets", "matplotlib", "pandas", "pgspecial (==2.0.1)", "pkgmt", "polars (==0.17.2)", "psycopg2-binary", "pyarrow", "pymysql", "pyodbc", "pytest", "snowflake-sqlalchemy", "twine"]
+dev = ["black", "duckdb (<0.8.0)", "duckdb-engine", "flake8", "invoke", "ipywidgets", "matplotlib", "pandas", "pkgmt", "polars (==0.17.2)", "pyodbc", "pytest", "twine"]
+integration = ["black", "dockerctx", "duckdb (<0.8.0)", "duckdb-engine", "flake8", "invoke", "ipywidgets", "matplotlib", "pandas", "pgspecial (==2.0.1)", "pkgmt", "polars (==0.17.2)", "psycopg2-binary", "pyarrow", "pymysql", "pyodbc", "pytest", "snowflake-sqlalchemy", "twine"]
 
 [[package]]
 name = "markupsafe"
@@ -1631,4 +1634,4 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=4.6)", "pytest-black (
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.7"
-content-hash = "9b21160db42d4cb56a294ec2c409480cf4d9e9d40bd0bc47c1f850a4f6b5cbfa"
+content-hash = "46e02744cd2f77c4dcc10bf3bada23fd6a58730bace2e1a754f6bbe1dd2620e1"
