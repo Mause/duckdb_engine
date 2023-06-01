@@ -543,13 +543,13 @@ i18n = ["Babel (>=2.7)"]
 
 [[package]]
 name = "jupysql"
-version = "0.7.7"
+version = "0.7.8"
 description = "Better SQL in Jupyter"
 optional = false
 python-versions = "*"
 files = [
-    {file = "jupysql-0.7.7-py3-none-any.whl", hash = "sha256:c5a86bae5d50f01fb01609b491061dc6f56077f77d9538e4d7a835acac6e1310"},
-    {file = "jupysql-0.7.7.tar.gz", hash = "sha256:ef2e499fd12e4e9f2c85fdf60a762e70300657156cca45d6c4939c494103683a"},
+    {file = "jupysql-0.7.8-py3-none-any.whl", hash = "sha256:3d49ffb9f23717a5d5c23abace7c137f0f4496b220959234346c2aaab630aec8"},
+    {file = "jupysql-0.7.8.tar.gz", hash = "sha256:f4fffa3a9606885f0b2a4f8076bc5fd2557c081a830157dec3e25d8ddd534ec0"},
 ]
 
 [package.dependencies]
