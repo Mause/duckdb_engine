@@ -282,7 +282,7 @@ class Dialect(PGDialect_psycopg2):
 
     def create_connect_args(self, url: URL) -> Tuple[tuple, dict]:
         opts = url.translate_connect_args()
-        opts['config'] = dict(url.query)
+        opts["config"] = dict(url.query)
         return [[], opts]
 
     @classmethod
