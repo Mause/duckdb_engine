@@ -281,7 +281,9 @@ class Dialect(PGDialect_psycopg2):
         DefaultDialect.initialize(self, connection)
 
     def create_connect_args(self, url: URL) -> Tuple[tuple, dict]:
-        return (), url.translate_connect_args(database="database")
+        opts = url.translate_connect_args()
+        opts['config'] = dict(url.query)
+        return [[], opts]
 
     @classmethod
     def import_dbapi(cls: Type["Dialect"]) -> Type[DBAPI]:
