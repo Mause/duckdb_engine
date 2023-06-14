@@ -370,7 +370,9 @@ def test_url_config(tmp_path: Path) -> None:
         res = conn.execute(
             text("select value from duckdb_settings() where name='worker_threads'")
         )
-        assert res.first()[0] == "123"
+        row = res.first()
+        assert row is not None
+        assert row[0] == "123"
 
 
 def test_do_ping(tmp_path: Path, caplog: LogCaptureFixture) -> None:
