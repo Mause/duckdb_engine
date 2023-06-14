@@ -364,7 +364,7 @@ def test_config(tmp_path: Path) -> None:
 
 
 def test_url_config(tmp_path: Path) -> None:
-    eng = create_engine(f"duckdb:///:memory:?worker_threads=123")
+    eng = create_engine("duckdb:///:memory:?worker_threads=123")
 
     with eng.connect() as conn:
         res = conn.execute(
