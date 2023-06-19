@@ -373,15 +373,21 @@ def test_url_config() -> None:
         assert row[0] == 123
 
 
-
 def test_url_config_and_dict_config() -> None:
-    eng = create_engine("duckdb:///:memory:?worker_threads=123", connect_args={'config': {'memory_limit': '500mb'}})
+    eng = create_engine(
+        "duckdb:///:memory:?worker_threads=123",
+        connect_args={"config": {"memory_limit": "500mb"}},
+    )
 
     with eng.connect() as conn:
-        res = conn.execute(text("select current_setting('worker_threads'), current_setting('memory_limit')"))
+        res = conn.execute(
+            text(
+                "select current_setting('worker_threads'), current_setting('memory_limit')"
+            )
+        )
         row = res.first()
         assert row is not None
-        assert row == (123, '500.0MB')
+        assert row == (123, "500.0MB")
 
 
 def test_do_ping(tmp_path: Path, caplog: LogCaptureFixture) -> None:
