@@ -16,7 +16,8 @@ def get_core_config() -> Set[str]:
         .execute("SELECT name FROM duckdb_settings()")
         .fetchall()
     )
-    return {name for name, in rows}
+    # special case for motherduck here - they accept this config at extension load time
+    return {name for name, in rows} | {'motherduck_token'}
 
 
 def apply_config(
