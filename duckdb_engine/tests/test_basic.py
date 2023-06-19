@@ -363,14 +363,14 @@ def test_config(tmp_path: Path) -> None:
             conn.execute(text("create table hello2 (i int)"))
 
 
-def test_url_config(tmp_path: Path) -> None:
+def test_url_config() -> None:
     eng = create_engine("duckdb:///:memory:?worker_threads=123")
 
     with eng.connect() as conn:
         res = conn.execute(text("select current_setting('worker_threads')"))
         row = res.first()
         assert row is not None
-        assert row[0] == "123"
+        assert row[0] == 123
 
 
 def test_do_ping(tmp_path: Path, caplog: LogCaptureFixture) -> None:
