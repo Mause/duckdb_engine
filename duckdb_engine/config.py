@@ -17,7 +17,7 @@ def get_core_config() -> Set[str]:
         .fetchall()
     )
     # special case for motherduck here - they accept this config at extension load time
-    return {name for name, in rows} | {'motherduck_token'}
+    return {name for name, in rows} | {"motherduck_token"}
 
 
 def apply_config(
