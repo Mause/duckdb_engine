@@ -368,7 +368,7 @@ def test_url_config(tmp_path: Path) -> None:
 
     with eng.connect() as conn:
         res = conn.execute(
-            text("select value from duckdb_settings() where name='worker_threads'")
+            text("select current_setting('worker_threads')")
         )
         row = res.first()
         assert row is not None
