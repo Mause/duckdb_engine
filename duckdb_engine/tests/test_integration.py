@@ -19,7 +19,7 @@ def test_integration(engine: Engine) -> None:
 
 @mark.remote_data
 @mark.skipif(
-    "dev" in duckdb.__version__, reason="md extension not available for dev builds"
+    "dev" in duckdb.__version__, reason="md extension not available for dev builds"  # type: ignore[attr-defined]
 )
 def test_motherduck() -> None:
     engine = create_engine("duckdb:///md:motherdb?motherduck_token=motherduckdb_token")
