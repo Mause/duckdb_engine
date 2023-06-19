@@ -17,7 +17,7 @@ def test_integration(engine: Engine) -> None:
 
 
 @mark.remote_data
-def test_motherduck():
+def test_motherduck() -> None:
     engine = create_engine("duckdb:///md:motherdb?motherduck_token=motherduckdb_token")
 
     with raises(
