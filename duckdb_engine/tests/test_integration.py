@@ -1,6 +1,6 @@
 import duckdb
 import pandas as pd
-from pytest import mark, raises
+from pytest import importorskip, mark, raises
 from sqlalchemy import text
 from sqlalchemy.engine import Engine, create_engine
 from sqlalchemy.exc import ProgrammingError
@@ -22,6 +22,8 @@ def test_integration(engine: Engine) -> None:
     "dev" in duckdb.__version__, reason="md extension not available for dev builds"  # type: ignore[attr-defined]
 )
 def test_motherduck() -> None:
+    importorskip("duckdb", "0.7.1")
+
     engine = create_engine(
         "duckdb:///md:motherdb",
         connect_args={"config": {"motherduck_token": "motherduckdb_token"}},
