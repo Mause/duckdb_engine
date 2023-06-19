@@ -28,5 +28,4 @@ def test_motherduck() -> None:
         ProgrammingError,
         match="Jwt is not in the form of Header.Payload.Signature with two dots and 3 sections",
     ):
-        with engine.connect() as conn:
-            pass
+        engine.connect()
