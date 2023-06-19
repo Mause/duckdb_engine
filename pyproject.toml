@@ -33,9 +33,8 @@ snapshottest = "^0.6.0"
 duckdb = "duckdb_engine:Dialect"
 
 [tool.pytest.ini_options]
-addopts = "--hypothesis-show-statistics"
+addopts = "--hypothesis-show-statistics --strict --strict-markers"
 xfail_strict = true
-strict_markers = true
 
 [tool.mypy]
 ignore_missing_imports = true
