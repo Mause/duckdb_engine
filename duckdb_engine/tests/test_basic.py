@@ -367,9 +367,7 @@ def test_url_config(tmp_path: Path) -> None:
     eng = create_engine("duckdb:///:memory:?worker_threads=123")
 
     with eng.connect() as conn:
-        res = conn.execute(
-            text("select current_setting('worker_threads')")
-        )
+        res = conn.execute(text("select current_setting('worker_threads')"))
         row = res.first()
         assert row is not None
         assert row[0] == "123"
