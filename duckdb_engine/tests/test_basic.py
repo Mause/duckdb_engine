@@ -363,6 +363,33 @@ def test_config(tmp_path: Path) -> None:
             conn.execute(text("create table hello2 (i int)"))
 
 
+def test_url_config() -> None:
+    eng = create_engine("duckdb:///:memory:?worker_threads=123")
+
+    with eng.connect() as conn:
+        res = conn.execute(text("select current_setting('worker_threads')"))
+        row = res.first()
+        assert row is not None
+        assert row[0] == 123
+
+
+def test_url_config_and_dict_config() -> None:
+    eng = create_engine(
+        "duckdb:///:memory:?worker_threads=123",
+        connect_args={"config": {"memory_limit": "500mb"}},
+    )
+
+    with eng.connect() as conn:
+        res = conn.execute(
+            text(
+                "select current_setting('worker_threads'), current_setting('memory_limit')"
+            )
+        )
+        row = res.first()
+        assert row is not None
+        assert row == (123, "500.0MB")
+
+
 def test_do_ping(tmp_path: Path, caplog: LogCaptureFixture) -> None:
     engine = create_engine(
         "duckdb:///" + str(tmp_path / "db"), pool_pre_ping=True, pool_size=1

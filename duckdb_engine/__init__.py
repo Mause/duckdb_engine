@@ -196,7 +196,8 @@ class Dialect(PGDialect_psycopg2):
     def connect(self, *cargs: Any, **cparams: Any) -> "Connection":
         core_keys = get_core_config()
         preload_extensions = cparams.pop("preload_extensions", [])
-        config = cparams.get("config", {})
+        config = cparams.setdefault("config", {})
+        config.update(cparams.pop("url_config", {}))
 
         ext = {k: config.pop(k) for k in list(config) if k not in core_keys}
 
@@ -281,7 +282,9 @@ class Dialect(PGDialect_psycopg2):
         DefaultDialect.initialize(self, connection)
 
     def create_connect_args(self, url: URL) -> Tuple[tuple, dict]:
-        return (), url.translate_connect_args(database="database")
+        opts = url.translate_connect_args(database="database")
+        opts["url_config"] = dict(url.query)
+        return (), opts
 
     @classmethod
     def import_dbapi(cls: Type["Dialect"]) -> Type[DBAPI]:
