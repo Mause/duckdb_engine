@@ -421,4 +421,3 @@ def test_try_cast(engine: Engine) -> None:
 
         query = select(try_cast("not a date", DateTime))
         assert conn.execute(query).one() == (None,)
-
