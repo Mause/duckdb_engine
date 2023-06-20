@@ -14,14 +14,16 @@ from typing import (
 )
 
 import duckdb
+import sqlalchemy
 from sqlalchemy import pool, text
 from sqlalchemy import types as sqltypes
 from sqlalchemy import util
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.dialects.postgresql.base import PGDialect, PGInspector
+from sqlalchemy.dialects.postgresql.base import PGDialect, PGInspector, PGTypeCompiler
 from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
 from sqlalchemy.engine.default import DefaultDialect
 from sqlalchemy.engine.url import URL
+from sqlalchemy.ext.compiler import compiles
 
 from .config import apply_config, get_core_config
 from .datatypes import ISCHEMA_NAMES, register_extension_types
@@ -357,3 +359,18 @@ class Dialect(PGDialect_psycopg2):
         columns = self._get_columns_info(rows, domains, enums, schema)  # type: ignore[attr-defined]
 
         return columns.items()
+
+
+if sqlalchemy.__version__ >= "2.0.14":
+    from sqlalchemy import TryCast  # type: ignore[attr-defined]
+
+    @compiles(TryCast, "duckdb")  # type: ignore[misc]
+    def visit_try_cast(
+        instance: TryCast,
+        compiler: PGTypeCompiler,
+        **kw: Any,
+    ) -> str:
+        return "TRY_CAST({} AS {})".format(
+            compiler.process(instance.clause, **kw),
+            compiler.process(instance.typeclause, **kw),
+        )

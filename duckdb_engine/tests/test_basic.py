@@ -1,7 +1,7 @@
 import logging
 import os
 import zlib
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Generic, Optional, TypeVar, cast
 
@@ -13,6 +13,7 @@ from packaging.version import Version
 from pytest import LogCaptureFixture, fixture, importorskip, mark, raises
 from sqlalchemy import (
     Column,
+    DateTime,
     ForeignKey,
     Integer,
     Interval,
@@ -22,6 +23,7 @@ from sqlalchemy import (
     Table,
     create_engine,
     inspect,
+    select,
     text,
     types,
 )
@@ -408,3 +410,11 @@ def test_do_ping(tmp_path: Path, caplog: LogCaptureFixture) -> None:
         assert any(
             "Pool pre-ping on connection" in message for message in caplog.messages
         )
+
+
+def test_try_cast(engine: Engine) -> None:
+    try_cast = importorskip("sqlalchemy", "2.0.14").try_cast
+
+    with engine.connect() as conn:
+        query = select(try_cast("2022-01-01", DateTime))
+        assert conn.execute(query).one() == (datetime(2022, 1, 1),)
