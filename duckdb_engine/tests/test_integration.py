@@ -1,3 +1,7 @@
+import sys
+from multiprocessing import Process
+from traceback import print_exc
+
 import duckdb
 import pandas as pd
 from pytest import importorskip, mark, raises
@@ -24,6 +28,23 @@ def test_integration(engine: Engine) -> None:
 def test_motherduck() -> None:
     importorskip("duckdb", "0.7.1")
 
+    proc = Process(target=hook)
+    proc.start()
+    proc.join()
+    assert proc.exitcode == 0
+
+
+def hook() -> None:
+    try:
+        _test_motherduck()
+    except Exception:
+        print_exc()
+        sys.exit(-1)
+    else:
+        sys.exit(0)
+
+
+def _test_motherduck() -> None:
     engine = create_engine(
         "duckdb:///md:motherdb",
         connect_args={"config": {"motherduck_token": "motherduckdb_token"}},
