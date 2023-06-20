@@ -5,16 +5,12 @@
 
 ### Features
 
-* implement nested type internals ([5c16863](https://github.com/Mause/duckdb_engine/commit/5c16863fce86a11f5bef64449f453dd8b0ef8167))
-
+* nested types (Struct, Map, Union) ([5c16863](https://github.com/Mause/duckdb_engine/commit/5c16863fce86a11f5bef64449f453dd8b0ef8167))
+* passing config via query parameters in the url ([6907041](https://github.com/Mause/duckdb_engine/pull/675/commits/690704175dc5d61530dc3fd74b0526a638010ba6)
 
 ### Bug Fixes
 
-* allow for segfaults too ([d4a56fc](https://github.com/Mause/duckdb_engine/commit/d4a56fcec608f405478ae149d378a99c693a2df7))
-* **deps:** update dependency numpy to v1.25.0 ([99dab3f](https://github.com/Mause/duckdb_engine/commit/99dab3f71bfcbede7939c63a7e6c69c3b2ea17b5))
-* merge connect_args and url config ([3b6ef2d](https://github.com/Mause/duckdb_engine/commit/3b6ef2d59080a9547ba08eb855489864cf66bd28))
-* motherduck_token ([b944405](https://github.com/Mause/duckdb_engine/commit/b9444054260eb10c7d473dc55cb7cd7e8a0e84b6))
-* restore db override ([0a431a8](https://github.com/Mause/duckdb_engine/commit/0a431a8cfe1c92fadc6f130ba68b4a2dbe9d4a13))
+* allow passing motherduck_token as a config parameter ([b944405](https://github.com/Mause/duckdb_engine/commit/b9444054260eb10c7d473dc55cb7cd7e8a0e84b6))
 
 ## [0.7.3](https://github.com/Mause/duckdb_engine/compare/v0.7.2...v0.7.3) (2023-05-19)
 
