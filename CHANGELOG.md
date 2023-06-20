@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.8.0](https://github.com/Mause/duckdb_engine/compare/v0.7.3...v0.8.0) (2023-06-20)
+
+
+### Features
+
+* nested types (Struct, Map, Union) ([5c16863](https://github.com/Mause/duckdb_engine/commit/5c16863fce86a11f5bef64449f453dd8b0ef8167))
+* passing config via query parameters in the url ([6907041](https://github.com/Mause/duckdb_engine/pull/675/commits/690704175dc5d61530dc3fd74b0526a638010ba6)
+
+### Bug Fixes
+
+* allow passing motherduck_token as a config parameter ([b944405](https://github.com/Mause/duckdb_engine/commit/b9444054260eb10c7d473dc55cb7cd7e8a0e84b6))
+
 ## [0.7.3](https://github.com/Mause/duckdb_engine/compare/v0.7.2...v0.7.3) (2023-05-19)
 
 
