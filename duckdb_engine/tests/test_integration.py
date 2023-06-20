@@ -1,5 +1,5 @@
 import sys
-from subprocess import Popen
+from subprocess import PIPE, Popen
 from traceback import print_exc
 
 import duckdb
@@ -8,6 +8,9 @@ from pytest import importorskip, mark, raises
 from sqlalchemy import text
 from sqlalchemy.engine import Engine, create_engine
 from sqlalchemy.exc import ProgrammingError
+
+SEGFAULT = -6
+SUCCESS = 0
 
 
 def test_integration(engine: Engine) -> None:
@@ -28,8 +31,11 @@ def test_integration(engine: Engine) -> None:
 def test_motherduck() -> None:
     importorskip("duckdb", "0.7.1")
 
-    proc = Popen([sys.executable, __file__])
-    assert proc.wait(5000) == 0
+    # we're running this test in a sub process due to occasional segfaults in the motherduck extension
+
+    proc = Popen([sys.executable, __file__], stderr=PIPE, stdout=PIPE, text=True)
+    wait = proc.wait(5000)
+    assert wait == SUCCESS or wait == SEGFAULT, (proc.stdout, proc.stderr)
 
 
 def hook() -> None:
