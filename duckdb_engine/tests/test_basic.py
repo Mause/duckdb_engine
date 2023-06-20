@@ -418,3 +418,7 @@ def test_try_cast(engine: Engine) -> None:
     with engine.connect() as conn:
         query = select(try_cast("2022-01-01", DateTime))
         assert conn.execute(query).one() == (datetime(2022, 1, 1),)
+
+        query = select(try_cast("not a date", DateTime))
+        assert conn.execute(query).one() == (None,)
+
