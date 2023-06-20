@@ -181,6 +181,7 @@ def test_get_views(engine: Engine) -> None:
 
 
 @mark.skipif(os.uname().machine == "aarch64", reason="not supported on aarch64")
+@mark.remote_data
 def test_preload_extension() -> None:
     duckdb.default_connection.execute("INSTALL httpfs")
     engine = create_engine(

@@ -1079,6 +1079,21 @@ pytest = ">=4.6"
 testing = ["fields", "hunter", "process-tests", "pytest-xdist", "six", "virtualenv"]
 
 [[package]]
+name = "pytest-remotedata"
+version = "0.4.0"
+description = "Pytest plugin for controlling remote data access."
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "pytest-remotedata-0.4.0.tar.gz", hash = "sha256:be21c558e34d7c11b0f6aeb50956c09520bffcd02b7fce9c6f8e8531a401a1c8"},
+    {file = "pytest_remotedata-0.4.0-py3-none-any.whl", hash = "sha256:48ebd360d24bc670cfeca43fff62c1866251af9cfe53f2662f225f74b3496357"},
+]
+
+[package.dependencies]
+packaging = "*"
+pytest = ">=4.6"
+
+[[package]]
 name = "python-dateutil"
 version = "2.8.1"
 description = "Extensions to the standard Python datetime module"
@@ -1555,4 +1570,4 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=4.6)", "pytest-black (
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.7"
-content-hash = "7a26e275478d35aecc5e9c81c04c7178fe67d2a319e6f38e39d9b38ade2b08a9"
+content-hash = "120123381a2702dde9093bcc25992c2daa52aaf60dec5a9949ce3e68d4ddab4c"
