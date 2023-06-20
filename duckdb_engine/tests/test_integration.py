@@ -1,5 +1,5 @@
 import sys
-from multiprocessing import Process
+from subprocess import Popen
 from traceback import print_exc
 
 import duckdb
@@ -28,10 +28,8 @@ def test_integration(engine: Engine) -> None:
 def test_motherduck() -> None:
     importorskip("duckdb", "0.7.1")
 
-    proc = Process(target=hook)
-    proc.start()
-    proc.join()
-    assert proc.exitcode == 0
+    proc = Popen([sys.executable, __file__])
+    assert proc.wait(5000) == 0
 
 
 def hook() -> None:
@@ -55,3 +53,7 @@ def _test_motherduck() -> None:
         match="Jwt is not in the form of Header.Payload.Signature with two dots and 3 sections",
     ):
         engine.connect()
+
+
+if __name__ == "__main__":
+    _test_motherduck()
