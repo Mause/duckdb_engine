@@ -5,7 +5,7 @@
 
 ### Features
 
-* try_cast operator ([c4318ef](https://github.com/Mause/duckdb_engine/commit/c4318ef636b5a88a1cb8eccef827183884022a7b))
+* added support for try_cast operator ([c4318ef](https://github.com/Mause/duckdb_engine/commit/c4318ef636b5a88a1cb8eccef827183884022a7b)) (see [SQLAlchemy docs](https://docs.sqlalchemy.org/en/20/core/sqlelement.html#sqlalchemy.sql.expression.try_cast) for more information)
 
 ## [0.8.0](https://github.com/Mause/duckdb_engine/compare/v0.7.3...v0.8.0) (2023-06-20)
 
