@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.1](https://github.com/Mause/duckdb_engine/compare/v0.9.0...v0.9.1) (2023-07-14)
+
+
+### Bug Fixes
+
+* move numpy to dev dependencies ([368c55c](https://github.com/Mause/duckdb_engine/commit/368c55cd41ceb97d4e8dc2971a100b088d2305da))
+
 ## [0.9.0](https://github.com/Mause/duckdb_engine/compare/v0.8.0...v0.9.0) (2023-06-21)
 
 
