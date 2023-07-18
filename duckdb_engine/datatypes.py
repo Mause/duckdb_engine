@@ -176,7 +176,7 @@ ISCHEMA_NAMES = {
     "tinyint": TinyInteger,
     "utinyint": UTinyInteger,
     "usmallint": USmallInteger,
-    "uinteger": UInt8,
+    "uinteger": UInteger,
     "ubigint": UBigInteger,
     "timestamp_s": sqltypes.TIMESTAMP,
     "timestamp_ms": sqltypes.TIMESTAMP,
