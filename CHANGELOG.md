@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.2](https://github.com/Mause/duckdb_engine/compare/v0.9.1...v0.9.2) (2023-07-23)
+
+
+### Bug Fixes
+
+* **types:** map `uinteger` to correct type ([405769a](https://github.com/Mause/duckdb_engine/commit/405769a3b4146cb751e64d4965e94c760934b974))
+
 ## [0.9.1](https://github.com/Mause/duckdb_engine/compare/v0.9.0...v0.9.1) (2023-07-14)
 
 
