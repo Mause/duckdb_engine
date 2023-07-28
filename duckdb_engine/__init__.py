@@ -22,6 +22,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.dialects.postgresql.base import PGDialect, PGInspector, PGTypeCompiler
 from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
 from sqlalchemy.engine.default import DefaultDialect
+from sqlalchemy.engine.reflection import cache
 from sqlalchemy.engine.url import URL
 from sqlalchemy.ext.compiler import compiles
 
@@ -259,7 +260,8 @@ class Dialect(PGDialect_psycopg2):
 
         return [row[0] for row in rs]
 
-    def get_schema_names(self, connection, **kw) -> Any:
+    @cache  # type: ignore[call-arg]
+    def get_schema_names(self, connection: "Connection", **kw: "Any"):  # type: ignore[no-untyped-def]
         """
         Return unquoted database_name.schema_name unless either contains spaces or double quotes.
         In that case, escape double quotes and then wrap in double quotes.
@@ -267,23 +269,15 @@ class Dialect(PGDialect_psycopg2):
         (see https://docs.sqlalchemy.org/en/20/dialects/mssql.html#multipart-schema-names)
         """
         s = """
-            SELECT
-                CASE
-                    WHEN contains(database_name, ' ') OR contains(database_name, '"') THEN '"' || replace(database_name, '"', '""') || '"'
-                    ELSE database_name
-                END
-                || '.' ||
-                CASE
-                    WHEN contains(schema_name, ' ') OR contains(schema_name, '"') THEN '"' || replace(schema_name, '"', '""') || '"'
-                    ELSE schema_name
-                END AS npspname
+            SELECT database_name, schema_name AS npspname
             FROM duckdb_schemas()
             WHERE schema_name NOT LIKE 'pg\\_%' ESCAPE '\'
             ORDER BY npspname
             """
         rs = connection.execute(text(s))
 
-        return [row[0] for row in rs]
+        qs = self.identifier_preparer.quote_schema
+        return [f"{qs(db)}.{qs(schema)}" for (db, schema) in rs]
 
     def get_indexes(
         self,

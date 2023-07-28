@@ -165,6 +165,27 @@ def test_get_tables(inspector: Inspector) -> None:
     assert inspector.get_view_names() == []
 
 
+def test_get_schema_names(inspector: Inspector, engine: Engine) -> None:
+    with engine.connect() as conn:
+        conn.exec_driver_sql('CREATE SCHEMA "hello world"')
+        conn.exec_driver_sql("ATTACH ':memory:' AS \"my db\"")
+    assert inspector.get_schema_names() == [
+        'memory."hello world"',
+        "memory.information_schema",
+        "system.information_schema",
+        "temp.information_schema",
+        '"my db".information_schema',
+        "memory.main",
+        "system.main",
+        "temp.main",
+        '"my db".main',
+        "memory.pg_catalog",
+        "system.pg_catalog",
+        "temp.pg_catalog",
+        '"my db".pg_catalog',
+    ]
+
+
 def test_get_views(engine: Engine) -> None:
     con = engine.connect()
     views = engine.dialect.get_view_names(con)
