@@ -167,22 +167,25 @@ def test_get_tables(inspector: Inspector) -> None:
 
 def test_get_schema_names(inspector: Inspector, engine: Engine) -> None:
     with engine.connect() as conn:
-        conn.exec_driver_sql('CREATE SCHEMA "hello world"')
-        conn.exec_driver_sql("ATTACH ':memory:' AS \"my db\"")
+        # Using multi-line strings because of all the single and double quotes flying around...
+        conn.exec_driver_sql("""CREATE SCHEMA "hello world" """)
+        conn.exec_driver_sql("""ATTACH ':memory:' AS "my db" """)
+        conn.exec_driver_sql("""CREATE SCHEMA "my db"."hello world" """)
+        conn.exec_driver_sql("""CREATE SCHEMA "my db"."cursed "" schema" """)
+
+    # Deliberately excluding pg_catalog schema (to align with Postgres)
     assert inspector.get_schema_names() == [
         'memory."hello world"',
         "memory.information_schema",
-        "system.information_schema",
-        "temp.information_schema",
-        '"my db".information_schema',
         "memory.main",
-        "system.main",
-        "temp.main",
+        '"my db"."cursed "" schema"',
+        '"my db"."hello world"',
+        '"my db".information_schema',
         '"my db".main',
-        "memory.pg_catalog",
-        "system.pg_catalog",
-        "temp.pg_catalog",
-        '"my db".pg_catalog',
+        "system.information_schema",
+        "system.main",
+        "temp.information_schema",
+        "temp.main",
     ]
 
 
