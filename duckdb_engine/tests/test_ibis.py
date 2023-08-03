@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from pytest import fixture, importorskip
+from sqlalchemy import text
 
 importorskip("ibis")
 
@@ -39,5 +40,5 @@ def test_pandas(ibis_conn: "Backend") -> None:
 
 def test_method_call(ibis_conn: "Backend") -> None:
     importorskip("pyarrow")
-    with ibis_conn._safe_raw_sql("select 1") as cursor:
+    with ibis_conn._safe_raw_sql(text("select 1")) as cursor:
         cursor.cursor.fetch_record_batch()
