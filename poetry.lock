@@ -548,13 +548,13 @@ i18n = ["Babel (>=2.7)"]
 
 [[package]]
 name = "jupysql"
-version = "0.8.0"
+version = "0.9.0"
 description = "Better SQL in Jupyter"
 optional = false
 python-versions = "*"
 files = [
-    {file = "jupysql-0.8.0-py3-none-any.whl", hash = "sha256:8d5f4383e99f6e1b3065f9b3f9d040b6a964c78a601bb64fa7dc8e094cb47256"},
-    {file = "jupysql-0.8.0.tar.gz", hash = "sha256:6bd22cf36767947411dc1198131dde65f06ad31e198f0403586c2f302beb5fa8"},
+    {file = "jupysql-0.9.0-py3-none-any.whl", hash = "sha256:8fcd24d7bbc0379e345d3b578f719f50b8db4ded0288e7d43bb4e9c5b85dd9d7"},
+    {file = "jupysql-0.9.0.tar.gz", hash = "sha256:0b754436b8e96fdfcff87e087f42e3f9661241c058495aa189d9d8cea8468f72"},
 ]
 
 [package.dependencies]
@@ -572,8 +572,8 @@ sqlglot = ">=11.3.7"
 sqlparse = "*"
 
 [package.extras]
-dev = ["black", "duckdb (<0.8.0)", "duckdb-engine", "flake8", "invoke", "ipywidgets", "js2py", "jupysql-plugin", "matplotlib", "pandas", "pkgmt", "polars (==0.17.2)", "pyarrow", "pyodbc", "pytest", "twine"]
-integration = ["black", "dockerctx", "duckdb (<0.8.0)", "duckdb-engine", "flake8", "invoke", "ipywidgets", "js2py", "jupysql-plugin", "matplotlib", "oracledb", "pandas", "pgspecial (==2.0.1)", "pkgmt", "polars (==0.17.2)", "psycopg2-binary", "pyarrow", "pymysql", "pyodbc", "pytest", "snowflake-sqlalchemy", "twine"]
+dev = ["black", "duckdb (<0.8.0)", "duckdb-engine", "flake8", "invoke", "ipywidgets", "js2py", "jupysql-plugin", "matplotlib", "pandas", "pkgmt", "polars (==0.17.2)", "psutil", "pyarrow", "pyodbc", "pytest", "twine"]
+integration = ["black", "dockerctx", "duckdb (<0.8.0)", "duckdb-engine", "flake8", "invoke", "ipywidgets", "js2py", "jupysql-plugin", "matplotlib", "oracledb", "pandas", "pgspecial (==2.0.1)", "pkgmt", "polars (==0.17.2)", "psutil", "psycopg2-binary", "pyarrow", "pymysql", "pyodbc", "pytest", "python-tds", "snowflake-sqlalchemy", "sqlalchemy-pytds", "twine"]
 
 [[package]]
 name = "markupsafe"
@@ -1577,4 +1577,4 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=4.6)", "pytest-black (
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.7"
-content-hash = "b100a00b49c3b12a6a1c3264b4c983b4854dca6d5ec152489d54a0c954413552"
+content-hash = "395f4d408379f8cd001688f77394dab47ad293b7fbb9771e4b05b573aae8153a"
