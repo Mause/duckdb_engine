@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Generic, Optional, TypeVar, cast
 
+from snapshottest.module import SnapshotTest
 import duckdb
 import sqlalchemy
 from hypothesis import assume, given, settings
@@ -165,7 +166,9 @@ def test_get_tables(inspector: Inspector) -> None:
     assert inspector.get_view_names() == []
 
 
-def test_get_schema_names(inspector: Inspector, engine: Engine) -> None:
+def test_get_schema_names(
+    inspector: Inspector, engine: Engine, snapshot: SnapshotTest
+) -> None:
     with engine.connect() as conn:
         # Using multi-line strings because of all the single and double quotes flying around...
         conn.exec_driver_sql("""CREATE SCHEMA "hello world" """)
@@ -174,19 +177,7 @@ def test_get_schema_names(inspector: Inspector, engine: Engine) -> None:
         conn.exec_driver_sql("""CREATE SCHEMA "my db"."cursed "" schema" """)
 
     # Deliberately excluding pg_catalog schema (to align with Postgres)
-    assert inspector.get_schema_names() == [
-        'memory."hello world"',
-        "memory.information_schema",
-        "memory.main",
-        '"my db"."cursed "" schema"',
-        '"my db"."hello world"',
-        '"my db".information_schema',
-        '"my db".main',
-        "system.information_schema",
-        "system.main",
-        "temp.information_schema",
-        "temp.main",
-    ]
+    snapshot.assert_match(inspector.get_schema_names())
 
 
 def test_get_views(engine: Engine) -> None:
