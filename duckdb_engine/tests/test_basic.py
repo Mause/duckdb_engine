@@ -5,13 +5,13 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Generic, Optional, TypeVar, cast
 
-from snapshottest.module import SnapshotTest
 import duckdb
 import sqlalchemy
 from hypothesis import assume, given, settings
 from hypothesis.strategies import text as text_strat
 from packaging.version import Version
 from pytest import LogCaptureFixture, fixture, importorskip, mark, raises
+from snapshottest.module import SnapshotTest
 from sqlalchemy import (
     Column,
     DateTime,
