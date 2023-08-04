@@ -11,7 +11,6 @@ from hypothesis import assume, given, settings
 from hypothesis.strategies import text as text_strat
 from packaging.version import Version
 from pytest import LogCaptureFixture, fixture, importorskip, mark, raises
-from snapshottest.module import SnapshotTest
 from sqlalchemy import (
     Column,
     DateTime,
@@ -35,7 +34,7 @@ from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, relationship, sessionmaker
 
-from .. import DBAPI, Dialect
+from .. import DBAPI, Dialect, supports_attach
 
 try:
     # sqlalchemy 2
@@ -166,18 +165,33 @@ def test_get_tables(inspector: Inspector) -> None:
     assert inspector.get_view_names() == []
 
 
-def test_get_schema_names(
-    inspector: Inspector, engine: Engine, snapshot: SnapshotTest
-) -> None:
+def test_get_schema_names(inspector: Inspector, engine: Engine) -> None:
     with engine.connect() as conn:
         # Using multi-line strings because of all the single and double quotes flying around...
-        conn.exec_driver_sql("""CREATE SCHEMA "hello world" """)
-        conn.exec_driver_sql("""ATTACH ':memory:' AS "my db" """)
-        conn.exec_driver_sql("""CREATE SCHEMA "my db"."hello world" """)
-        conn.exec_driver_sql("""CREATE SCHEMA "my db"."cursed "" schema" """)
+        conn.execute(text("""CREATE SCHEMA "hello world" """))
+        if supports_attach:
+            conn.execute(text("""ATTACH ':memory:' AS "my db" """))
+            conn.execute(text("""CREATE SCHEMA "my db"."hello world" """))
+            conn.execute(text("""CREATE SCHEMA "my db"."cursed "" schema" """))
 
     # Deliberately excluding pg_catalog schema (to align with Postgres)
-    snapshot.assert_match(inspector.get_schema_names())
+    names = inspector.get_schema_names()
+    if supports_attach:
+        assert names == [
+            'memory."hello world"',
+            "memory.information_schema",
+            "memory.main",
+            '"my db"."cursed "" schema"',
+            '"my db"."hello world"',
+            '"my db".information_schema',
+            '"my db".main',
+            "system.information_schema",
+            "system.main",
+            "temp.information_schema",
+            "temp.main",
+        ]
+    else:
+        assert names == ["hello world", "information_schema", "main", "temp"]
 
 
 def test_get_views(engine: Engine) -> None:

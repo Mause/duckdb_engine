@@ -15,6 +15,7 @@ from typing import (
 
 import duckdb
 import sqlalchemy
+from packaging.version import Version
 from sqlalchemy import pool, text
 from sqlalchemy import types as sqltypes
 from sqlalchemy import util
@@ -30,6 +31,8 @@ from .config import apply_config, get_core_config
 from .datatypes import ISCHEMA_NAMES, register_extension_types
 
 __version__ = "0.9.2"
+duckdb_version: str = duckdb.__version__  # type: ignore[attr-defined]
+supports_attach = Version(duckdb_version) >= Version("0.7.0")
 
 if TYPE_CHECKING:
     from sqlalchemy.base import Connection
@@ -268,6 +271,10 @@ class Dialect(PGDialect_psycopg2):
         SQLAlchemy definition of a schema includes database name for databases like SQL Server (Ex: databasename.dbo)
         (see https://docs.sqlalchemy.org/en/20/dialects/mssql.html#multipart-schema-names)
         """
+
+        if not supports_attach:
+            return super().get_schema_names(connection, **kw)
+
         s = """
             SELECT database_name, schema_name AS npspname
             FROM duckdb_schemas()
