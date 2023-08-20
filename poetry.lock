@@ -548,13 +548,13 @@ i18n = ["Babel (>=2.7)"]
 
 [[package]]
 name = "jupysql"
-version = "0.8.0"
+version = "0.10.0"
 description = "Better SQL in Jupyter"
 optional = false
 python-versions = "*"
 files = [
-    {file = "jupysql-0.8.0-py3-none-any.whl", hash = "sha256:8d5f4383e99f6e1b3065f9b3f9d040b6a964c78a601bb64fa7dc8e094cb47256"},
-    {file = "jupysql-0.8.0.tar.gz", hash = "sha256:6bd22cf36767947411dc1198131dde65f06ad31e198f0403586c2f302beb5fa8"},
+    {file = "jupysql-0.10.0-py3-none-any.whl", hash = "sha256:beb29b39cb977e5e689442b70ed307a4a66bea1a980c45008d54091f530c3947"},
+    {file = "jupysql-0.10.0.tar.gz", hash = "sha256:20aa8bbfa952dfbee24b91692f3f996120d99ecee41b924dca3a8a61b4c51ff0"},
 ]
 
 [package.dependencies]
@@ -572,8 +572,8 @@ sqlglot = ">=11.3.7"
 sqlparse = "*"
 
 [package.extras]
-dev = ["black", "duckdb (<0.8.0)", "duckdb-engine", "flake8", "invoke", "ipywidgets", "js2py", "jupysql-plugin", "matplotlib", "pandas", "pkgmt", "polars (==0.17.2)", "pyarrow", "pyodbc", "pytest", "twine"]
-integration = ["black", "dockerctx", "duckdb (<0.8.0)", "duckdb-engine", "flake8", "invoke", "ipywidgets", "js2py", "jupysql-plugin", "matplotlib", "oracledb", "pandas", "pgspecial (==2.0.1)", "pkgmt", "polars (==0.17.2)", "psycopg2-binary", "pyarrow", "pymysql", "pyodbc", "pytest", "snowflake-sqlalchemy", "twine"]
+dev = ["black", "duckdb (<0.8.0)", "duckdb-engine", "flake8", "invoke", "ipywidgets", "js2py", "jupysql-plugin", "matplotlib", "pandas", "pkgmt", "polars (==0.17.2)", "psutil", "pyarrow", "pyodbc", "pytest", "twine"]
+integration = ["black", "dockerctx", "duckdb (<0.8.0)", "duckdb-engine", "flake8", "invoke", "ipywidgets", "js2py", "jupysql-plugin", "matplotlib", "oracledb", "pandas", "pgspecial (==2.0.1)", "pkgmt", "polars (==0.17.2)", "psutil", "psycopg2-binary", "pyarrow", "pymysql", "pyodbc", "pytest", "python-tds", "redshift-connector", "snowflake-sqlalchemy", "sqlalchemy-pytds", "sqlalchemy-redshift", "twine"]
 
 [[package]]
 name = "markupsafe"
@@ -1577,4 +1577,4 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=4.6)", "pytest-black (
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.7"
-content-hash = "b100a00b49c3b12a6a1c3264b4c983b4854dca6d5ec152489d54a0c954413552"
+content-hash = "23535a33f715f576c3fda925b5fc777dbedea05af1663731e6f88166c1c8d388"
