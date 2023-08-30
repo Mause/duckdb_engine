@@ -619,13 +619,13 @@ i18n = ["Babel (>=2.7)"]
 
 [[package]]
 name = "jupysql"
-version = "0.10.0"
+version = "0.10.1"
 description = "Better SQL in Jupyter"
 optional = false
 python-versions = "*"
 files = [
-    {file = "jupysql-0.10.0-py3-none-any.whl", hash = "sha256:beb29b39cb977e5e689442b70ed307a4a66bea1a980c45008d54091f530c3947"},
-    {file = "jupysql-0.10.0.tar.gz", hash = "sha256:20aa8bbfa952dfbee24b91692f3f996120d99ecee41b924dca3a8a61b4c51ff0"},
+    {file = "jupysql-0.10.1-py3-none-any.whl", hash = "sha256:a9e9035416ca3105cf07de97468c672a446a04d623c7b187a3a786d908dc69df"},
+    {file = "jupysql-0.10.1.tar.gz", hash = "sha256:560012c8af82103f9e0afba00c6b444976737d05f101ff5cb104837f61c524c1"},
 ]
 
 [package.dependencies]
@@ -643,8 +643,8 @@ sqlglot = ">=11.3.7"
 sqlparse = "*"
 
 [package.extras]
-dev = ["black", "duckdb (<0.8.0)", "duckdb-engine", "flake8", "invoke", "ipywidgets", "js2py", "jupysql-plugin", "matplotlib", "pandas", "pkgmt", "polars (==0.17.2)", "psutil", "pyarrow", "pyodbc", "pytest", "twine"]
-integration = ["black", "dockerctx", "duckdb (<0.8.0)", "duckdb-engine", "flake8", "invoke", "ipywidgets", "js2py", "jupysql-plugin", "matplotlib", "oracledb", "pandas", "pgspecial (==2.0.1)", "pkgmt", "polars (==0.17.2)", "psutil", "psycopg2-binary", "pyarrow", "pymysql", "pyodbc", "pytest", "python-tds", "redshift-connector", "snowflake-sqlalchemy", "sqlalchemy-pytds", "sqlalchemy-redshift", "twine"]
+dev = ["black", "duckdb (<0.8.0)", "duckdb-engine", "flake8", "invoke", "ipywidgets", "js2py", "jupysql-plugin", "jupyter-server", "matplotlib", "pandas", "pkgmt", "polars (==0.17.2)", "psutil", "pyarrow", "pyodbc", "pytest", "twine"]
+integration = ["black", "clickhouse-sqlalchemy", "dockerctx", "duckdb (<0.8.0)", "duckdb-engine", "flake8", "invoke", "ipywidgets", "js2py", "jupysql-plugin", "jupyter-server", "matplotlib", "oracledb", "pandas", "pgspecial (==2.0.1)", "pkgmt", "polars (==0.17.2)", "psutil", "psycopg2-binary", "pyarrow", "pymysql", "pyodbc", "pytest", "python-tds", "redshift-connector", "snowflake-sqlalchemy", "sqlalchemy-pytds", "sqlalchemy-redshift", "twine"]
 
 [[package]]
 name = "markupsafe"
