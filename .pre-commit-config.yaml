@@ -18,7 +18,7 @@ repos:
         args:
           - --float-to-top
   - repo: https://github.com/PyCQA/autoflake
-    rev: v1.3
+    rev: v2.2.0
     hooks:
       - id: autoflake
         args:
