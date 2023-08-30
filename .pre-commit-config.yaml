@@ -17,13 +17,16 @@ repos:
       - id: isort
         args:
           - --float-to-top
-  - repo: https://github.com/humitos/mirrors-autoflake
-    rev: v1.3
+  - repo: https://github.com/PyCQA/autoflake
+    rev: v2.2.0
     hooks:
       - id: autoflake
         args:
           - --in-place
           - --remove-all-unused-imports
+          - --expand-star-imports
+          - --remove-duplicate-keys
+          - --remove-unused-variables
   - repo: https://github.com/asottile/pyupgrade
     rev: v3.10.1
     hooks:
