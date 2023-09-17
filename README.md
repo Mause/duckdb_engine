@@ -133,6 +133,23 @@ The `pandas.read_sql()` method can read tables from `duckdb_engine` into DataFra
 
 Unsigned integers are supported by DuckDB, and are available in [`duckdb_engine.datatypes`](duckdb_engine/datatypes.py).
 
+## Alembic Integration
+
+SQLAlchemy's companion library `alembic` can optionally be used to manage database migrations.
+
+This support can be enabling by adding an Alembic implementation class for the `duckdb` dialect.
+
+```python
+from alembic.ddl.impl import DefaultImpl
+
+class AlembicDuckDBImpl(DefaultImpl):
+    """Alembic implementation for DuckDB."""
+
+    __dialect__ = "duckdb"
+```
+
+After loading this class with your program, Alembic will no longer raise an error when generating or applying migrations.
+
 ## Preloading extensions (experimental)
 
 Until the DuckDB python client allows you to natively preload extensions, I've added experimental support via a `connect_args` parameter
