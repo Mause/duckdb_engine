@@ -314,11 +314,10 @@ def test_comment_support() -> None:
         duckdb.default_connection.execute('comment on sqlite_master is "hello world";')
 
 
-@mark.xfail(raises=AttributeError)
 def test_rowcount() -> None:
     import duckdb
 
-    duckdb.default_connection.rowcount  # type: ignore
+    assert duckdb.default_connection.rowcount == -1  # type: ignore
 
 
 def test_sessions(session: Session) -> None:
