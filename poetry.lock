@@ -619,13 +619,13 @@ i18n = ["Babel (>=2.7)"]
 
 [[package]]
 name = "jupysql"
-version = "0.10.1"
+version = "0.10.2"
 description = "Better SQL in Jupyter"
 optional = false
 python-versions = "*"
 files = [
-    {file = "jupysql-0.10.1-py3-none-any.whl", hash = "sha256:a9e9035416ca3105cf07de97468c672a446a04d623c7b187a3a786d908dc69df"},
-    {file = "jupysql-0.10.1.tar.gz", hash = "sha256:560012c8af82103f9e0afba00c6b444976737d05f101ff5cb104837f61c524c1"},
+    {file = "jupysql-0.10.2-py3-none-any.whl", hash = "sha256:28d35d1145fefb208ed4098a7a582690a6f893d3b1f179077656375e8c7ae71a"},
+    {file = "jupysql-0.10.2.tar.gz", hash = "sha256:8dd9de87534581460df434d980798a6bbc0dbb338187fee7b19586f523f055f8"},
 ]
 
 [package.dependencies]
@@ -636,6 +636,7 @@ ipython = [
 ]
 ipython-genutils = ">=0.1.0"
 jinja2 = "*"
+jupysql-plugin = "*"
 ploomber-core = ">=0.2.7"
 prettytable = "*"
 sqlalchemy = "*"
@@ -643,8 +644,22 @@ sqlglot = ">=11.3.7"
 sqlparse = "*"
 
 [package.extras]
-dev = ["black", "duckdb (<0.8.0)", "duckdb-engine", "flake8", "invoke", "ipywidgets", "js2py", "jupysql-plugin", "jupyter-server", "matplotlib", "pandas", "pkgmt", "polars (==0.17.2)", "psutil", "pyarrow", "pyodbc", "pytest", "twine"]
-integration = ["black", "clickhouse-sqlalchemy", "dockerctx", "duckdb (<0.8.0)", "duckdb-engine", "flake8", "invoke", "ipywidgets", "js2py", "jupysql-plugin", "jupyter-server", "matplotlib", "oracledb", "pandas", "pgspecial (==2.0.1)", "pkgmt", "polars (==0.17.2)", "psutil", "psycopg2-binary", "pyarrow", "pymysql", "pyodbc", "pytest", "python-tds", "redshift-connector", "snowflake-sqlalchemy", "sqlalchemy-pytds", "sqlalchemy-redshift", "twine"]
+dev = ["black", "duckdb", "duckdb-engine", "flake8", "invoke", "ipywidgets", "js2py", "jupyter-server", "matplotlib (==3.7.2)", "pandas (==2.0.3)", "pkgmt", "polars (==0.17.2)", "psutil", "pyarrow", "pyodbc", "pytest", "twine"]
+integration = ["black", "clickhouse-sqlalchemy", "dockerctx", "duckdb", "duckdb-engine", "flake8", "invoke", "ipywidgets", "js2py", "jupyter-server", "matplotlib (==3.7.2)", "oracledb", "pandas (==2.0.3)", "pgspecial (==2.0.1)", "pkgmt", "polars (==0.17.2)", "psutil", "psycopg2-binary", "pyarrow", "pymysql", "pyodbc", "pytest", "python-tds", "redshift-connector", "snowflake-sqlalchemy", "sqlalchemy-pytds", "sqlalchemy-redshift", "twine"]
+
+[[package]]
+name = "jupysql-plugin"
+version = "0.2.5"
+description = "Jupyterlab extension for JupySQL"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "jupysql_plugin-0.2.5-py3-none-any.whl", hash = "sha256:fc553a0267f9eb64a72d7a187977e40d18a49548b26ba0761d5c1b933039c59f"},
+    {file = "jupysql_plugin-0.2.5.tar.gz", hash = "sha256:e1c5621f814003b5e8eaf3f175c7562449416a0a0c9f63d466b8084d2c591992"},
+]
+
+[package.dependencies]
+ploomber-core = "*"
 
 [[package]]
 name = "markupsafe"
