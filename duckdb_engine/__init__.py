@@ -283,10 +283,6 @@ class Dialect(PGDialect_psycopg2):
     def dbapi(**kwargs: Any) -> Type[DBAPI]:
         return DBAPI
 
-    def initialize(self, connection: Any) -> None:
-        super().initialize(connection)
-        self.supports_native_enum = True
-
     def _get_server_version_info(self, connection: "Connection") -> Tuple[int, int]:
         return (8, 0)
 
@@ -467,6 +463,7 @@ class Dialect(PGDialect_psycopg2):
 
     def initialize(self, connection: "Connection") -> None:
         DefaultDialect.initialize(self, connection)
+        self.supports_native_enum = True
 
     def create_connect_args(self, url: URL) -> Tuple[tuple, dict]:
         opts = url.translate_connect_args(database="database")
