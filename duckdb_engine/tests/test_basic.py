@@ -368,6 +368,7 @@ def test_table_reflect(session: Session, engine: Engine) -> None:
     reflect_table(user_table, None)
 
 
+@mark.xfail(reason="duckdb doesnt fully support enums in the postgres views yet")
 def test_enum_type_format(session: Session, engine: Engine) -> None:
     importorskip("duckdb", "0.6.1")
 
