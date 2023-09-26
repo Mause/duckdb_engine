@@ -1197,13 +1197,13 @@ testing = ["fields", "hunter", "process-tests", "pytest-xdist", "six", "virtuale
 
 [[package]]
 name = "pytest-remotedata"
-version = "0.4.0"
+version = "0.4.1"
 description = "Pytest plugin for controlling remote data access."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "pytest-remotedata-0.4.0.tar.gz", hash = "sha256:be21c558e34d7c11b0f6aeb50956c09520bffcd02b7fce9c6f8e8531a401a1c8"},
-    {file = "pytest_remotedata-0.4.0-py3-none-any.whl", hash = "sha256:48ebd360d24bc670cfeca43fff62c1866251af9cfe53f2662f225f74b3496357"},
+    {file = "pytest-remotedata-0.4.1.tar.gz", hash = "sha256:05c08bf638cdd1ed66eb01738a1647c3c714737c3ec3abe009d2c1f793b4bb59"},
+    {file = "pytest_remotedata-0.4.1-py3-none-any.whl", hash = "sha256:4e840bd8733091c2a84e52528ee2c2a98aa2d4a26376ba20448f211bccd30a35"},
 ]
 
 [package.dependencies]
