@@ -420,3 +420,9 @@ def test_try_cast(engine: Engine) -> None:
 
         query = select(try_cast("not a date", DateTime))
         assert conn.execute(query).one() == (None,)
+
+
+def test_params(engine: Engine) -> None:
+    s = text("SELECT :x")
+    with engine.connect() as conn:
+        assert ("m",) == conn.execute(s, {"x": "m"}).fetchone()
