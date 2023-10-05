@@ -7,6 +7,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.dialects import registry  # type: ignore
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.engine.base import Connection
 from typing_extensions import ParamSpec
 
 warnings.filterwarnings(
@@ -25,6 +26,11 @@ def engine() -> Engine:
 
     return create_engine("duckdb:///:memory:")
 
+
+@fixture
+def conn(engine: Engine) -> Connection:
+    with engine.connect() as conn:
+        yield conn
 
 @fixture
 def session(engine: Engine) -> Session:

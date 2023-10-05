@@ -2,22 +2,25 @@ import duckdb
 import pandas as pd
 from pytest import importorskip, mark, raises
 from sqlalchemy import __version__, text
-from sqlalchemy.engine import Engine, create_engine
+from sqlalchemy.engine import create_engine
+from sqlalchemy.engine.base import Connection
 from sqlalchemy.exc import ProgrammingError
 
+df = pd.DataFrame([{"a": 1}])
 
-def test_integration(engine: Engine) -> None:
-    df = pd.DataFrame([{"a": 1}])
-    with engine.connect() as conn:
-        if hasattr(conn, "exec_driver_sql"):
-            conn.exec_driver_sql("register", ("test_df_driver", df))  # type: ignore[arg-type]
-            conn.execute(text("select * from test_df_driver"))
 
-        if __version__.startswith("2."):
-            conn.execute(text("register(?, ?)"), ("test_df", df))
-        else:
-            conn.execute(text("register"), ("test_df", df))
-        conn.execute(text("select * from test_df"))
+@mark.skipif(not hasattr(Connection, "exec_driver_sql"), reason="Needs exec_driver_sql")
+def test_register_driver(conn: Connection) -> None:
+    conn.exec_driver_sql("register", ("test_df_driver", df))  # type: ignore[arg-type]
+    conn.execute(text("select * from test_df_driver"))
+
+
+def test_plain_register(conn: Connection) -> None:
+    if __version__.startswith("1.3"):
+        conn.execute(text("register"), {"name": "test_df", "df": df})
+    else:
+        conn.execute(text("register(:name, :df)"), {"name": "test_df", "df": df})
+    conn.execute(text("select * from test_df"))
 
 
 @mark.remote_data
