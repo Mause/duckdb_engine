@@ -1,6 +1,6 @@
 import warnings
 from functools import wraps
-from typing import Any, Callable, TypeVar
+from typing import Any, Callable, Generator, TypeVar
 
 from pytest import fixture, raises
 from sqlalchemy import create_engine
@@ -28,7 +28,7 @@ def engine() -> Engine:
 
 
 @fixture
-def conn(engine: Engine) -> Connection:
+def conn(engine: Engine) -> Generator[Connection, None, None]:
     with engine.connect() as conn:
         yield conn
 
