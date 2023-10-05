@@ -1,22 +1,22 @@
 import duckdb
 import pandas as pd
 from pytest import importorskip, mark, raises
-from sqlalchemy import text
+from sqlalchemy import __version__, text
 from sqlalchemy.engine import Engine, create_engine
 from sqlalchemy.exc import ProgrammingError
 
-SEGFAULT = -6
-SUCCESS = 0
-
 
 def test_integration(engine: Engine) -> None:
+    df = pd.DataFrame([{"a": 1}])
     with engine.connect() as conn:
-        execute = (
-            conn.exec_driver_sql if hasattr(conn, "exec_driver_sql") else conn.execute
-        )
-        params = ("test_df", pd.DataFrame([{"a": 1}]))
-        execute("register", params)  # type: ignore[operator]
+        if hasattr(conn, "exec_driver_sql"):
+            conn.exec_driver_sql("register", ("test_df_driver", df))  # type: ignore[arg-type]
+            conn.execute(text("select * from test_df_driver"))
 
+        if __version__.startswith("2."):
+            conn.execute(text("register(?, ?)"), ("test_df", df))
+        else:
+            conn.execute(text("register"), ("test_df", df))
         conn.execute(text("select * from test_df"))
 
 
