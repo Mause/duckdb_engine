@@ -87,10 +87,15 @@ The supported configuration parameters are listed in the [DuckDB docs](https://d
 ## How to register a pandas DataFrame
 
 ```python
-eng = create_engine("duckdb:///:memory:")
-eng.execute("register", ("dataframe_name", pd.DataFrame(...)))
+conn = create_engine("duckdb:///:memory:").connect()
 
-eng.execute("select * from dataframe_name")
+# with SQLAlchemy 1.3
+conn.execute("register", ("dataframe_name", pd.DataFrame(...)))
+
+# with SQLAlchemy 1.4+
+conn.execute(text("register(:name, :df)"), {"name": "test_df", "df": df})
+
+conn.execute("select * from dataframe_name")
 ```
 
 ## Things to keep in mind
