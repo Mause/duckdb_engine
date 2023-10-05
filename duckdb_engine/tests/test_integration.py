@@ -1,23 +1,26 @@
 import duckdb
 import pandas as pd
 from pytest import importorskip, mark, raises
-from sqlalchemy import text
-from sqlalchemy.engine import Engine, create_engine
+from sqlalchemy import __version__, text
+from sqlalchemy.engine import create_engine
+from sqlalchemy.engine.base import Connection
 from sqlalchemy.exc import ProgrammingError
 
-SEGFAULT = -6
-SUCCESS = 0
+df = pd.DataFrame([{"a": 1}])
 
 
-def test_integration(engine: Engine) -> None:
-    with engine.connect() as conn:
-        execute = (
-            conn.exec_driver_sql if hasattr(conn, "exec_driver_sql") else conn.execute
-        )
-        params = ("test_df", pd.DataFrame([{"a": 1}]))
-        execute("register", params)  # type: ignore[operator]
+@mark.skipif(not hasattr(Connection, "exec_driver_sql"), reason="Needs exec_driver_sql")
+def test_register_driver(conn: Connection) -> None:
+    conn.exec_driver_sql("register", ("test_df_driver", df))  # type: ignore[arg-type]
+    conn.execute(text("select * from test_df_driver"))
 
-        conn.execute(text("select * from test_df"))
+
+def test_plain_register(conn: Connection) -> None:
+    if __version__.startswith("1.3"):
+        conn.execute(text("register"), {"name": "test_df", "df": df})
+    else:
+        conn.execute(text("register(:name, :df)"), {"name": "test_df", "df": df})
+    conn.execute(text("select * from test_df"))
 
 
 @mark.remote_data

@@ -87,10 +87,15 @@ The supported configuration parameters are listed in the [DuckDB docs](https://d
 ## How to register a pandas DataFrame
 
 ```python
-eng = create_engine("duckdb:///:memory:")
-eng.execute("register", ("dataframe_name", pd.DataFrame(...)))
+conn = create_engine("duckdb:///:memory:").connect()
 
-eng.execute("select * from dataframe_name")
+# with SQLAlchemy 1.3
+conn.execute("register", ("dataframe_name", pd.DataFrame(...)))
+
+# with SQLAlchemy 1.4+
+conn.execute(text("register(:name, :df)"), {"name": "test_df", "df": df})
+
+conn.execute("select * from dataframe_name")
 ```
 
 ## Things to keep in mind
@@ -156,6 +161,8 @@ class AlembicDuckDBImpl(DefaultImpl):
 After loading this class with your program, Alembic will no longer raise an error when generating or applying migrations.
 
 ## Preloading extensions (experimental)
+
+> DuckDB 0.9.0+ includes builtin support for autoinstalling and autoloading of extensions, see [the extension documentation](http://duckdb.org/docs/archive/0.9.0/extensions/overview#autoloadable-extensions) for more information.
 
 Until the DuckDB python client allows you to natively preload extensions, I've added experimental support via a `connect_args` parameter
 
