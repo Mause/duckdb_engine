@@ -429,35 +429,17 @@ def test_params(engine: Engine) -> None:
         assert ("m",) == conn.execute(s, {"x": "m"}).fetchone()
 
 
-def test_361() -> None:
-    # setup
-    conn = duckdb.connect("test.duckdb")
-    conn.execute("create table test (dt date); insert into test values ('2022-01-01');")
-
-    # query
-    engine = create_engine("duckdb:///test.duckdb")
-    metadata = MetaData(engine)
-    metadata.reflect()
-    test = metadata.tables["test"]
-    part = "year"
-    date_part = func.date_part(part, test.c.dt)
-
-    stmt = select(date_part).select_from(test).group_by(date_part)
-    engine.execute(stmt).fetchall()
-
-
-def test_try_cast(engine: Engine) -> None:
-    try_cast = importorskip("sqlalchemy", "2.0.14").try_cast
-
+def test_361(engine: Engine) -> None:
     with engine.connect() as conn:
-        query = select(try_cast("2022-01-01", DateTime))
-        assert conn.execute(query).one() == (datetime(2022, 1, 1),)
+        conn.execute(
+            "create table test (dt date); insert into test values ('2022-01-01');"
+        )
 
-        query = select(try_cast("not a date", DateTime))
-        assert conn.execute(query).one() == (None,)
+        metadata = MetaData(engine)
+        metadata.reflect()
+        test = metadata.tables["test"]
+        part = "year"
+        date_part = func.date_part(part, test.c.dt)
 
-
-def test_params(engine: Engine) -> None:
-    s = text("SELECT :x")
-    with engine.connect() as conn:
-        assert ("m",) == conn.execute(s, {"x": "m"}).fetchone()
+        stmt = select(date_part).select_from(test).group_by(date_part)
+        conn.execute(stmt).fetchall()
