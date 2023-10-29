@@ -22,6 +22,7 @@ from sqlalchemy import (
     String,
     Table,
     create_engine,
+    func,
     inspect,
     select,
     text,
