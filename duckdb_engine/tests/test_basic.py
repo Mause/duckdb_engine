@@ -434,8 +434,8 @@ def test_361(engine: Engine) -> None:
         conn.execute(text("create table test (dt date);"))
         conn.execute(text("insert into test values ('2022-01-01');"))
 
-        metadata = MetaData(engine)
-        metadata.reflect()
+        metadata = MetaData()
+        metadata.reflect(bind=conn)
         test = metadata.tables["test"]
         part = "year"
         date_part = func.date_part(part, test.c.dt)
