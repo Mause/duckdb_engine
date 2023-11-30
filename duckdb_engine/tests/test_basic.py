@@ -440,5 +440,10 @@ def test_361(engine: Engine) -> None:
         part = "year"
         date_part = func.date_part(part, test.c.dt)
 
-        stmt = select(date_part).select_from(test).group_by(date_part)
+        stmt = (
+            select(date_part)
+            .select_from(test)
+            .group_by(date_part)
+            .compile(dialect=engine.dialect, compile_kwargs={"literal_binds": True})
+        )
         conn.execute(stmt).fetchall()
