@@ -444,6 +444,5 @@ def test_361(engine: Engine) -> None:
             select(date_part)
             .select_from(test)
             .group_by(date_part)
-            .compile(dialect=engine.dialect, compile_kwargs={"literal_binds": True})
         )
         conn.execute(stmt).fetchall()

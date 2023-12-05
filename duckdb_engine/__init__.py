@@ -24,11 +24,13 @@ from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
 from sqlalchemy.engine.default import DefaultDialect
 from sqlalchemy.engine.url import URL
 from sqlalchemy.ext.compiler import compiles
+from packaging.version import Version
 
 from .config import apply_config, get_core_config
 from .datatypes import ISCHEMA_NAMES, register_extension_types
 
 __version__ = "0.9.2"
+sqlalchemy_version = Version(sqlalchemy.__version__)
 
 if TYPE_CHECKING:
     from sqlalchemy.base import Connection
@@ -39,7 +41,7 @@ register_extension_types()
 
 
 class DBAPI:
-    paramstyle = duckdb.paramstyle
+    paramstyle = "numeric_dollar" if sqlalchemy_version >= Version("2.0.0") else "qmark"
     apilevel = duckdb.apilevel
     threadsafety = duckdb.threadsafety
 
