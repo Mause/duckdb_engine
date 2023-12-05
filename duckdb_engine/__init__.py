@@ -312,17 +312,23 @@ class Dialect(PGDialect_psycopg2):
                 # Format:
                 #   <db_name>.<schema_name>
                 #   db_name and schema_name are double quoted if contains spaces or double quotes
-                database_name, schema_name = [max(s) for s in re.findall(r'"([^.]+)"|([^.]+)', schema)]
-                params = {
-                    "database_name": database_name,
-                    "schema_name": schema_name
-                }
+                database_name, schema_name = (
+                    max(s) for s in re.findall(r'"([^.]+)"|([^.]+)', schema)
+                )
+                params = {"database_name": database_name, "schema_name": schema_name}
                 s += "AND database_name = :database_name\n"
             s += "AND schema_name = :schema_name"
 
         rs = connection.execute(text(s), params)
 
-        return [table for (db, sc, table,) in rs]
+        return [
+            table
+            for (
+                db,
+                sc,
+                table,
+            ) in rs
+        ]
 
     def get_indexes(
         self,

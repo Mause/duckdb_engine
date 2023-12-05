@@ -173,8 +173,16 @@ def test_get_schema_names(inspector: Inspector, engine: Engine) -> None:
         if supports_attach:
             conn.execute(text("""ATTACH ':memory:' AS "daffy duck" """))
             conn.execute(text("""CREATE SCHEMA "daffy duck"."quack quack" """))
-            conn.execute(text("""CREATE TABLE "daffy duck"."quack quack"."t1" (i INTEGER, j INTEGER);"""))
-            conn.execute(text("""CREATE TABLE "daffy duck"."quack quack"."t2" (i INTEGER, j INTEGER);"""))
+            conn.execute(
+                text(
+                    """CREATE TABLE "daffy duck"."quack quack"."t1" (i INTEGER, j INTEGER);"""
+                )
+            )
+            conn.execute(
+                text(
+                    """CREATE TABLE "daffy duck"."quack quack"."t2" (i INTEGER, j INTEGER);"""
+                )
+            )
             conn.execute(text("""CREATE SCHEMA "daffy duck"."you're "" despicable" """))
 
     # Deliberately excluding pg_catalog schema (to align with Postgres)
