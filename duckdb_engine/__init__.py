@@ -15,6 +15,7 @@ from typing import (
 
 import duckdb
 import sqlalchemy
+from packaging.version import Version
 from sqlalchemy import pool, text
 from sqlalchemy import types as sqltypes
 from sqlalchemy import util
@@ -24,7 +25,6 @@ from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
 from sqlalchemy.engine.default import DefaultDialect
 from sqlalchemy.engine.url import URL
 from sqlalchemy.ext.compiler import compiles
-from packaging.version import Version
 
 from .config import apply_config, get_core_config
 from .datatypes import ISCHEMA_NAMES, register_extension_types
