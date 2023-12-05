@@ -1,11 +1,12 @@
 import warnings
 from functools import wraps
-from typing import Any, Callable, TypeVar
+from typing import Any, Callable, Generator, TypeVar
 
 from pytest import fixture, raises
 from sqlalchemy import create_engine
 from sqlalchemy.dialects import registry  # type: ignore
 from sqlalchemy.engine import Engine
+from sqlalchemy.engine.base import Connection
 from sqlalchemy.orm import Session, sessionmaker
 from typing_extensions import ParamSpec
 
@@ -24,6 +25,12 @@ def engine() -> Engine:
     registry.register("duckdb", "duckdb_engine", "Dialect")
 
     return create_engine("duckdb:///:memory:")
+
+
+@fixture
+def conn(engine: Engine) -> Generator[Connection, None, None]:
+    with engine.connect() as conn:
+        yield conn
 
 
 @fixture

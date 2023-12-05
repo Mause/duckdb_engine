@@ -22,6 +22,7 @@ from sqlalchemy import (
     String,
     Table,
     create_engine,
+    func,
     inspect,
     select,
     text,
@@ -343,11 +344,10 @@ def test_comment_support() -> None:
         duckdb.default_connection.execute('comment on sqlite_master is "hello world";')
 
 
-@mark.xfail(raises=AttributeError)
 def test_rowcount() -> None:
     import duckdb
 
-    duckdb.default_connection.rowcount  # type: ignore
+    assert duckdb.default_connection.rowcount == -1  # type: ignore
 
 
 def test_sessions(session: Session) -> None:
@@ -450,3 +450,29 @@ def test_try_cast(engine: Engine) -> None:
 
         query = select(try_cast("not a date", DateTime))
         assert conn.execute(query).one() == (None,)
+
+
+def test_params(engine: Engine) -> None:
+    s = text("SELECT :x")
+    with engine.connect() as conn:
+        assert ("m",) == conn.execute(s, {"x": "m"}).fetchone()
+
+
+def test_361(engine: Engine) -> None:
+    with engine.connect() as conn:
+        conn.execute(text("create table test (dt date);"))
+        conn.execute(text("insert into test values ('2022-01-01');"))
+
+        metadata = MetaData()
+        metadata.reflect(bind=conn)
+        test = metadata.tables["test"]
+        part = "year"
+        date_part = func.date_part(part, test.c.dt)
+
+        stmt = (
+            select(date_part)
+            .select_from(test)
+            .group_by(date_part)
+            .compile(dialect=engine.dialect, compile_kwargs={"literal_binds": True})
+        )
+        conn.execute(stmt).fetchall()

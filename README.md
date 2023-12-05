@@ -15,8 +15,13 @@ Basic SQLAlchemy driver for [DuckDB](https://duckdb.org/)
       * [Auto-incrementing ID columns](#auto-incrementing-id-columns)
       * [Pandas read_sql() chunksize](#pandas-read_sql-chunksize)
       * [Unsigned integer support](#unsigned-integer-support)
+   * [Alembic Integration](#alembic-integration)
    * [Preloading extensions (experimental)](#preloading-extensions-experimental)
    * [The name](#the-name)
+
+<!-- Created by https://github.com/ekalinin/github-markdown-toc -->
+<!-- Added by: me, at: Wed 20 Sep 2023 12:44:27 AWST -->
+
 <!--te-->
 
 ## Installation
@@ -82,10 +87,15 @@ The supported configuration parameters are listed in the [DuckDB docs](https://d
 ## How to register a pandas DataFrame
 
 ```python
-eng = create_engine("duckdb:///:memory:")
-eng.execute("register", ("dataframe_name", pd.DataFrame(...)))
+conn = create_engine("duckdb:///:memory:").connect()
 
-eng.execute("select * from dataframe_name")
+# with SQLAlchemy 1.3
+conn.execute("register", ("dataframe_name", pd.DataFrame(...)))
+
+# with SQLAlchemy 1.4+
+conn.execute(text("register(:name, :df)"), {"name": "test_df", "df": df})
+
+conn.execute("select * from dataframe_name")
 ```
 
 ## Things to keep in mind
@@ -133,7 +143,26 @@ The `pandas.read_sql()` method can read tables from `duckdb_engine` into DataFra
 
 Unsigned integers are supported by DuckDB, and are available in [`duckdb_engine.datatypes`](duckdb_engine/datatypes.py).
 
+## Alembic Integration
+
+SQLAlchemy's companion library `alembic` can optionally be used to manage database migrations.
+
+This support can be enabling by adding an Alembic implementation class for the `duckdb` dialect.
+
+```python
+from alembic.ddl.impl import DefaultImpl
+
+class AlembicDuckDBImpl(DefaultImpl):
+    """Alembic implementation for DuckDB."""
+
+    __dialect__ = "duckdb"
+```
+
+After loading this class with your program, Alembic will no longer raise an error when generating or applying migrations.
+
 ## Preloading extensions (experimental)
+
+> DuckDB 0.9.0+ includes builtin support for autoinstalling and autoloading of extensions, see [the extension documentation](http://duckdb.org/docs/archive/0.9.0/extensions/overview#autoloadable-extensions) for more information.
 
 Until the DuckDB python client allows you to natively preload extensions, I've added experimental support via a `connect_args` parameter
 
