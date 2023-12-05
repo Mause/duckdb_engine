@@ -5,7 +5,6 @@
 
 ### Bug Fixes
 
-* update constant ([ec61da2](https://github.com/Mause/duckdb_engine/commit/ec61da22ae6251814c604e6dc04cfa5c6de40444))
 * use numeric_dollar where available ([f51ee7f](https://github.com/Mause/duckdb_engine/commit/f51ee7fb481f6e41e9d6636356edb81ee5e424cd))
 
 
