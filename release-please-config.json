@@ -2,16 +2,10 @@
   "packages": {
     ".": {
       "package-name": "duckdb_engine",
-      "releaseType": "python",
+      "release-type": "python",
       "draft": true,
       "prerelease": false,
-      "bumpMinorPreMajor": false,
-      "bumpPatchForMinorPreMajor": true,
-      "changelogPath": "CHANGELOG.md",
-      "versioning": "default",
-      "extraFiles": [
-        "duckdb_engine/__init__.py"
-      ]
+      "versioning": "default"
     }
   }
 }
