@@ -29,7 +29,7 @@ from sqlalchemy.ext.compiler import compiles
 from .config import apply_config, get_core_config
 from .datatypes import ISCHEMA_NAMES, register_extension_types
 
-__version__ = "0.9.2"
+__version__ = "0.9.3"
 sqlalchemy_version = Version(sqlalchemy.__version__)
 
 if TYPE_CHECKING:

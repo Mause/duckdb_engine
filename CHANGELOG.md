@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.9.3](https://github.com/Mause/duckdb_engine/compare/v0.9.2...v0.9.3) (2023-12-05)
+
+
+### Bug Fixes
+
+* update constant ([ec61da2](https://github.com/Mause/duckdb_engine/commit/ec61da22ae6251814c604e6dc04cfa5c6de40444))
+* use numeric_dollar where available ([f51ee7f](https://github.com/Mause/duckdb_engine/commit/f51ee7fb481f6e41e9d6636356edb81ee5e424cd))
+
+
+### Documentation
+
+* add directions for `alembic` support ([d549ba4](https://github.com/Mause/duckdb_engine/commit/d549ba497b1830b73b54dda4cd983ddb3114c150))
+* update autoloading docs ([b782994](https://github.com/Mause/duckdb_engine/commit/b7829948114fb391918795a932564da2bbbb16db))
+* update register docs ([9081ef7](https://github.com/Mause/duckdb_engine/commit/9081ef76cac0dd80b3922cc2b290724db17aa28e))
+* update toc ([abcb158](https://github.com/Mause/duckdb_engine/commit/abcb158c42b734514028fbb9741c7c7dfa04f985))
+* update toc ([#785](https://github.com/Mause/duckdb_engine/issues/785)) ([234a8b8](https://github.com/Mause/duckdb_engine/commit/234a8b801ffe4d236c8a790b880bc81207f37266))
+
 ## [0.9.2](https://github.com/Mause/duckdb_engine/compare/v0.9.1...v0.9.2) (2023-07-23)
 
 
