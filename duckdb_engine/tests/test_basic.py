@@ -430,6 +430,8 @@ def test_params(engine: Engine) -> None:
 
 
 def test_361(engine: Engine) -> None:
+    importorskip("sqlalchemy", "2.0.0")
+
     with engine.connect() as conn:
         conn.execute(text("create table test (dt date);"))
         conn.execute(text("insert into test values ('2022-01-01');"))
