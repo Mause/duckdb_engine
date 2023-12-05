@@ -1,3 +1,4 @@
+import re
 import warnings
 from typing import (
     TYPE_CHECKING,
@@ -285,6 +286,43 @@ class Dialect(PGDialect_psycopg2):
 
         qs = self.identifier_preparer.quote_schema
         return [f"{qs(db)}.{qs(schema)}" for (db, schema) in rs]
+
+    @cache  # type: ignore[call-arg]
+    def get_table_names(self, connection: "Connection", schema=None, **kw: "Any"):  # type: ignore[no-untyped-def]
+        """
+        Return unquoted database_name.schema_name unless either contains spaces or double quotes.
+        In that case, escape double quotes and then wrap in double quotes.
+        SQLAlchemy definition of a schema includes database name for databases like SQL Server (Ex: databasename.dbo)
+        (see https://docs.sqlalchemy.org/en/20/dialects/mssql.html#multipart-schema-names)
+        """
+
+        if not supports_attach:
+            return super().get_table_names(connection, schema, **kw)
+
+        s = """
+            SELECT database_name, schema_name, table_name
+            FROM duckdb_tables()
+            WHERE schema_name NOT LIKE 'pg\\_%' ESCAPE '\\'
+            """
+        params = {}
+        if schema is not None:
+            params = {"schema_name": schema}
+            if "." in schema:
+                # Get database name and schema name from schema if it contains a database name
+                # Format:
+                #   <db_name>.<schema_name>
+                #   db_name and schema_name are double quoted if contains spaces or double quotes
+                database_name, schema_name = [max(s) for s in re.findall(r'"([^.]+)"|([^.]+)', schema)]
+                params = {
+                    "database_name": database_name,
+                    "schema_name": schema_name
+                }
+                s += "AND database_name = :database_name\n"
+            s += "AND schema_name = :schema_name"
+
+        rs = connection.execute(text(s), params)
+
+        return [table for (db, sc, table,) in rs]
 
     def get_indexes(
         self,

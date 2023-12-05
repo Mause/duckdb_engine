@@ -169,30 +169,39 @@ def test_get_tables(inspector: Inspector) -> None:
 def test_get_schema_names(inspector: Inspector, engine: Engine) -> None:
     with engine.connect() as conn:
         # Using multi-line strings because of all the single and double quotes flying around...
-        conn.execute(text("""CREATE SCHEMA "hello world" """))
+        conn.execute(text("""CREATE SCHEMA "quack quack" """))
         if supports_attach:
-            conn.execute(text("""ATTACH ':memory:' AS "my db" """))
-            conn.execute(text("""CREATE SCHEMA "my db"."hello world" """))
-            conn.execute(text("""CREATE SCHEMA "my db"."cursed "" schema" """))
+            conn.execute(text("""ATTACH ':memory:' AS "daffy duck" """))
+            conn.execute(text("""CREATE SCHEMA "daffy duck"."quack quack" """))
+            conn.execute(text("""CREATE TABLE "daffy duck"."quack quack"."t1" (i INTEGER, j INTEGER);"""))
+            conn.execute(text("""CREATE TABLE "daffy duck"."quack quack"."t2" (i INTEGER, j INTEGER);"""))
+            conn.execute(text("""CREATE SCHEMA "daffy duck"."you're "" despicable" """))
 
     # Deliberately excluding pg_catalog schema (to align with Postgres)
     names = inspector.get_schema_names()
     if supports_attach:
-        assert names == [
-            'memory."hello world"',
+        assert set(names) == {
+            'memory."quack quack"',
             "memory.information_schema",
             "memory.main",
-            '"my db"."cursed "" schema"',
-            '"my db"."hello world"',
-            '"my db".information_schema',
-            '"my db".main',
+            '"daffy duck"."you\'re "" despicable"',
+            '"daffy duck"."quack quack"',
+            '"daffy duck".information_schema',
+            '"daffy duck".main',
             "system.information_schema",
             "system.main",
             "temp.information_schema",
             "temp.main",
-        ]
+        }
     else:
-        assert names == ["hello world", "information_schema", "main", "temp"]
+        assert names == ["quack quack", "information_schema", "main", "temp"]
+
+    table_names = inspector.get_table_names(schema='"daffy duck"."quack quack"')
+    assert set(table_names) == {"t1", "t2"}
+
+    table_names_all = inspector.get_table_names()
+    assert "t1" in table_names_all
+    assert "t2" in table_names_all
 
 
 def test_get_views(engine: Engine) -> None:
