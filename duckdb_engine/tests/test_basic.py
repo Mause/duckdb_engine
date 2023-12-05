@@ -443,4 +443,4 @@ def test_361(engine: Engine) -> None:
         date_part = func.date_part(part, test.c.dt)
 
         stmt = select(date_part).select_from(test).group_by(date_part)
-        conn.execute(stmt).fetchall()
+        assert conn.execute(stmt).fetchall() == [(2022,)]
