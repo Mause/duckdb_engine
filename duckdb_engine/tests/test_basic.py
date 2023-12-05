@@ -430,6 +430,8 @@ def test_params(engine: Engine) -> None:
 
 
 def test_361(engine: Engine) -> None:
+    importorskip("sqlalchemy", "2.0.0")
+
     with engine.connect() as conn:
         conn.execute(text("create table test (dt date);"))
         conn.execute(text("insert into test values ('2022-01-01');"))
@@ -440,10 +442,5 @@ def test_361(engine: Engine) -> None:
         part = "year"
         date_part = func.date_part(part, test.c.dt)
 
-        stmt = (
-            select(date_part)
-            .select_from(test)
-            .group_by(date_part)
-            .compile(dialect=engine.dialect, compile_kwargs={"literal_binds": True})
-        )
-        conn.execute(stmt).fetchall()
+        stmt = select(date_part).select_from(test).group_by(date_part)
+        assert conn.execute(stmt).fetchall() == [(2022,)]
