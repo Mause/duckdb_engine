@@ -1,6 +1,7 @@
 {
   "packages": {
     ".": {
+      "projectName": "duckdb_engine",
       "releaseType": "python",
       "draft": true,
       "prerelease": false,
