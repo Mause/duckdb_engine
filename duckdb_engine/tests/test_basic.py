@@ -170,19 +170,19 @@ def test_get_tables(inspector: Inspector) -> None:
     supports_attach is False,
     reason="ATTACH is not supported for DuckDB version < 0.7.0",
 )
-def test_get_schema_names(inspector: Inspector, engine: Engine) -> None:
-    # Run each command in a separate transaction
-    for cmd in [
+def test_get_schema_names(inspector: Inspector, session: Session) -> None:
+    # Using multi-line strings because of all the single and double quotes flying around...
+    cmds = [
         """CREATE SCHEMA "quack quack" """,
         """ATTACH ':memory:' AS "daffy duck" """,
         """CREATE SCHEMA "daffy duck"."quack quack" """,
         """CREATE TABLE "daffy duck"."quack quack"."t1" (i INTEGER, j INTEGER);""",
         """CREATE TABLE "daffy duck"."quack quack"."t2" (i INTEGER, j INTEGER);""",
         """CREATE SCHEMA "daffy duck"."you're "" despicable" """,
-    ]:
-        with engine.connect() as conn:
-            # Using multi-line strings because of all the single and double quotes flying around...
-            conn.execute(text(cmd))
+    ]
+    for cmd in cmds:
+        session.execute(text(cmd))
+        session.commit()
 
     # Deliberately excluding pg_catalog schema (to align with Postgres)
     names = inspector.get_schema_names()
