@@ -187,19 +187,19 @@ def test_get_schema_names(inspector: Inspector, session: Session) -> None:
     # Deliberately excluding pg_catalog schema (to align with Postgres)
     names = inspector.get_schema_names()
     if supports_attach:
-        assert set(names) == {
-            'memory."quack quack"',
-            "memory.information_schema",
-            "memory.main",
-            '"daffy duck"."you\'re "" despicable"',
-            '"daffy duck"."quack quack"',
+        assert names == [
             '"daffy duck".information_schema',
             '"daffy duck".main',
+            '"daffy duck"."quack quack"',
+            '"daffy duck"."you\'re "" despicable"',
+            "memory.information_schema",
+            "memory.main",
+            'memory."quack quack"',
             "system.information_schema",
             "system.main",
             "temp.information_schema",
             "temp.main",
-        }
+        ]
     else:
         assert names == ["quack quack", "information_schema", "main", "temp"]
 
