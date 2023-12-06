@@ -31,9 +31,8 @@ from sqlalchemy.ext.compiler import compiles
 from .config import apply_config, get_core_config
 from .datatypes import ISCHEMA_NAMES, register_extension_types
 
-__version__ = "0.9.2"
-duckdb_version: str = duckdb.__version__  # type: ignore[attr-defined]
-supports_attach = Version(duckdb_version) >= Version("0.7.0")
+__version__ = "0.9.3"
+sqlalchemy_version = Version(sqlalchemy.__version__)
 
 if TYPE_CHECKING:
     from sqlalchemy.base import Connection
@@ -44,7 +43,7 @@ register_extension_types()
 
 
 class DBAPI:
-    paramstyle = duckdb.paramstyle
+    paramstyle = "numeric_dollar" if sqlalchemy_version >= Version("2.0.0") else "qmark"
     apilevel = duckdb.apilevel
     threadsafety = duckdb.threadsafety
 
@@ -139,7 +138,11 @@ class ConnectionWrapper:
         try:
             if statement.lower() == "commit":  # this is largely for ipython-sql
                 self.__c.commit()
-            elif statement.lower() in ("register", "register(?, ?)"):
+            elif statement.lower() in (
+                "register",
+                "register(?, ?)",
+                "register($1, $2)",
+            ):
                 assert parameters and len(parameters) == 2, parameters
                 view_name, df = parameters
                 self.__c.register(view_name, df)
