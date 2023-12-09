@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.4](https://github.com/Mause/duckdb_engine/compare/v0.9.3...v0.9.4) (2023-12-09)
+
+
+### Bug Fixes
+
+* fix: Support fetching multiple databases and schemas and their associated tables
+
 ## [0.9.3](https://github.com/Mause/duckdb_engine/compare/v0.9.2...v0.9.3) (2023-12-05)
 
 
