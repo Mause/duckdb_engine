@@ -249,7 +249,7 @@ def test_preload_extension() -> None:
 
 @fixture
 def inspector(engine: Engine, session: Session) -> Inspector:
-    session.execute(text("create table test (id int);"))
+    session.execute(text("create table test (id int, primary key (id));"))
     session.commit()
 
     meta = MetaData()
@@ -259,11 +259,15 @@ def inspector(engine: Engine, session: Session) -> Inspector:
 
 
 def test_get_columns(inspector: Inspector) -> None:
-    inspector.get_columns("test", None)
+    assert inspector.get_columns("test", None) == []
 
 
-def test_get_foreign_keys(inspector: Inspector) -> None:
-    inspector.get_foreign_keys("test", None)
+def test_get_foreign_keys(inspector: Inspector, session: Session) -> None:
+    session.execute(
+        text("create table test2 (id int, foreign_id int references test);")
+    )
+    assert len(set(inspector.get_table_names()) & {"test", "test2"}) == 2
+    assert inspector.get_foreign_keys("test", None) == []
 
 
 @mark.skipif(
