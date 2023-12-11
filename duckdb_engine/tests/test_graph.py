@@ -1,18 +1,10 @@
-from sqlalchemy import (
-    Column,
-    ForeignKey,
-    Integer,
-    MetaData,
-    Sequence,
-    String,
-    Table,
-    create_engine,
-)
+from snapshottest.module import SnapshotTest
+from sqlalchemy import Column, ForeignKey, Integer, MetaData, Sequence, String, Table
 from sqlalchemy.engine import Engine
 from sqlalchemy_schemadisplay import create_schema_graph
 
 
-def display_schema(engine: Engine, outfile: str) -> None:
+def display_schema(engine: Engine, snapshot: SnapshotTest) -> None:
     """
     Display metadata
     """
@@ -25,13 +17,10 @@ def display_schema(engine: Engine, outfile: str) -> None:
         rankdir="LR",  # From left to right (instead of top to bottom)
         concentrate=False,  # Don't try to join the relation lines together
     )
-    graph.write_png(outfile)  # write out the file
+    snapshot.assert_match(graph.to_string())
 
 
-def test_graph() -> None:
-    # Second test with duckdb
-    engine = create_engine("duckdb:///:memory:")
-
+def test_graph(engine: Engine, snapshot: SnapshotTest) -> None:
     metadata_obj = MetaData(engine)
 
     user_id_seq: Sequence = Sequence("user_id_seq")
@@ -70,4 +59,4 @@ def test_graph() -> None:
 
     metadata_obj.create_all(engine)
 
-    display_schema(engine, "duckdb/dbschema_2.png")
+    display_schema(engine, snapshot)
