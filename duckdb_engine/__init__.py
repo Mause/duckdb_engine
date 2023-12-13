@@ -371,7 +371,7 @@ class Dialect(PGDialect_psycopg2):
             raise NoSuchTableError(table_name)
         return table_oid
 
-    def has_table(self, connection, table_name, schema=None):
+    def has_table(self, connection, table_name, schema=None, **kw):
         try:
             return self.get_table_oid(connection, table_name, schema) is not None
         except NoSuchTableError:
