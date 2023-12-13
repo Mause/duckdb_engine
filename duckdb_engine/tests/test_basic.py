@@ -214,6 +214,7 @@ def test_get_table_names(inspector: Inspector, session: Session) -> None:
         """CREATE SCHEMA "daffy duck"."quack quack" """,
         """CREATE TABLE "daffy duck"."quack quack"."t1" (i INTEGER, j INTEGER);""",
         """CREATE TABLE "daffy duck"."quack quack"."t2" (i INTEGER, j INTEGER);""",
+        """CREATE TABLE "t3" (i INTEGER, j INTEGER);""",
     ]
     for cmd in cmds:
         session.execute(text(cmd))
@@ -223,10 +224,15 @@ def test_get_table_names(inspector: Inspector, session: Session) -> None:
     assert set(table_names) == {"t1", "t2"}
     for table_name in table_names:
         assert inspector.has_table(table_name, schema='"daffy duck"."quack quack"')
+    
+    table_names = inspector.get_table_names(schema='main')
+    assert "t3" in table_names
+    assert "t1" not in table_names
 
     table_names_all = inspector.get_table_names()
     assert "t1" in table_names_all
     assert "t2" in table_names_all
+    assert "t3" in table_names_all
     for table_name in table_names_all:
         assert inspector.has_table(table_name)
 
