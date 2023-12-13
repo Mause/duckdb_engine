@@ -332,6 +332,30 @@ class Dialect(PGDialect_psycopg2):
         qs = self.identifier_preparer.quote_schema
         return [qs(".".join(npspname)) for npspname in rs]
 
+    def _build_query_where(self, table_name=None, schema_name=None, database_name=None):
+        sql = ""
+        params = {}
+
+        # If no database name is provided, try to get it from the schema name
+        # specified as "<db name>.<schema name>"
+        # If only a schema name is found, database_name will return None
+        if database_name is None and schema_name is not None:
+            database_name, schema_name = self.identifier_preparer._separate(schema_name)
+
+        if table_name is not None:
+            sql += "AND table_name = :table_name\n"
+            params.update({"table_name": table_name})
+
+        if schema_name is not None:
+            sql += "AND schema_name = :schema_name\n"
+            params.update({"schema_name": schema_name})
+
+        if database_name is not None:
+            sql += "AND database_name = :database_name\n"
+            params.update({"database_name": database_name})
+
+        return sql, params
+
     @cache  # type: ignore[call-arg]
     def get_table_names(self, connection: "Connection", schema=None, **kw: "Any"):  # type: ignore[no-untyped-def]
         """
@@ -349,17 +373,8 @@ class Dialect(PGDialect_psycopg2):
             FROM duckdb_tables()
             WHERE schema_name NOT LIKE 'pg\\_%' ESCAPE '\\'
             """
-        params = {}
-
-        if schema is not None:
-            database_name, schema_name = self.identifier_preparer._separate(schema)
-            s += "AND schema_name = :schema_name\n"
-            params.update({"schema_name": schema_name})
-
-            if database_name is not None:
-                s += "AND database_name = :database_name\n"
-                params.update({"database_name": database_name})
-
+        sql, params = self._build_query_where(schema_name=schema)
+        s += sql
         rs = connection.execute(text(s), params)
 
         return [
@@ -383,16 +398,8 @@ class Dialect(PGDialect_psycopg2):
             WHERE schema_name NOT LIKE 'pg\\_%' ESCAPE '\\'
             AND table_name = :table_name
             """
-        params = {"table_name": table_name}
-
-        if schema is not None:
-            database_name, schema_name = self.identifier_preparer._separate(schema)
-            s += "AND schema_name = :schema_name\n"
-            params.update({"schema_name": schema_name})
-
-            if database_name is not None:
-                s += "AND database_name = :database_name\n"
-                params.update({"database_name": database_name})
+        sql, params = self._build_query_where(table_name=table_name, schema_name=schema)
+        s += sql
 
         rs = connection.execute(text(s), params)
         table_oid = rs.scalar()
