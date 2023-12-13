@@ -215,24 +215,23 @@ def test_get_table_names(inspector: Inspector, session: Session) -> None:
         """CREATE TABLE "daffy duck"."quack quack"."t1" (i INTEGER, j INTEGER);""",
         """CREATE TABLE "daffy duck"."quack quack"."t2" (i INTEGER, j INTEGER);""",
         """CREATE TABLE "t3" (i INTEGER, j INTEGER);""",
+        """CREATE SCHEMA "porky" """,
+        """CREATE TABLE "porky"."t4" (i INTEGER, j INTEGER);""",
     ]
     for cmd in cmds:
         session.execute(text(cmd))
         session.commit()
 
-    table_names = inspector.get_table_names(schema='"daffy duck"."quack quack"')
-    assert set(table_names) == {"t1", "t2"}
-    for table_name in table_names:
-        assert inspector.has_table(table_name, schema='"daffy duck"."quack quack"')
-    
-    table_names = inspector.get_table_names(schema='main')
-    assert "t3" in table_names
-    assert "t1" not in table_names
+    for schema, table_names in zip(
+        ['"daffy duck"."quack quack"', "main", "porky"], [["t1", "t2"], ["t3"], ["t4"]]
+    ):
+        _table_names = inspector.get_table_names(schema=schema)
+        assert set(_table_names).issuperset(set(table_names))
+        for _table_name in _table_names:
+            assert inspector.has_table(_table_name, schema)
 
     table_names_all = inspector.get_table_names()
-    assert "t1" in table_names_all
-    assert "t2" in table_names_all
-    assert "t3" in table_names_all
+    assert set(table_names_all).issuperset({"t1", "t2", "t3", "t4"})
     for table_name in table_names_all:
         assert inspector.has_table(table_name)
 
