@@ -21,7 +21,12 @@ from sqlalchemy import pool, text
 from sqlalchemy import types as sqltypes
 from sqlalchemy import util
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.dialects.postgresql.base import PGDialect, PGInspector, PGTypeCompiler
+from sqlalchemy.dialects.postgresql.base import (
+    PGDialect,
+    PGIdentifierPreparer,
+    PGInspector,
+    PGTypeCompiler,
+)
 from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
 from sqlalchemy.engine.default import DefaultDialect
 from sqlalchemy.engine.reflection import cache
@@ -176,6 +181,38 @@ def index_warning() -> None:
     )
 
 
+class DuckDBIdentifierPreparer(PGIdentifierPreparer):
+    def _separate(self, name) -> Tuple[Optional[str], str]:
+        """
+        Get database name and schema name from schema if it contains a database name
+            Format:
+              <db_name>.<schema_name>
+              db_name and schema_name are double quoted if contains spaces or double quotes
+        """
+        database_name, schema_name = None, name
+        if "." in name:
+            database_name, schema_name = (
+                max(s) for s in re.findall(r'"([^.]+)"|([^.]+)', name)
+            )
+        return database_name, schema_name
+
+    def format_schema(self, name):
+        """Prepare a quoted schema name."""
+        database_name, schema_name = self._separate(name)
+        if database_name is None:
+            return self.quote(name)
+        return ".".join(self.quote(_n) for _n in [database_name, schema_name])
+
+    def quote_schema(self, schema: str, force: Any = None) -> str:
+        """
+        Conditionally quote a schema name.
+
+        :param schema: string schema name
+        :param force: unused
+        """
+        return self.format_schema(schema)
+
+
 class Dialect(PGDialect_psycopg2):
     name = "duckdb"
     driver = "duckdb_engine"
@@ -201,6 +238,8 @@ class Dialect(PGDialect_psycopg2):
         PGDialect.ischema_names,
         ISCHEMA_NAMES,
     )
+    preparer = DuckDBIdentifierPreparer
+    identifier_preparer: DuckDBIdentifierPreparer
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         kwargs["use_native_hstore"] = False
@@ -291,7 +330,7 @@ class Dialect(PGDialect_psycopg2):
         rs = connection.execute(text(s))
 
         qs = self.identifier_preparer.quote_schema
-        return [f"{qs(db)}.{qs(schema)}" for (db, schema) in rs]
+        return [qs(".".join(npspname)) for npspname in rs]
 
     @cache  # type: ignore[call-arg]
     def get_table_names(self, connection: "Connection", schema=None, **kw: "Any"):  # type: ignore[no-untyped-def]
@@ -311,19 +350,15 @@ class Dialect(PGDialect_psycopg2):
             WHERE schema_name NOT LIKE 'pg\\_%' ESCAPE '\\'
             """
         params = {}
+
         if schema is not None:
-            params = {"schema_name": schema}
-            if "." in schema:
-                # Get database name and schema name from schema if it contains a database name
-                # Format:
-                #   <db_name>.<schema_name>
-                #   db_name and schema_name are double quoted if contains spaces or double quotes
-                database_name, schema_name = (
-                    max(s) for s in re.findall(r'"([^.]+)"|([^.]+)', schema)
-                )
-                params = {"database_name": database_name, "schema_name": schema_name}
+            database_name, schema_name = self.identifier_preparer._separate(schema)
+            s += "AND schema_name = :schema_name\n"
+            params.update({"schema_name": schema_name})
+
+            if database_name is not None:
                 s += "AND database_name = :database_name\n"
-            s += "AND schema_name = :schema_name"
+                params.update({"database_name": database_name})
 
         rs = connection.execute(text(s), params)
 
@@ -349,21 +384,15 @@ class Dialect(PGDialect_psycopg2):
             AND table_name = :table_name
             """
         params = {"table_name": table_name}
+
         if schema is not None:
-            params.update({"schema_name": schema})
-            if "." in schema:
-                # Get database name and schema name from schema if it contains a database name
-                # Format:
-                #   <db_name>.<schema_name>
-                #   db_name and schema_name are double quoted if contains spaces or double quotes
-                database_name, schema_name = (
-                    max(s) for s in re.findall(r'"([^.]+)"|([^.]+)', schema)
-                )
-                params.update(
-                    {"database_name": database_name, "schema_name": schema_name}
-                )
+            database_name, schema_name = self.identifier_preparer._separate(schema)
+            s += "AND schema_name = :schema_name\n"
+            params.update({"schema_name": schema_name})
+
+            if database_name is not None:
                 s += "AND database_name = :database_name\n"
-            s += "AND schema_name = :schema_name"
+                params.update({"database_name": database_name})
 
         rs = connection.execute(text(s), params)
         table_oid = rs.scalar()
