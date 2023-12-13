@@ -26,6 +26,7 @@ from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
 from sqlalchemy.engine.default import DefaultDialect
 from sqlalchemy.engine.reflection import cache
 from sqlalchemy.engine.url import URL
+from sqlalchemy.exc import NoSuchTableError
 from sqlalchemy.ext.compiler import compiles
 
 from .config import apply_config, get_core_config
@@ -334,6 +335,47 @@ class Dialect(PGDialect_psycopg2):
                 table,
             ) in rs
         ]
+
+    @cache
+    def get_table_oid(self, connection, table_name, schema=None, **kw):
+        """Fetch the oid for (database.)schema.table_name.
+        The schema name can be formatted either as database.schema or just the schema name.
+        In the latter scenario the schema associated with the default database is used.
+        """
+        s = """
+            SELECT table_oid
+            FROM duckdb_tables()
+            WHERE schema_name NOT LIKE 'pg\\_%' ESCAPE '\\'
+            AND table_name = :table_name
+            """
+        params = {"table_name": table_name}
+        if schema is not None:
+            params.update({"schema_name": schema})
+            if "." in schema:
+                # Get database name and schema name from schema if it contains a database name
+                # Format:
+                #   <db_name>.<schema_name>
+                #   db_name and schema_name are double quoted if contains spaces or double quotes
+                database_name, schema_name = (
+                    max(s) for s in re.findall(r'"([^.]+)"|([^.]+)', schema)
+                )
+                params.update(
+                    {"database_name": database_name, "schema_name": schema_name}
+                )
+                s += "AND database_name = :database_name\n"
+            s += "AND schema_name = :schema_name"
+
+        rs = connection.execute(text(s), params)
+        table_oid = rs.scalar()
+        if table_oid is None:
+            raise NoSuchTableError(table_name)
+        return table_oid
+
+    def has_table(self, connection, table_name, schema=None):
+        try:
+            return self.get_table_oid(connection, table_name, schema) is not None
+        except NoSuchTableError:
+            return False
 
     def get_indexes(
         self,
