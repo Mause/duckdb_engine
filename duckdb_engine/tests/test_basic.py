@@ -162,7 +162,8 @@ def test_simple_string(s: str) -> None:
 
 
 def test_get_tables(inspector: Inspector) -> None:
-    assert inspector.get_table_names()
+    for table_name in inspector.get_table_names():
+        assert inspector.has_table(table_name)
     assert inspector.get_view_names() == []
 
 
@@ -176,8 +177,6 @@ def test_get_schema_names(inspector: Inspector, session: Session) -> None:
         """CREATE SCHEMA "quack quack" """,
         """ATTACH ':memory:' AS "daffy duck" """,
         """CREATE SCHEMA "daffy duck"."quack quack" """,
-        """CREATE TABLE "daffy duck"."quack quack"."t1" (i INTEGER, j INTEGER);""",
-        """CREATE TABLE "daffy duck"."quack quack"."t2" (i INTEGER, j INTEGER);""",
         """CREATE SCHEMA "daffy duck"."you're "" despicable" """,
     ]
     for cmd in cmds:
@@ -203,12 +202,33 @@ def test_get_schema_names(inspector: Inspector, session: Session) -> None:
     else:
         assert names == ["quack quack", "information_schema", "main", "temp"]
 
+
+@mark.skipif(
+    supports_attach is False,
+    reason="ATTACH is not supported for DuckDB version < 0.7.0",
+)
+def test_get_table_names(inspector: Inspector, session: Session) -> None:
+    # Using multi-line strings because of all the single and double quotes flying around...
+    cmds = [
+        """ATTACH ':memory:' AS "daffy duck" """,
+        """CREATE SCHEMA "daffy duck"."quack quack" """,
+        """CREATE TABLE "daffy duck"."quack quack"."t1" (i INTEGER, j INTEGER);""",
+        """CREATE TABLE "daffy duck"."quack quack"."t2" (i INTEGER, j INTEGER);""",
+    ]
+    for cmd in cmds:
+        session.execute(text(cmd))
+        session.commit()
+
     table_names = inspector.get_table_names(schema='"daffy duck"."quack quack"')
     assert set(table_names) == {"t1", "t2"}
+    for table_name in table_names:
+        assert inspector.has_table(table_name, schema='"daffy duck"."quack quack"')
 
     table_names_all = inspector.get_table_names()
     assert "t1" in table_names_all
     assert "t2" in table_names_all
+    for table_name in table_names_all:
+        assert inspector.has_table(table_name)
 
 
 def test_get_views(engine: Engine) -> None:
