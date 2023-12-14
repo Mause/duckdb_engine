@@ -182,7 +182,7 @@ def index_warning() -> None:
 
 
 class DuckDBIdentifierPreparer(PGIdentifierPreparer):
-    def _separate(self, name: Optional[str]) -> tuple[Optional[Any], Optional[str]]:
+    def _separate(self, name: Optional[str]) -> Tuple[Optional[Any], Optional[str]]:
         """
         Get database name and schema name from schema if it contains a database name
             Format:
@@ -310,7 +310,7 @@ class Dialect(PGDialect_psycopg2):
         return [row[0] for row in rs]
 
     @cache  # type: ignore[call-arg]
-    def get_schema_names(self, connection: "Connection", **kw: Any):  # type: ignore[no-untyped-def]
+    def get_schema_names(self, connection: "Connection", **kw: "Any"):  # type: ignore[no-untyped-def]
         """
         Return unquoted database_name.schema_name unless either contains spaces or double quotes.
         In that case, escape double quotes and then wrap in double quotes.
@@ -362,7 +362,7 @@ class Dialect(PGDialect_psycopg2):
         return sql, params
 
     @cache  # type: ignore[call-arg]
-    def get_table_names(self, connection: "Connection", schema=None, **kw: Any):  # type: ignore[no-untyped-def]
+    def get_table_names(self, connection: "Connection", schema=None, **kw: "Any"):  # type: ignore[no-untyped-def]
         """
         Return unquoted database_name.schema_name unless either contains spaces or double quotes.
         In that case, escape double quotes and then wrap in double quotes.
@@ -392,13 +392,13 @@ class Dialect(PGDialect_psycopg2):
         ]
 
     @cache  # type: ignore[call-arg]
-    def get_table_oid(
+    def get_table_oid(  # type: ignore[no-untyped-def]
         self,
         connection: "Connection",
         table_name: str,
-        schema: Optional[str] = None,
-        **kw: Any,
-    ) -> int:
+        schema: "Optional[str]" = None,
+        **kw: "Any",
+    ):
         """Fetch the oid for (database.)schema.table_name.
         The schema name can be formatted either as database.schema or just the schema name.
         In the latter scenario the schema associated with the default database is used.
@@ -471,25 +471,25 @@ class Dialect(PGDialect_psycopg2):
         )
 
     @cache  # type: ignore[call-arg]
-    def get_columns(
+    def get_columns(  # type: ignore[no-untyped-def]
         self,
         connection: "Connection",
         table_name: str,
-        schema: Optional[str] = None,
-        **kw: Any,
-    ) -> Any:
+        schema: "Optional[str]" = None,
+        **kw: "Any",
+    ):
         _, schema = self.identifier_preparer._separate(schema)
         return super().get_columns(connection, table_name, schema=None, **kw)
 
     @cache  # type: ignore[call-arg]
-    def get_foreign_keys(
+    def get_foreign_keys(  # type: ignore[no-untyped-def]
         self,
         connection: "Connection",
         table_name: str,
-        schema: Optional[str] = None,
+        schema: "Optional[str]" = None,
         postgresql_ignore_search_path: bool = False,
-        **kw: Any,
-    ) -> Any:
+        **kw: "Any",
+    ):
         _, schema = self.identifier_preparer._separate(schema)
         return super().get_foreign_keys(
             connection,
@@ -500,24 +500,24 @@ class Dialect(PGDialect_psycopg2):
         )
 
     @cache  # type: ignore[call-arg]
-    def get_check_constraints(
+    def get_check_constraints(  # type: ignore[no-untyped-def]
         self,
         connection: "Connection",
         table_name: str,
-        schema: Optional[str] = None,
-        **kw: Any,
-    ) -> Any:
+        schema: "Optional[str]" = None,
+        **kw: "Any",
+    ):
         _, schema = self.identifier_preparer._separate(schema)
         return super().get_check_constraints(connection, table_name, schema, **kw)
 
     @cache  # type: ignore[call-arg]
-    def get_unique_constraints(
+    def get_unique_constraints(  # type: ignore[no-untyped-def]
         self,
         connection: "Connection",
         table_name: str,
-        schema: Optional[str] = None,
-        **kw: Any,
-    ) -> Any:
+        schema: "Optional[str]" = None,
+        **kw: "Any",
+    ):
         _, schema = self.identifier_preparer._separate(schema)
         return super().get_unique_constraints(connection, table_name, schema, **kw)
 
