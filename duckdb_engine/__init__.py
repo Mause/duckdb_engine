@@ -478,8 +478,9 @@ class Dialect(PGDialect_psycopg2):
         schema: "Optional[str]" = None,
         **kw: "Any",
     ):
+        # Support schema name with db name prefix
         _, schema = self.identifier_preparer._separate(schema)
-        return super().get_columns(connection, table_name, schema=None, **kw)
+        return super().get_columns(connection, table_name, schema=schema, **kw)
 
     @cache  # type: ignore[call-arg]
     def get_foreign_keys(  # type: ignore[no-untyped-def]
@@ -490,11 +491,12 @@ class Dialect(PGDialect_psycopg2):
         postgresql_ignore_search_path: bool = False,
         **kw: "Any",
     ):
+        # Support schema name with db name prefix
         _, schema = self.identifier_preparer._separate(schema)
         return super().get_foreign_keys(
             connection,
             table_name,
-            schema=None,
+            schema=schema,
             postgresql_ignore_search_path=False,
             **kw,
         )
@@ -507,6 +509,7 @@ class Dialect(PGDialect_psycopg2):
         schema: "Optional[str]" = None,
         **kw: "Any",
     ):
+        # Support schema name with db name prefix
         _, schema = self.identifier_preparer._separate(schema)
         return super().get_check_constraints(connection, table_name, schema, **kw)
 
@@ -518,6 +521,7 @@ class Dialect(PGDialect_psycopg2):
         schema: "Optional[str]" = None,
         **kw: "Any",
     ):
+        # Support schema name with db name prefix
         _, schema = self.identifier_preparer._separate(schema)
         return super().get_unique_constraints(connection, table_name, schema, **kw)
 
@@ -554,6 +558,7 @@ class Dialect(PGDialect_psycopg2):
         SOFTWARE.
         """
 
+        # Support schema name with db name prefix
         _, schema = self.identifier_preparer._separate(schema)
         has_filter_names, params = self._prepare_filter_names(filter_names)  # type: ignore[attr-defined]
         query = self._columns_query(schema, has_filter_names, scope, kind)  # type: ignore[attr-defined]
