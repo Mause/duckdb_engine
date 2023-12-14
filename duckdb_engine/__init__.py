@@ -182,7 +182,7 @@ def index_warning() -> None:
 
 
 class DuckDBIdentifierPreparer(PGIdentifierPreparer):
-    def _separate(self, name) -> Tuple[Optional[str], str]:
+    def _separate(self, name: Optional[str]) -> tuple[Optional[Any], Optional[str]]:
         """
         Get database name and schema name from schema if it contains a database name
             Format:
@@ -196,7 +196,7 @@ class DuckDBIdentifierPreparer(PGIdentifierPreparer):
             )
         return database_name, schema_name
 
-    def format_schema(self, name):
+    def format_schema(self, name: str) -> str:
         """Prepare a quoted schema name."""
         database_name, schema_name = self._separate(name)
         if database_name is None:
@@ -310,7 +310,7 @@ class Dialect(PGDialect_psycopg2):
         return [row[0] for row in rs]
 
     @cache  # type: ignore[call-arg]
-    def get_schema_names(self, connection: "Connection", **kw: "Any"):  # type: ignore[no-untyped-def]
+    def get_schema_names(self, connection: "Connection", **kw: Any):  # type: ignore[no-untyped-def]
         """
         Return unquoted database_name.schema_name unless either contains spaces or double quotes.
         In that case, escape double quotes and then wrap in double quotes.
@@ -332,7 +332,12 @@ class Dialect(PGDialect_psycopg2):
         qs = self.identifier_preparer.quote_schema
         return [qs(".".join(nspname)) for nspname in rs]
 
-    def _build_query_where(self, table_name=None, schema_name=None, database_name=None):
+    def _build_query_where(
+        self,
+        table_name: Optional[str] = None,
+        schema_name: Optional[str] = None,
+        database_name: Optional[str] = None,
+    ) -> Tuple[str, Dict[str, str]]:
         sql = ""
         params = {}
 
@@ -357,7 +362,7 @@ class Dialect(PGDialect_psycopg2):
         return sql, params
 
     @cache  # type: ignore[call-arg]
-    def get_table_names(self, connection: "Connection", schema=None, **kw: "Any"):  # type: ignore[no-untyped-def]
+    def get_table_names(self, connection: "Connection", schema=None, **kw: Any):  # type: ignore[no-untyped-def]
         """
         Return unquoted database_name.schema_name unless either contains spaces or double quotes.
         In that case, escape double quotes and then wrap in double quotes.
@@ -386,8 +391,14 @@ class Dialect(PGDialect_psycopg2):
             ) in rs
         ]
 
-    @cache
-    def get_table_oid(self, connection, table_name, schema=None, **kw):
+    @cache  # type: ignore[call-arg]
+    def get_table_oid(
+        self,
+        connection: "Connection",
+        table_name: str,
+        schema: Optional[str] = None,
+        **kw: Any,
+    ) -> int:
         """Fetch the oid for (database.)schema.table_name.
         The schema name can be formatted either as database.schema or just the schema name.
         In the latter scenario the schema associated with the default database is used.
@@ -407,7 +418,13 @@ class Dialect(PGDialect_psycopg2):
             raise NoSuchTableError(table_name)
         return table_oid
 
-    def has_table(self, connection, table_name, schema=None, **kw):
+    def has_table(
+        self,
+        connection: "Connection",
+        table_name: str,
+        schema: Optional[str] = None,
+        **kw: Any,
+    ) -> bool:
         try:
             return self.get_table_oid(connection, table_name, schema) is not None
         except NoSuchTableError:
@@ -453,20 +470,26 @@ class Dialect(PGDialect_psycopg2):
             self, cursor, statement, parameters, context
         )
 
-    @cache
-    def get_columns(self, connection, table_name, schema=None, **kw):
+    @cache  # type: ignore[call-arg]
+    def get_columns(
+        self,
+        connection: "Connection",
+        table_name: str,
+        schema: Optional[str] = None,
+        **kw: Any,
+    ) -> Any:
         _, schema = self.identifier_preparer._separate(schema)
         return super().get_columns(connection, table_name, schema=None, **kw)
 
-    @cache
+    @cache  # type: ignore[call-arg]
     def get_foreign_keys(
         self,
-        connection,
-        table_name,
-        schema=None,
-        postgresql_ignore_search_path=False,
-        **kw,
-    ):
+        connection: "Connection",
+        table_name: str,
+        schema: Optional[str] = None,
+        postgresql_ignore_search_path: bool = False,
+        **kw: Any,
+    ) -> Any:
         _, schema = self.identifier_preparer._separate(schema)
         return super().get_foreign_keys(
             connection,
@@ -476,13 +499,25 @@ class Dialect(PGDialect_psycopg2):
             **kw,
         )
 
-    @cache
-    def get_check_constraints(self, connection, table_name, schema=None, **kw):
+    @cache  # type: ignore[call-arg]
+    def get_check_constraints(
+        self,
+        connection: "Connection",
+        table_name: str,
+        schema: Optional[str] = None,
+        **kw: Any,
+    ) -> Any:
         _, schema = self.identifier_preparer._separate(schema)
         return super().get_check_constraints(connection, table_name, schema, **kw)
 
-    @cache
-    def get_unique_constraints(self, connection, table_name, schema=None, **kw):
+    @cache  # type: ignore[call-arg]
+    def get_unique_constraints(
+        self,
+        connection: "Connection",
+        table_name: str,
+        schema: Optional[str] = None,
+        **kw: Any,
+    ) -> Any:
         _, schema = self.identifier_preparer._separate(schema)
         return super().get_unique_constraints(connection, table_name, schema, **kw)
 
