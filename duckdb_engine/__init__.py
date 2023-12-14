@@ -470,61 +470,6 @@ class Dialect(PGDialect_psycopg2):
             self, cursor, statement, parameters, context
         )
 
-    @cache  # type: ignore[call-arg]
-    def get_columns(  # type: ignore[no-untyped-def]
-        self,
-        connection: "Connection",
-        table_name: str,
-        schema: "Optional[str]" = None,
-        **kw: "Any",
-    ):
-        # Support schema name with db name prefix
-        _, schema = self.identifier_preparer._separate(schema)
-        return super().get_columns(connection, table_name, schema=schema, **kw)
-
-    @cache  # type: ignore[call-arg]
-    def get_foreign_keys(  # type: ignore[no-untyped-def]
-        self,
-        connection: "Connection",
-        table_name: str,
-        schema: "Optional[str]" = None,
-        postgresql_ignore_search_path: bool = False,
-        **kw: "Any",
-    ):
-        # Support schema name with db name prefix
-        _, schema = self.identifier_preparer._separate(schema)
-        return super().get_foreign_keys(
-            connection,
-            table_name,
-            schema=schema,
-            postgresql_ignore_search_path=False,
-            **kw,
-        )
-
-    @cache  # type: ignore[call-arg]
-    def get_check_constraints(  # type: ignore[no-untyped-def]
-        self,
-        connection: "Connection",
-        table_name: str,
-        schema: "Optional[str]" = None,
-        **kw: "Any",
-    ):
-        # Support schema name with db name prefix
-        _, schema = self.identifier_preparer._separate(schema)
-        return super().get_check_constraints(connection, table_name, schema, **kw)
-
-    @cache  # type: ignore[call-arg]
-    def get_unique_constraints(  # type: ignore[no-untyped-def]
-        self,
-        connection: "Connection",
-        table_name: str,
-        schema: "Optional[str]" = None,
-        **kw: "Any",
-    ):
-        # Support schema name with db name prefix
-        _, schema = self.identifier_preparer._separate(schema)
-        return super().get_unique_constraints(connection, table_name, schema, **kw)
-
     # FIXME: this method is a hack around the fact that we use a single cursor for all queries inside a connection,
     #   and this is required to fix get_multi_columns
     def get_multi_columns(
@@ -558,8 +503,6 @@ class Dialect(PGDialect_psycopg2):
         SOFTWARE.
         """
 
-        # Support schema name with db name prefix
-        _, schema = self.identifier_preparer._separate(schema)
         has_filter_names, params = self._prepare_filter_names(filter_names)  # type: ignore[attr-defined]
         query = self._columns_query(schema, has_filter_names, scope, kind)  # type: ignore[attr-defined]
         rows = list(connection.execute(query, params).mappings())
