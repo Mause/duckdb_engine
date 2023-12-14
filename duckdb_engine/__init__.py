@@ -190,7 +190,7 @@ class DuckDBIdentifierPreparer(PGIdentifierPreparer):
               db_name and schema_name are double quoted if contains spaces or double quotes
         """
         database_name, schema_name = None, name
-        if "." in name:
+        if name is not None and "." in name:
             database_name, schema_name = (
                 max(s) for s in re.findall(r'"([^.]+)"|([^.]+)', name)
             )
@@ -322,15 +322,15 @@ class Dialect(PGDialect_psycopg2):
             return super().get_schema_names(connection, **kw)
 
         s = """
-            SELECT database_name, schema_name AS npspname
+            SELECT database_name, schema_name AS nspname
             FROM duckdb_schemas()
             WHERE schema_name NOT LIKE 'pg\\_%' ESCAPE '\\'
-            ORDER BY database_name, npspname
+            ORDER BY database_name, nspname
             """
         rs = connection.execute(text(s))
 
         qs = self.identifier_preparer.quote_schema
-        return [qs(".".join(npspname)) for npspname in rs]
+        return [qs(".".join(nspname)) for nspname in rs]
 
     def _build_query_where(self, table_name=None, schema_name=None, database_name=None):
         sql = ""
@@ -453,6 +453,39 @@ class Dialect(PGDialect_psycopg2):
             self, cursor, statement, parameters, context
         )
 
+    @cache
+    def get_columns(self, connection, table_name, schema=None, **kw):
+        _, schema = self.identifier_preparer._separate(schema)
+        return super().get_columns(connection, table_name, schema=None, **kw)
+
+    @cache
+    def get_foreign_keys(
+        self,
+        connection,
+        table_name,
+        schema=None,
+        postgresql_ignore_search_path=False,
+        **kw,
+    ):
+        _, schema = self.identifier_preparer._separate(schema)
+        return super().get_foreign_keys(
+            connection,
+            table_name,
+            schema=None,
+            postgresql_ignore_search_path=False,
+            **kw,
+        )
+
+    @cache
+    def get_check_constraints(self, connection, table_name, schema=None, **kw):
+        _, schema = self.identifier_preparer._separate(schema)
+        return super().get_check_constraints(connection, table_name, schema, **kw)
+
+    @cache
+    def get_unique_constraints(self, connection, table_name, schema=None, **kw):
+        _, schema = self.identifier_preparer._separate(schema)
+        return super().get_unique_constraints(connection, table_name, schema, **kw)
+
     # FIXME: this method is a hack around the fact that we use a single cursor for all queries inside a connection,
     #   and this is required to fix get_multi_columns
     def get_multi_columns(
@@ -486,6 +519,7 @@ class Dialect(PGDialect_psycopg2):
         SOFTWARE.
         """
 
+        _, schema = self.identifier_preparer._separate(schema)
         has_filter_names, params = self._prepare_filter_names(filter_names)  # type: ignore[attr-defined]
         query = self._columns_query(schema, has_filter_names, scope, kind)  # type: ignore[attr-defined]
         rows = list(connection.execute(query, params).mappings())
