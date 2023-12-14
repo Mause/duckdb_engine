@@ -291,7 +291,7 @@ def test_get_columns(inspector: Inspector, session: Session) -> None:
     assert inspector.has_table("t1", '"daffy duck"."quack quack"')
     cols1 = inspector.get_columns("t1", None)
     cols2 = inspector.get_columns("t1", '"daffy duck"."quack quack"')
-    cols3 = inspector.get_columns("t1", 'daffy duck.quack quack')
+    cols3 = inspector.get_columns("t1", "daffy duck.quack quack")
     assert len(cols1) == 2
     assert cols1[0]["name"] == "i"
     assert cols1[1]["name"] == "j"
