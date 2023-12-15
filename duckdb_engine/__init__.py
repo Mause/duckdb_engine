@@ -33,6 +33,7 @@ from sqlalchemy.engine.reflection import cache
 from sqlalchemy.engine.url import URL
 from sqlalchemy.exc import NoSuchTableError
 from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.sql.selectable import Select
 
 from .config import apply_config, get_core_config
 from .datatypes import ISCHEMA_NAMES, register_extension_types
@@ -469,6 +470,29 @@ class Dialect(PGDialect_psycopg2):
         return DefaultDialect.do_executemany(
             self, cursor, statement, parameters, context
         )
+
+    def _pg_class_filter_scope_schema(
+        self,
+        query: Select,
+        schema: str,
+        scope: Any,
+        pg_class_table: Any = None,
+    ) -> Any:
+        # Don't scope by schema for now
+        if hasattr(super(), "_pg_class_filter_scope_schema"):
+            query = getattr(super(), "_pg_class_filter_scope_schema")(
+                query, schema=None, scope=scope, pg_class_table=pg_class_table
+            )
+            if schema is not None:
+                # Now let's scope by schema, but make sure we're not adding in the database name prefix
+                # This will not work if a schema or table name is not unique!
+                _, schema_name = self.identifier_preparer._separate(schema)
+                query = query.where(
+                    text("pg_namespace.nspname = :schema_name").bindparams(
+                        schema_name=schema_name
+                    )
+                )
+            return query
 
     # FIXME: this method is a hack around the fact that we use a single cursor for all queries inside a connection,
     #   and this is required to fix get_multi_columns
