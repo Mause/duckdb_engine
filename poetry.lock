@@ -536,13 +536,13 @@ i18n = ["Babel (>=2.7)"]
 
 [[package]]
 name = "jupysql"
-version = "0.10.4"
+version = "0.10.5"
 description = "Better SQL in Jupyter"
 optional = false
 python-versions = "*"
 files = [
-    {file = "jupysql-0.10.4-py3-none-any.whl", hash = "sha256:06886556b67bd87b91ab85c528d050b242e3dc54501710767d9998aa4788faeb"},
-    {file = "jupysql-0.10.4.tar.gz", hash = "sha256:798a2092a5ff6ea681fc6c3bf215e6c89364cd30f95238b06d4cea93a25ae923"},
+    {file = "jupysql-0.10.5-py3-none-any.whl", hash = "sha256:281e873902965d51bfa0e3f7412c079d1dcd831e3ff6255c2a22e0b20d8b398f"},
+    {file = "jupysql-0.10.5.tar.gz", hash = "sha256:ed1cfe787524c012f6a69836f45fee756c06179148ff0542fb4485ca322c9450"},
 ]
 
 [package.dependencies]
@@ -554,12 +554,12 @@ jupysql-plugin = "*"
 ploomber-core = ">=0.2.7"
 prettytable = "*"
 sqlalchemy = "*"
-sqlglot = ">=11.3.7"
+sqlglot = ">=11.3.7,<20.0.0"
 sqlparse = "*"
 
 [package.extras]
-dev = ["black", "duckdb (<0.9.0)", "duckdb-engine", "flake8", "invoke", "ipywidgets", "js2py", "jupyter-server", "matplotlib (==3.7.2)", "pandas (==2.0.3)", "pkgmt", "polars (==0.17.2)", "psutil", "pyarrow", "pyodbc", "pytest", "twine"]
-integration = ["black", "clickhouse-sqlalchemy", "dockerctx", "duckdb (<0.9.0)", "duckdb-engine", "flake8", "invoke", "ipywidgets", "js2py", "jupyter-server", "matplotlib (==3.7.2)", "oracledb", "pandas (==2.0.3)", "pgspecial (==2.0.1)", "pkgmt", "polars (==0.17.2)", "psutil", "psycopg2-binary", "pyarrow", "pymysql", "pyodbc", "pytest", "python-tds", "redshift-connector", "snowflake-sqlalchemy", "sqlalchemy-pytds", "sqlalchemy-redshift", "twine"]
+dev = ["black", "duckdb", "duckdb-engine", "flake8", "invoke", "ipywidgets", "js2py", "jupyter-server", "matplotlib (==3.7.2)", "pandas", "pkgmt", "polars (==0.17.2)", "psutil", "pyarrow", "pyodbc", "pytest", "twine"]
+integration = ["black", "clickhouse-sqlalchemy", "dockerctx", "duckdb", "duckdb-engine", "flake8", "invoke", "ipywidgets", "js2py", "jupyter-server", "matplotlib (==3.7.2)", "oracledb", "pandas", "pgspecial (==2.0.1)", "pkgmt", "polars (==0.17.2)", "psutil", "psycopg2-binary", "pyarrow", "pymysql", "pyodbc", "pytest", "python-tds", "redshift-connector", "snowflake-sqlalchemy", "sqlalchemy-pytds", "sqlalchemy-redshift", "twine"]
 
 [[package]]
 name = "jupysql-plugin"
