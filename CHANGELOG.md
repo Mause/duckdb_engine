@@ -3,9 +3,9 @@
 ## [0.9.5](https://github.com/Mause/duckdb_engine/compare/v0.9.4...v0.9.5) (2023-12-21)
 
 
-### Miscellaneous Chores
+### Bug Fixes
 
-* force release 0.9.5 ([7c5a1f6](https://github.com/Mause/duckdb_engine/commit/7c5a1f6be056ed4b62b9435cf72acace16a890c0))
+* fix: support getting table properties using schema with db name prefix ([#848](https://github.com/Mause/duckdb_engine/pull/848))
 
 ## [0.9.4](https://github.com/Mause/duckdb_engine/compare/v0.9.3...v0.9.4) (2023-12-09)
 
