@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.5](https://github.com/Mause/duckdb_engine/compare/v0.9.4...v0.9.5) (2023-12-21)
+
+
+### Bug Fixes
+
+* fix: support getting table properties using schema with db name prefix ([#848](https://github.com/Mause/duckdb_engine/pull/848))
+
 ## [0.9.4](https://github.com/Mause/duckdb_engine/compare/v0.9.3...v0.9.4) (2023-12-09)
 
 
