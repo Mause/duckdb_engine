@@ -21,12 +21,19 @@ from sqlalchemy import pool, text
 from sqlalchemy import types as sqltypes
 from sqlalchemy import util
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.dialects.postgresql.base import PGDialect, PGInspector, PGTypeCompiler
+from sqlalchemy.dialects.postgresql.base import (
+    PGDialect,
+    PGIdentifierPreparer,
+    PGInspector,
+    PGTypeCompiler,
+)
 from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
 from sqlalchemy.engine.default import DefaultDialect
 from sqlalchemy.engine.reflection import cache
 from sqlalchemy.engine.url import URL
+from sqlalchemy.exc import NoSuchTableError
 from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.sql.selectable import Select
 
 from .config import apply_config, get_core_config
 from .datatypes import ISCHEMA_NAMES, register_extension_types
@@ -175,6 +182,38 @@ def index_warning() -> None:
     )
 
 
+class DuckDBIdentifierPreparer(PGIdentifierPreparer):
+    def _separate(self, name: Optional[str]) -> Tuple[Optional[Any], Optional[str]]:
+        """
+        Get database name and schema name from schema if it contains a database name
+            Format:
+              <db_name>.<schema_name>
+              db_name and schema_name are double quoted if contains spaces or double quotes
+        """
+        database_name, schema_name = None, name
+        if name is not None and "." in name:
+            database_name, schema_name = (
+                max(s) for s in re.findall(r'"([^.]+)"|([^.]+)', name)
+            )
+        return database_name, schema_name
+
+    def format_schema(self, name: str) -> str:
+        """Prepare a quoted schema name."""
+        database_name, schema_name = self._separate(name)
+        if database_name is None:
+            return self.quote(name)
+        return ".".join(self.quote(_n) for _n in [database_name, schema_name])
+
+    def quote_schema(self, schema: str, force: Any = None) -> str:
+        """
+        Conditionally quote a schema name.
+
+        :param schema: string schema name
+        :param force: unused
+        """
+        return self.format_schema(schema)
+
+
 class Dialect(PGDialect_psycopg2):
     name = "duckdb"
     driver = "duckdb_engine"
@@ -200,6 +239,8 @@ class Dialect(PGDialect_psycopg2):
         PGDialect.ischema_names,
         ISCHEMA_NAMES,
     )
+    preparer = DuckDBIdentifierPreparer
+    identifier_preparer: DuckDBIdentifierPreparer
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         kwargs["use_native_hstore"] = False
@@ -282,15 +323,44 @@ class Dialect(PGDialect_psycopg2):
             return super().get_schema_names(connection, **kw)
 
         s = """
-            SELECT database_name, schema_name AS npspname
+            SELECT database_name, schema_name AS nspname
             FROM duckdb_schemas()
             WHERE schema_name NOT LIKE 'pg\\_%' ESCAPE '\\'
-            ORDER BY database_name, npspname
+            ORDER BY database_name, nspname
             """
         rs = connection.execute(text(s))
 
         qs = self.identifier_preparer.quote_schema
-        return [f"{qs(db)}.{qs(schema)}" for (db, schema) in rs]
+        return [qs(".".join(nspname)) for nspname in rs]
+
+    def _build_query_where(
+        self,
+        table_name: Optional[str] = None,
+        schema_name: Optional[str] = None,
+        database_name: Optional[str] = None,
+    ) -> Tuple[str, Dict[str, str]]:
+        sql = ""
+        params = {}
+
+        # If no database name is provided, try to get it from the schema name
+        # specified as "<db name>.<schema name>"
+        # If only a schema name is found, database_name will return None
+        if database_name is None and schema_name is not None:
+            database_name, schema_name = self.identifier_preparer._separate(schema_name)
+
+        if table_name is not None:
+            sql += "AND table_name = :table_name\n"
+            params.update({"table_name": table_name})
+
+        if schema_name is not None:
+            sql += "AND schema_name = :schema_name\n"
+            params.update({"schema_name": schema_name})
+
+        if database_name is not None:
+            sql += "AND database_name = :database_name\n"
+            params.update({"database_name": database_name})
+
+        return sql, params
 
     @cache  # type: ignore[call-arg]
     def get_table_names(self, connection: "Connection", schema=None, **kw: "Any"):  # type: ignore[no-untyped-def]
@@ -309,21 +379,8 @@ class Dialect(PGDialect_psycopg2):
             FROM duckdb_tables()
             WHERE schema_name NOT LIKE 'pg\\_%' ESCAPE '\\'
             """
-        params = {}
-        if schema is not None:
-            params = {"schema_name": schema}
-            if "." in schema:
-                # Get database name and schema name from schema if it contains a database name
-                # Format:
-                #   <db_name>.<schema_name>
-                #   db_name and schema_name are double quoted if contains spaces or double quotes
-                database_name, schema_name = (
-                    max(s) for s in re.findall(r'"([^.]+)"|([^.]+)', schema)
-                )
-                params = {"database_name": database_name, "schema_name": schema_name}
-                s += "AND database_name = :database_name\n"
-            s += "AND schema_name = :schema_name"
-
+        sql, params = self._build_query_where(schema_name=schema)
+        s += sql
         rs = connection.execute(text(s), params)
 
         return [
@@ -334,6 +391,45 @@ class Dialect(PGDialect_psycopg2):
                 table,
             ) in rs
         ]
+
+    @cache  # type: ignore[call-arg]
+    def get_table_oid(  # type: ignore[no-untyped-def]
+        self,
+        connection: "Connection",
+        table_name: str,
+        schema: "Optional[str]" = None,
+        **kw: "Any",
+    ):
+        """Fetch the oid for (database.)schema.table_name.
+        The schema name can be formatted either as database.schema or just the schema name.
+        In the latter scenario the schema associated with the default database is used.
+        """
+        s = """
+            SELECT table_oid
+            FROM duckdb_tables()
+            WHERE schema_name NOT LIKE 'pg\\_%' ESCAPE '\\'
+            AND table_name = :table_name
+            """
+        sql, params = self._build_query_where(table_name=table_name, schema_name=schema)
+        s += sql
+
+        rs = connection.execute(text(s), params)
+        table_oid = rs.scalar()
+        if table_oid is None:
+            raise NoSuchTableError(table_name)
+        return table_oid
+
+    def has_table(
+        self,
+        connection: "Connection",
+        table_name: str,
+        schema: Optional[str] = None,
+        **kw: Any,
+    ) -> bool:
+        try:
+            return self.get_table_oid(connection, table_name, schema) is not None
+        except NoSuchTableError:
+            return False
 
     def get_indexes(
         self,
@@ -374,6 +470,29 @@ class Dialect(PGDialect_psycopg2):
         return DefaultDialect.do_executemany(
             self, cursor, statement, parameters, context
         )
+
+    def _pg_class_filter_scope_schema(
+        self,
+        query: Select,
+        schema: str,
+        scope: Any,
+        pg_class_table: Any = None,
+    ) -> Any:
+        # Don't scope by schema for now
+        if hasattr(super(), "_pg_class_filter_scope_schema"):
+            query = getattr(super(), "_pg_class_filter_scope_schema")(
+                query, schema=None, scope=scope, pg_class_table=pg_class_table
+            )
+            if schema is not None:
+                # Now let's scope by schema, but make sure we're not adding in the database name prefix
+                # This will not work if a schema or table name is not unique!
+                _, schema_name = self.identifier_preparer._separate(schema)
+                query = query.where(
+                    text("pg_namespace.nspname = :schema_name").bindparams(
+                        schema_name=schema_name
+                    )
+                )
+            return query
 
     # FIXME: this method is a hack around the fact that we use a single cursor for all queries inside a connection,
     #   and this is required to fix get_multi_columns

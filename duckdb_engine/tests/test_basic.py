@@ -162,7 +162,8 @@ def test_simple_string(s: str) -> None:
 
 
 def test_get_tables(inspector: Inspector) -> None:
-    assert inspector.get_table_names()
+    for table_name in inspector.get_table_names():
+        assert inspector.has_table(table_name)
     assert inspector.get_view_names() == []
 
 
@@ -174,10 +175,6 @@ def test_get_schema_names(inspector: Inspector, session: Session) -> None:
     # Using multi-line strings because of all the single and double quotes flying around...
     cmds = [
         """CREATE SCHEMA "quack quack" """,
-        """ATTACH ':memory:' AS "daffy duck" """,
-        """CREATE SCHEMA "daffy duck"."quack quack" """,
-        """CREATE TABLE "daffy duck"."quack quack"."t1" (i INTEGER, j INTEGER);""",
-        """CREATE TABLE "daffy duck"."quack quack"."t2" (i INTEGER, j INTEGER);""",
         """CREATE SCHEMA "daffy duck"."you're "" despicable" """,
     ]
     for cmd in cmds:
@@ -203,12 +200,35 @@ def test_get_schema_names(inspector: Inspector, session: Session) -> None:
     else:
         assert names == ["quack quack", "information_schema", "main", "temp"]
 
-    table_names = inspector.get_table_names(schema='"daffy duck"."quack quack"')
-    assert set(table_names) == {"t1", "t2"}
+
+@mark.skipif(
+    supports_attach is False,
+    reason="ATTACH is not supported for DuckDB version < 0.7.0",
+)
+def test_get_table_names(inspector: Inspector, session: Session) -> None:
+    # Using multi-line strings because of all the single and double quotes flying around...
+    cmds = [
+        """CREATE TABLE "daffy duck"."quack quack"."t2" (i INTEGER, j INTEGER);""",
+        """CREATE TABLE "t3" (i INTEGER, j INTEGER);""",
+        """CREATE SCHEMA "porky" """,
+        """CREATE TABLE "porky"."t4" (i INTEGER, j INTEGER);""",
+    ]
+    for cmd in cmds:
+        session.execute(text(cmd))
+        session.commit()
+
+    for schema, table_names in zip(
+        ['"daffy duck"."quack quack"', "main", "porky"], [["t1", "t2"], ["t3"], ["t4"]]
+    ):
+        _table_names = inspector.get_table_names(schema=schema)
+        assert set(_table_names).issuperset(set(table_names))
+        for _table_name in _table_names:
+            assert inspector.has_table(_table_name, schema)
 
     table_names_all = inspector.get_table_names()
-    assert "t1" in table_names_all
-    assert "t2" in table_names_all
+    assert set(table_names_all).issuperset({"t1", "t2", "t3", "t4"})
+    for table_name in table_names_all:
+        assert inspector.has_table(table_name)
 
 
 def test_get_views(engine: Engine) -> None:
@@ -249,8 +269,14 @@ def test_preload_extension() -> None:
 
 @fixture
 def inspector(engine: Engine, session: Session) -> Inspector:
-    session.execute(text("create table test (id int);"))
-    session.commit()
+    cmds = [
+        """CREATE TABLE test (id INTEGER);""" """ATTACH ':memory:' AS "daffy duck" """,
+        """CREATE SCHEMA "daffy duck"."quack quack" """,
+        """CREATE TABLE "daffy duck"."quack quack"."t1" (i INTEGER, j INTEGER);""",
+    ]
+    for cmd in cmds:
+        session.execute(text(cmd))
+        session.commit()
 
     meta = MetaData()
     Table("test", meta)
@@ -258,12 +284,24 @@ def inspector(engine: Engine, session: Session) -> Inspector:
     return inspect(engine)
 
 
-def test_get_columns(inspector: Inspector) -> None:
-    inspector.get_columns("test", None)
+def test_get_columns(inspector: Inspector, session: Session) -> None:
+    cols = inspector.get_columns("test", None)
+    assert len(cols) == 1
+    assert cols[0]["name"] == "id"
+    assert inspector.has_table("t1", '"daffy duck"."quack quack"')
+    cols1 = inspector.get_columns("t1", None)
+    cols2 = inspector.get_columns("t1", '"daffy duck"."quack quack"')
+    cols3 = inspector.get_columns("t1", "daffy duck.quack quack")
+    assert len(cols1) == 2
+    assert cols1[0]["name"] == "i"
+    assert cols1[1]["name"] == "j"
+    assert cols1[0]["name"] == cols2[0]["name"] == cols3[0]["name"]
+    assert cols1[1]["name"] == cols2[1]["name"] == cols3[1]["name"]
 
 
 def test_get_foreign_keys(inspector: Inspector) -> None:
-    inspector.get_foreign_keys("test", None)
+    assert inspector.get_foreign_keys("test", None) == []
+    assert inspector.get_foreign_keys("t1", '"daffy duck"."quack quack"') == []
 
 
 @mark.skipif(
@@ -272,10 +310,12 @@ def test_get_foreign_keys(inspector: Inspector) -> None:
 )
 def test_get_check_constraints(inspector: Inspector) -> None:
     assert inspector.get_check_constraints("test", None) == []
+    assert inspector.get_check_constraints("t1", '"daffy duck"."quack quack"') == []
 
 
 def test_get_unique_constraints(inspector: Inspector) -> None:
     inspector.get_unique_constraints("test", None)
+    inspector.get_unique_constraints("t1", '"daffy duck"."quack quack"')
 
 
 def test_reflect(session: Session, engine: Engine) -> None:

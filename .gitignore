@@ -8,3 +8,9 @@ __pycache__/
 htmlcov/
 .coverage
 coverage.xml
+.DS_Store
+.hypothesis/*
+.idea
+.vscode
+results.xml
+venv
