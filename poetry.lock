@@ -536,13 +536,13 @@ i18n = ["Babel (>=2.7)"]
 
 [[package]]
 name = "jupysql"
-version = "0.10.5"
+version = "0.10.6"
 description = "Better SQL in Jupyter"
 optional = false
 python-versions = "*"
 files = [
-    {file = "jupysql-0.10.5-py3-none-any.whl", hash = "sha256:281e873902965d51bfa0e3f7412c079d1dcd831e3ff6255c2a22e0b20d8b398f"},
-    {file = "jupysql-0.10.5.tar.gz", hash = "sha256:ed1cfe787524c012f6a69836f45fee756c06179148ff0542fb4485ca322c9450"},
+    {file = "jupysql-0.10.6-py3-none-any.whl", hash = "sha256:b2f0e69db0d620996dbee924c56b9e937d986e3fb3cd59e40fab985b792b5195"},
+    {file = "jupysql-0.10.6.tar.gz", hash = "sha256:4b93585c8d5de6a8c6f114c0a6c9a64b237df81a8f99a87cd6ccdaab70eda514"},
 ]
 
 [package.dependencies]
@@ -554,7 +554,7 @@ jupysql-plugin = "*"
 ploomber-core = ">=0.2.7"
 prettytable = "*"
 sqlalchemy = "*"
-sqlglot = ">=11.3.7,<20.0.0"
+sqlglot = ">=11.3.7"
 sqlparse = "*"
 
 [package.extras]
