@@ -70,6 +70,10 @@ class HugeInteger(Integer):
     # HUGEINT	 	-170141183460469231731687303715884105727*	170141183460469231731687303715884105727
 
 
+class UHugeInteger(Integer):
+    name = "UHugeInt"
+
+
 class UInteger(Integer):
     # UINTEGER	-	0	4294967295
     pass
@@ -173,6 +177,7 @@ class Union(TypeEngine):
 
 ISCHEMA_NAMES = {
     "hugeint": HugeInteger,
+    "uhugeint": UHugeInteger,
     "tinyint": TinyInteger,
     "utinyint": UTinyInteger,
     "usmallint": USmallInteger,
