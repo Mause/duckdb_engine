@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.10.0](https://github.com/Mause/duckdb_engine/compare/v0.9.5...v0.10.0) (2023-12-24)
+
+
+### Features
+
+* add new uhugeint type ([4e01db8](https://github.com/Mause/duckdb_engine/commit/4e01db8101121c6ee3909949ff4dcace91385e51))
+
+
+### Bug Fixes
+
+* remove packaging requirement ([5b9cafb](https://github.com/Mause/duckdb_engine/commit/5b9cafb289ad7bc391e3bac3f31fe276618deddf))
+
 ## [0.9.5](https://github.com/Mause/duckdb_engine/compare/v0.9.4...v0.9.5) (2023-12-21)
 
 
