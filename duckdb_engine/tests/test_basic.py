@@ -475,7 +475,9 @@ def test_url_config_and_dict_config() -> None:
         )
         row = res.first()
         assert row is not None
-        assert row == (123, "500.0MB")
+        worker_threads, memory_limit = row
+        assert worker_threads == 123
+        assert memory_limit in ("500.0MB", "476.8 MiB")
 
 
 def test_do_ping(tmp_path: Path, caplog: LogCaptureFixture) -> None:
