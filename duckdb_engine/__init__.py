@@ -16,7 +16,6 @@ from typing import (
 
 import duckdb
 import sqlalchemy
-from packaging.version import Version
 from sqlalchemy import pool, text
 from sqlalchemy import types as sqltypes
 from sqlalchemy import util
@@ -39,9 +38,9 @@ from .config import apply_config, get_core_config
 from .datatypes import ISCHEMA_NAMES, register_extension_types
 
 __version__ = "0.9.5"
-sqlalchemy_version = Version(sqlalchemy.__version__)
+sqlalchemy_version = sqlalchemy.__version__
 duckdb_version: str = duckdb.__version__  # type: ignore[attr-defined]
-supports_attach: bool = Version(duckdb_version) >= Version("0.7.0")
+supports_attach: bool = duckdb_version >= "0.7.0"
 
 if TYPE_CHECKING:
     from sqlalchemy.base import Connection
@@ -52,7 +51,7 @@ register_extension_types()
 
 
 class DBAPI:
-    paramstyle = "numeric_dollar" if sqlalchemy_version >= Version("2.0.0") else "qmark"
+    paramstyle = "numeric_dollar" if sqlalchemy_version >= "2.0.0" else "qmark"
     apilevel = duckdb.apilevel
     threadsafety = duckdb.threadsafety
 
