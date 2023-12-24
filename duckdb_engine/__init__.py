@@ -37,7 +37,7 @@ from sqlalchemy.sql.selectable import Select
 from .config import apply_config, get_core_config
 from .datatypes import ISCHEMA_NAMES, register_extension_types
 
-__version__ = "0.9.5"
+__version__ = "0.10.0"
 sqlalchemy_version = sqlalchemy.__version__
 duckdb_version: str = duckdb.__version__  # type: ignore[attr-defined]
 supports_attach: bool = duckdb_version >= "0.7.0"
