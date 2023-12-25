@@ -536,13 +536,13 @@ i18n = ["Babel (>=2.7)"]
 
 [[package]]
 name = "jupysql"
-version = "0.10.6"
+version = "0.10.7"
 description = "Better SQL in Jupyter"
 optional = false
 python-versions = "*"
 files = [
-    {file = "jupysql-0.10.6-py3-none-any.whl", hash = "sha256:b2f0e69db0d620996dbee924c56b9e937d986e3fb3cd59e40fab985b792b5195"},
-    {file = "jupysql-0.10.6.tar.gz", hash = "sha256:4b93585c8d5de6a8c6f114c0a6c9a64b237df81a8f99a87cd6ccdaab70eda514"},
+    {file = "jupysql-0.10.7-py3-none-any.whl", hash = "sha256:5004c59d942f92d30d35ea29ee92bf52ab2729a1e82c83fc195af3a3bb3b5201"},
+    {file = "jupysql-0.10.7.tar.gz", hash = "sha256:555b8255c077de68f6b4b5482aeb020624ee54ce441b8d942ee3e38096854a9c"},
 ]
 
 [package.dependencies]
@@ -559,7 +559,7 @@ sqlparse = "*"
 
 [package.extras]
 dev = ["black", "duckdb", "duckdb-engine", "flake8", "invoke", "ipywidgets", "js2py", "jupyter-server", "matplotlib (==3.7.2)", "pandas", "pkgmt", "polars (==0.17.2)", "psutil", "pyarrow", "pyodbc", "pytest", "twine"]
-integration = ["black", "clickhouse-sqlalchemy", "dockerctx", "duckdb", "duckdb-engine", "flake8", "invoke", "ipywidgets", "js2py", "jupyter-server", "matplotlib (==3.7.2)", "oracledb", "pandas", "pgspecial (==2.0.1)", "pkgmt", "polars (==0.17.2)", "psutil", "psycopg2-binary", "pyarrow", "pymysql", "pyodbc", "pytest", "python-tds", "redshift-connector", "snowflake-sqlalchemy", "sqlalchemy-pytds", "sqlalchemy-redshift", "twine"]
+integration = ["black", "clickhouse-sqlalchemy", "dockerctx", "duckdb", "duckdb-engine", "flake8", "grpcio-status", "invoke", "ipywidgets", "js2py", "jupyter-server", "matplotlib (==3.7.2)", "oracledb", "pandas", "pgspecial (==2.0.1)", "pkgmt", "polars (==0.17.2)", "psutil", "psycopg2-binary", "pyarrow", "pymysql", "pyodbc", "pyspark", "pytest", "python-tds", "redshift-connector", "snowflake-sqlalchemy", "sqlalchemy-pytds", "sqlalchemy-redshift", "twine"]
 
 [[package]]
 name = "jupysql-plugin"
