@@ -9,8 +9,9 @@ htmlcov/
 .coverage
 coverage.xml
 .DS_Store
-.hypothesis/*
+.hypothesis/
 .idea
 .vscode
 results.xml
 venv
+.venv
