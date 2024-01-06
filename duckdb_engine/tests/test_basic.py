@@ -111,6 +111,13 @@ class IntervalModel(Base):
     field = Column(Interval)
 
 
+class SerialAutoincModel(Base):
+    __tablename__ = "SerialAutoincModel"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+
+
 @fixture
 def session(engine: Engine) -> Session:
     return sessionmaker(bind=engine)()
@@ -409,6 +416,18 @@ def test_binary(session: Session) -> None:
 
     b: TableWithBinary = session.query(TableWithBinary).one()
     assert b.text == "Hello World!"
+
+
+def test_serial_support(session: Session) -> None:
+    session.add(SerialAutoincModel(name="Frank"))
+    session.add(SerialAutoincModel(name="Fritz"))
+    session.commit()
+
+    frank, fritz = session.query(SerialAutoincModel).order_by("id").all()
+    assert frank.name == "Frank"
+    assert frank.id == 1
+    assert fritz.name == "Fritz"
+    assert fritz.id == 2
 
 
 @mark.skipif(

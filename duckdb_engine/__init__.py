@@ -32,7 +32,9 @@ from sqlalchemy.engine.reflection import cache
 from sqlalchemy.engine.url import URL
 from sqlalchemy.exc import NoSuchTableError
 from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.schema import CreateColumn, CreateTable
 from sqlalchemy.sql import bindparam
+from sqlalchemy.sql.compiler import DDLCompiler
 from sqlalchemy.sql.selectable import Select
 
 from ._supports import has_comment_support
@@ -668,6 +670,38 @@ class Dialect(PGDialect_psycopg2):
                 return getattr(super(), "_comment_query")(
                     schema, has_filter_names, scope, kind
                 )
+
+
+def _serial_sequence_name(table_name: str) -> str:
+    return f"{table_name}_pk_sequence"
+
+
+@compiles(CreateTable, "duckdb")  # type: ignore[misc]
+def visit_create_table_with_serial_support(
+    instance: CreateTable, compiler: DDLCompiler, **kw: Any
+) -> str:
+    """Prepend a table with an auto-incremented primary key with the necessary sequence."""
+    table_sql = compiler.visit_create_table(instance, **kw)
+    table_name = instance.element.name
+    seq_name = _serial_sequence_name(table_name)
+    if seq_name not in table_sql:
+        # no need to create a sequence
+        return table_sql
+    seq_sql = f"\nCREATE SEQUENCE {seq_name};"
+    return seq_sql + table_sql
+
+
+@compiles(CreateColumn, "duckdb")  # type: ignore[misc]
+def visit_create_column_with_serial_support(
+    instance: CreateColumn, compiler: DDLCompiler, **kw: Any
+) -> str:
+    """Replace the first SERIAL field with a duckdb-style auto-incremented integer."""
+    column_sql = compiler.visit_create_column(instance, **kw)
+    if "SERIAL" not in column_sql or not kw.get("first_pk"):
+        return column_sql
+    table_name = instance.element.table.name
+    autoinc_type = f"INTEGER DEFAULT(nextval('{_serial_sequence_name(table_name)}'))"
+    return column_sql.replace("SERIAL", autoinc_type)
 
 
 if sqlalchemy.__version__ >= "2.0.14":
