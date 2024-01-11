@@ -17,6 +17,9 @@ jobs:
         - python: 3.9
           bleeding_edge: true
 
+    env:
+      FORCE_COLOR: 1
+
     steps:
       - uses: actions/checkout@v4
       - name: Remove cached duckdb extensions
