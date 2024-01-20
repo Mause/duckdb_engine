@@ -255,8 +255,9 @@ class Dialect(PGDialect_psycopg2):
         ext = {k: config.pop(k) for k in list(config) if k not in core_keys}
         if supports_user_agent:
             user_agent = f"duckdb_engine/{__version__}(sqlalchemy/{sqlalchemy_version})"
-            if ('custom_user_agent' in config): user_agent = f"{user_agent} {config['custom_user_agent']}"
-            config['custom_user_agent'] = user_agent
+            if "custom_user_agent" in config:
+                user_agent = f"{user_agent} {config['custom_user_agent']}"
+            config["custom_user_agent"] = user_agent
 
         conn = duckdb.connect(*cargs, **cparams)
 
