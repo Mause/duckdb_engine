@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import zlib
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -479,6 +480,23 @@ def test_url_config_and_dict_config() -> None:
         assert worker_threads == 123
         assert memory_limit in ("500.0MB", "476.8 MiB")
 
+def test_user_agent() -> None:
+    eng = create_engine("duckdb:///:memory:")
+
+    with eng.connect() as conn:
+        res = conn.execute(text("PRAGMA USER_AGENT"))
+        row = res.first()
+        assert row is not None
+        assert re.match(r'duckdb/.*(.*) python duckdb_engine/.*(sqlalchemy/.*)', row[0])
+
+def test_user_agent_with_custom_user_agent() -> None:
+    eng = create_engine("duckdb:///:memory:", connect_args={"config": {"custom_user_agent": "custom"}})
+
+    with eng.connect() as conn:
+        res = conn.execute(text("PRAGMA USER_AGENT"))
+        row = res.first()
+        assert row is not None
+        assert re.match(r'duckdb/.*(.*) python duckdb_engine/.*(sqlalchemy/.*) custom', row[0])
 
 def test_do_ping(tmp_path: Path, caplog: LogCaptureFixture) -> None:
     engine = create_engine(

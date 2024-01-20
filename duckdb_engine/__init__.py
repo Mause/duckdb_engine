@@ -41,6 +41,7 @@ __version__ = "0.10.0"
 sqlalchemy_version = sqlalchemy.__version__
 duckdb_version: str = duckdb.__version__  # type: ignore[attr-defined]
 supports_attach: bool = duckdb_version >= "0.7.0"
+supports_user_agent: bool = duckdb_version >= "0.9.2"
 
 if TYPE_CHECKING:
     from sqlalchemy.base import Connection
@@ -252,6 +253,10 @@ class Dialect(PGDialect_psycopg2):
         config.update(cparams.pop("url_config", {}))
 
         ext = {k: config.pop(k) for k in list(config) if k not in core_keys}
+        if supports_user_agent:
+            user_agent = f"duckdb_engine/{__version__}(sqlalchemy/{sqlalchemy_version})"
+            if ('custom_user_agent' in config): user_agent = f"{user_agent} {config['custom_user_agent']}"
+            config['custom_user_agent'] = user_agent
 
         conn = duckdb.connect(*cargs, **cparams)
 
