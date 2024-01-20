@@ -36,7 +36,7 @@ from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, relationship, sessionmaker
 
-from .. import DBAPI, Dialect, supports_attach
+from .. import DBAPI, Dialect, supports_attach, supports_user_agent
 
 try:
     # sqlalchemy 2
@@ -480,6 +480,10 @@ def test_url_config_and_dict_config() -> None:
         assert worker_threads == 123
         assert memory_limit in ("500.0MB", "476.8 MiB")
 
+@mark.skipif(
+    supports_user_agent is False,
+    reason="custom_user_agent is not supported for DuckDB version < 0.9.2",
+)
 def test_user_agent() -> None:
     eng = create_engine("duckdb:///:memory:")
 
@@ -489,6 +493,10 @@ def test_user_agent() -> None:
         assert row is not None
         assert re.match(r'duckdb/.*(.*) python duckdb_engine/.*(sqlalchemy/.*)', row[0])
 
+@mark.skipif(
+    supports_user_agent is False,
+    reason="custom_user_agent is not supported for DuckDB version < 0.9.2",
+)
 def test_user_agent_with_custom_user_agent() -> None:
     eng = create_engine("duckdb:///:memory:", connect_args={"config": {"custom_user_agent": "custom"}})
 
