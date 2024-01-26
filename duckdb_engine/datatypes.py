@@ -6,6 +6,7 @@ Also
 select * from duckdb_types where type_category = 'NUMERIC';
 ```
 """
+
 import typing
 from typing import Any, Callable, Dict, Optional, Type
 
