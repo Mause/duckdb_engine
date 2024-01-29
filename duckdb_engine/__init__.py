@@ -34,6 +34,7 @@ from sqlalchemy.exc import NoSuchTableError
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql.selectable import Select
 
+from ._supports import has_comment_support
 from .config import apply_config, get_core_config
 from .datatypes import ISCHEMA_NAMES, register_extension_types
 
@@ -218,7 +219,7 @@ class Dialect(PGDialect_psycopg2):
     driver = "duckdb_engine"
     _has_events = False
     supports_statement_cache = False
-    supports_comments = False
+    supports_comments = has_comment_support()
     supports_sane_rowcount = False
     supports_server_side_cursors = False
     inspector = DuckDBInspector
