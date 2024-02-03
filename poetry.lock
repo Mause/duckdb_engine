@@ -536,13 +536,13 @@ i18n = ["Babel (>=2.7)"]
 
 [[package]]
 name = "jupysql"
-version = "0.10.7"
+version = "0.10.9"
 description = "Better SQL in Jupyter"
 optional = false
 python-versions = "*"
 files = [
-    {file = "jupysql-0.10.7-py3-none-any.whl", hash = "sha256:5004c59d942f92d30d35ea29ee92bf52ab2729a1e82c83fc195af3a3bb3b5201"},
-    {file = "jupysql-0.10.7.tar.gz", hash = "sha256:555b8255c077de68f6b4b5482aeb020624ee54ce441b8d942ee3e38096854a9c"},
+    {file = "jupysql-0.10.9-py3-none-any.whl", hash = "sha256:c882d7beab1fa8db710dee66fb47b816cbc7fd2548448ad4ccd75c9c5072976d"},
+    {file = "jupysql-0.10.9.tar.gz", hash = "sha256:0916bb81d0fef44c32b171e98f9321deafd0959ab7fdde0e24c4d157c90d948d"},
 ]
 
 [package.dependencies]
@@ -558,8 +558,8 @@ sqlglot = ">=11.3.7"
 sqlparse = "*"
 
 [package.extras]
-dev = ["black", "duckdb", "duckdb-engine", "flake8", "invoke", "ipywidgets", "js2py", "jupyter-server", "matplotlib (==3.7.2)", "pandas", "pkgmt", "polars (==0.17.2)", "psutil", "pyarrow", "pyodbc", "pytest", "twine"]
-integration = ["black", "clickhouse-sqlalchemy", "dockerctx", "duckdb", "duckdb-engine", "flake8", "grpcio-status", "invoke", "ipywidgets", "js2py", "jupyter-server", "matplotlib (==3.7.2)", "oracledb", "pandas", "pgspecial (==2.0.1)", "pkgmt", "polars (==0.17.2)", "psutil", "psycopg2-binary", "pyarrow", "pymysql", "pyodbc", "pyspark", "pytest", "python-tds", "redshift-connector", "snowflake-sqlalchemy", "sqlalchemy-pytds", "sqlalchemy-redshift", "twine"]
+dev = ["black", "duckdb", "duckdb-engine", "flake8", "invoke", "ipywidgets", "js2py", "jupyter-server", "matplotlib (==3.7.2)", "pandas (<2.2.0)", "pkgmt", "polars (==0.17.2)", "psutil", "pyarrow", "pyodbc", "pytest", "twine"]
+integration = ["black", "clickhouse-sqlalchemy", "dockerctx", "duckdb", "duckdb-engine", "flake8", "grpcio-status", "invoke", "ipywidgets", "js2py", "jupyter-server", "matplotlib (==3.7.2)", "oracledb", "pandas (<2.2.0)", "pgspecial (==2.0.1)", "pkgmt", "polars (==0.17.2)", "psutil", "psycopg2-binary", "pyarrow", "pymysql", "pyodbc", "pyspark", "pytest", "python-tds", "redshift-connector", "snowflake-sqlalchemy", "sqlalchemy-pytds", "sqlalchemy-redshift", "twine"]
 
 [[package]]
 name = "jupysql-plugin"
