@@ -542,9 +542,11 @@ class Dialect(PGDialect_psycopg2):
         # dictionary with (name, ) if default search path or (schema, name)
         # as keys
         enums = dict(
-            ((rec["name"],), rec)
-            if rec["visible"]
-            else ((rec["schema"], rec["name"]), rec)
+            (
+                ((rec["name"],), rec)
+                if rec["visible"]
+                else ((rec["schema"], rec["name"]), rec)
+            )
             for rec in self._load_enums(  # type: ignore[attr-defined]
                 connection, schema="*", info_cache=kw.get("info_cache")
             )
