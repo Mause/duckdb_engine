@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import zlib
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -35,7 +36,7 @@ from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, relationship, sessionmaker
 
-from .. import Dialect, supports_attach
+from .. import Dialect, supports_attach, supports_user_agent
 from .._supports import has_comment_support
 
 try:
@@ -506,6 +507,38 @@ def test_url_config_and_dict_config() -> None:
         worker_threads, memory_limit = row
         assert worker_threads == 123
         assert memory_limit in ("500.0MB", "476.8 MiB")
+
+
+@mark.skipif(
+    supports_user_agent is False,
+    reason="custom_user_agent is not supported for DuckDB version < 0.9.2",
+)
+def test_user_agent() -> None:
+    eng = create_engine("duckdb:///:memory:")
+
+    with eng.connect() as conn:
+        res = conn.execute(text("PRAGMA USER_AGENT"))
+        row = res.first()
+        assert row is not None
+        assert re.match(r"duckdb/.*(.*) python duckdb_engine/.*(sqlalchemy/.*)", row[0])
+
+
+@mark.skipif(
+    supports_user_agent is False,
+    reason="custom_user_agent is not supported for DuckDB version < 0.9.2",
+)
+def test_user_agent_with_custom_user_agent() -> None:
+    eng = create_engine(
+        "duckdb:///:memory:", connect_args={"config": {"custom_user_agent": "custom"}}
+    )
+
+    with eng.connect() as conn:
+        res = conn.execute(text("PRAGMA USER_AGENT"))
+        row = res.first()
+        assert row is not None
+        assert re.match(
+            r"duckdb/.*(.*) python duckdb_engine/.*(sqlalchemy/.*) custom", row[0]
+        )
 
 
 def test_do_ping(tmp_path: Path, caplog: LogCaptureFixture) -> None:
