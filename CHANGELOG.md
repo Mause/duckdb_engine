@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.0](https://github.com/Mause/duckdb_engine/compare/v0.10.0...v0.11.0) (2024-02-04)
+
+
+### Features
+
+* comment support ([6a00ec0](https://github.com/Mause/duckdb_engine/commit/6a00ec0614e02191ee5a2d104f1fe288ea6b0d27))
+
 ## [0.10.0](https://github.com/Mause/duckdb_engine/compare/v0.9.5...v0.10.0) (2023-12-24)
 
 

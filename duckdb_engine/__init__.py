@@ -34,10 +34,11 @@ from sqlalchemy.exc import NoSuchTableError
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql.selectable import Select
 
+from ._supports import has_comment_support
 from .config import apply_config, get_core_config
 from .datatypes import ISCHEMA_NAMES, register_extension_types
 
-__version__ = "0.10.0"
+__version__ = "0.11.0"
 sqlalchemy_version = sqlalchemy.__version__
 duckdb_version: str = duckdb.__version__  # type: ignore[attr-defined]
 supports_attach: bool = duckdb_version >= "0.7.0"
@@ -219,7 +220,7 @@ class Dialect(PGDialect_psycopg2):
     driver = "duckdb_engine"
     _has_events = False
     supports_statement_cache = False
-    supports_comments = False
+    supports_comments = has_comment_support()
     supports_sane_rowcount = False
     supports_server_side_cursors = False
     inspector = DuckDBInspector
@@ -548,9 +549,11 @@ class Dialect(PGDialect_psycopg2):
         # dictionary with (name, ) if default search path or (schema, name)
         # as keys
         enums = dict(
-            ((rec["name"],), rec)
-            if rec["visible"]
-            else ((rec["schema"], rec["name"]), rec)
+            (
+                ((rec["name"],), rec)
+                if rec["visible"]
+                else ((rec["schema"], rec["name"]), rec)
+            )
             for rec in self._load_enums(  # type: ignore[attr-defined]
                 connection, schema="*", info_cache=kw.get("info_cache")
             )

@@ -37,6 +37,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, relationship, sessionmaker
 
 from .. import DBAPI, Dialect, supports_attach, supports_user_agent
+from .._supports import has_comment_support
 
 try:
     # sqlalchemy 2
@@ -395,10 +396,37 @@ def test_binary(session: Session) -> None:
     assert b.text == "Hello World!"
 
 
-def test_comment_support() -> None:
+@mark.skipif(
+    not has_comment_support(), reason="comments not supported by duckdb version"
+)
+def test_comment_support(engine: Engine) -> None:
     "comments not yet supported by duckdb"
-    with raises(DBAPI.ParserException, match="syntax error"):
-        duckdb.default_connection.execute('comment on sqlite_master is "hello world";')
+
+    class Notice(Base):
+        __tablename__ = "tb_notice"
+        __table_args__ = {"comment": "Notice table"}
+
+        seqno = Column(
+            Integer,
+            Sequence("seqno_sequence"),
+            primary_key=True,
+            comment="Integer representing the sequence number",
+        )
+        title = Column(
+            String(200),
+            nullable=False,
+            comment="Title of the notice, represented as a string",
+        )
+
+    Base.metadata.create_all(bind=engine)
+
+    inspector = inspect(engine)
+
+    assert inspector.get_table_comment("tb_notice")["text"] == "Notice table"
+
+    columns = inspector.get_columns("tb_notice", None)
+    assert columns[0]["comment"] == "Integer representing the sequence number"
+    assert columns[1]["comment"] == "Title of the notice, represented as a string"
 
 
 def test_rowcount() -> None:
