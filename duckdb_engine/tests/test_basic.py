@@ -36,7 +36,7 @@ from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, relationship, sessionmaker
 
-from .. import DBAPI, Dialect, supports_attach, supports_user_agent
+from .. import Dialect, supports_attach, supports_user_agent
 from .._supports import has_comment_support
 
 try:
