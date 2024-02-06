@@ -5,7 +5,7 @@
 
 ### Miscellaneous Chores
 
-* force release 0.11.1 ([f2cfe07](https://github.com/Mause/duckdb_engine/commit/f2cfe0782645b2a47b3679096b5c029c4ce25513))
+* Add duckdb_engine/sqlalchemy version info to DuckDB user_agent
 
 ## [0.11.0](https://github.com/Mause/duckdb_engine/compare/v0.10.0...v0.11.0) (2024-02-04)
 
