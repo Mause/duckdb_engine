@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.1](https://github.com/Mause/duckdb_engine/compare/v0.11.0...v0.11.1) (2024-02-06)
+
+
+### Miscellaneous Chores
+
+* Add duckdb_engine/sqlalchemy version info to DuckDB user_agent
+
 ## [0.11.0](https://github.com/Mause/duckdb_engine/compare/v0.10.0...v0.11.0) (2024-02-04)
 
 
