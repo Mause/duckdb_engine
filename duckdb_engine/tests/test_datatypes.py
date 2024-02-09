@@ -45,6 +45,18 @@ def test_unsigned_integer_type(
     assert session.query(table).one()
 
 
+@mark.remote_data()
+def test_raw_json(engine: Engine) -> None:
+    importorskip("duckdb", "0.9.3.dev4040")
+
+    with engine.connect() as conn:
+        assert conn.execute(text("load json"))
+
+        assert conn.execute(text("select {'Hello': 'world'}::JSON")).fetchone() == (
+            {"Hello": "world"},
+        )
+
+
 def test_json(engine: Engine, session: Session) -> None:
     base = declarative_base()
 

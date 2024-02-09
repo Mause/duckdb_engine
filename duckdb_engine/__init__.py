@@ -28,6 +28,7 @@ from sqlalchemy.dialects.postgresql.base import (
 )
 from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
 from sqlalchemy.engine.default import DefaultDialect
+from sqlalchemy.engine.interfaces import Dialect as RootDialect
 from sqlalchemy.engine.reflection import cache
 from sqlalchemy.engine.url import URL
 from sqlalchemy.exc import NoSuchTableError
@@ -47,7 +48,7 @@ supports_user_agent: bool = duckdb_version >= "0.9.2"
 if TYPE_CHECKING:
     from sqlalchemy.base import Connection
     from sqlalchemy.engine.interfaces import _IndexDict
-
+    from sqlalchemy.sql.type_api import _ResultProcessor
 
 register_extension_types()
 
@@ -215,6 +216,16 @@ class DuckDBIdentifierPreparer(PGIdentifierPreparer):
         return self.format_schema(schema)
 
 
+class DuckDBNullType(sqltypes.NullType):
+    def result_processor(
+        self, dialect: RootDialect, coltype: sqltypes.TypeEngine
+    ) -> Optional["_ResultProcessor"]:
+        if coltype == "JSON":
+            return sqltypes.JSON().result_processor(dialect, coltype)
+        else:
+            return super().result_processor(dialect, coltype)
+
+
 class Dialect(PGDialect_psycopg2):
     name = "duckdb"
     driver = "duckdb_engine"
@@ -246,6 +257,14 @@ class Dialect(PGDialect_psycopg2):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         kwargs["use_native_hstore"] = False
         super().__init__(*args, **kwargs)
+
+    def type_descriptor(self, typeobj: Type[sqltypes.TypeEngine]) -> Any:  # type: ignore[override]
+        res = super().type_descriptor(typeobj)
+
+        if isinstance(res, sqltypes.NullType):
+            return DuckDBNullType()
+
+        return res
 
     def connect(self, *cargs: Any, **cparams: Any) -> "Connection":
         core_keys = get_core_config()
