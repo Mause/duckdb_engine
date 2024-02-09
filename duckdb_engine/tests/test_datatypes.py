@@ -35,6 +35,10 @@ def test_unsigned_integer_type(
     assert session.query(table).one()
 
 
+def test_raw_json(engine: Engine) -> None:
+    with engine.connect() as conn:
+        assert ({},) == engine.execute("select {'Hello': 'world'}::JSON").fetchone()
+
 def test_json(engine: Engine, session: Session) -> None:
     base = declarative_base()
 
