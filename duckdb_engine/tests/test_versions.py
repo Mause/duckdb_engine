@@ -10,8 +10,8 @@ tox_env_name = os.environ.get("TOX_ENV_NAME")
 def test_versions() -> None:
     assert tox_env_name
     parts = version("duckdb").replace(".", "")
-    assert (
-        tox_env_name == "duckdb_master"
-        or "mypy" in tox_env_name
-        or f"duckdb{parts}" in tox_env_name
-    )
+
+    if tox_env_name == "duckdb_master" or "mypy" in tox_env_name:
+        return
+
+    assert f"duckdb{parts}" in tox_env_name
