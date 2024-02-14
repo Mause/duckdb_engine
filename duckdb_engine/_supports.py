@@ -2,9 +2,9 @@ import duckdb
 from packaging.version import Version
 
 duckdb_version = Version(duckdb.__version__)
-
-
 has_uhugeint_support = duckdb_version >= Version("0.10.0")
+supports_attach = duckdb_version >= Version("0.7.0")
+supports_user_agent = duckdb_version >= Version("0.9.2")
 
 
 def has_comment_support() -> bool:

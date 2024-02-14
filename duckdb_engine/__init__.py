@@ -34,16 +34,13 @@ from sqlalchemy.exc import NoSuchTableError
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql.selectable import Select
 
-from ._supports import has_comment_support
+from ._supports import has_comment_support, supports_attach, supports_user_agent
 from .config import apply_config, get_core_config
 from .datatypes import ISCHEMA_NAMES, register_extension_types
 
 __version__ = "0.13.0"
 __all__ = ["DuckDBEngineWarning", "Dialect"]
 sqlalchemy_version = sqlalchemy.__version__
-duckdb_version: str = duckdb.__version__
-supports_attach: bool = duckdb_version >= "0.7.0"
-supports_user_agent: bool = duckdb_version >= "0.9.2"
 
 if TYPE_CHECKING:
     from sqlalchemy.base import Connection
