@@ -1,7 +1,9 @@
-from sqlalchemy.ext.asyncio import AsyncAttrs
-from sqlalchemy.ext.asyncio import async_sessionmaker
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncAttrs,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 
 
 def test_asyncio():
@@ -13,4 +15,3 @@ def test_asyncio():
         await session.flush()
         await session.commit()
         await session.close()
-
