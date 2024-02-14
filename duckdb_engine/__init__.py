@@ -219,6 +219,7 @@ class Dialect(PGDialect_psycopg2):
     name = "duckdb"
     driver = "duckdb_engine"
     _has_events = False
+    is_async = True
     supports_statement_cache = False
     supports_comments = has_comment_support()
     supports_sane_rowcount = False
