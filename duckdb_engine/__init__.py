@@ -35,7 +35,7 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql.selectable import Select
 
 from ._supports import has_comment_support, supports_attach, supports_user_agent
-from .config import apply_config, get_core_config
+from .config import _install_extensions, apply_config, get_core_config
 from .datatypes import ISCHEMA_NAMES, register_extension_types
 
 __version__ = "0.13.0"
@@ -258,8 +258,11 @@ class Dialect(PGDialect_psycopg2):
     def connect(self, *cargs: Any, **cparams: Any) -> "Connection":
         core_keys = get_core_config()
         preload_extensions = cparams.pop("preload_extensions", [])
+        preinstall_extensions = cparams.pop("preinstall_extensions", [])
         config = cparams.setdefault("config", {})
         config.update(cparams.pop("url_config", {}))
+
+        _install_extensions(self, preinstall_extensions)
 
         ext = {k: config.pop(k) for k in list(config) if k not in core_keys}
         if supports_user_agent:
