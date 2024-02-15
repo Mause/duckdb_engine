@@ -44,10 +44,10 @@ jobs:
       - name: List tox envs
         run: tox -l
       - name: Test with tox
-        run: tox -e duckdb_master,ibis -vvv
+        run: tox -e duckdb_master,ibis -vvv --recreate
         if: matrix.bleeding_edge
       - name: Test with tox
-        run: tox -vvv
+        run: tox -vvv --recreate
         if: "!matrix.bleeding_edge"
       - name: Dump logs
         if: always()
