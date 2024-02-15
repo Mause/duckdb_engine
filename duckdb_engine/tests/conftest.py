@@ -1,9 +1,5 @@
-import logging
-import os
-import sys
 import warnings
 from functools import wraps
-from subprocess import check_call
 from typing import Any, Callable, Generator, TypeVar
 
 from pytest import fixture, raises
@@ -22,21 +18,6 @@ warnings.filterwarnings(
 P = ParamSpec("P")
 
 FuncT = TypeVar("FuncT", bound=Callable[..., Any])
-
-
-def pytest_sessionstart(session: Any) -> None:
-    tox_env_name = os.environ.get("TOX_ENV_NAME")
-    if not tox_env_name or "-" not in tox_env_name:
-        return
-
-    duckdb_version = ".".join(tox_env_name.split("-")[1][len("duckdb") :])
-
-    logging.info(f"Installing DuckDB version {duckdb_version} for testing")
-
-    check_call([sys.executable, "-m", "pip", "install", f"duckdb=={duckdb_version}"])
-
-
-pytest_sessionstart(None)
 
 
 @fixture
