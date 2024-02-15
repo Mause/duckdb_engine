@@ -11,10 +11,13 @@ def test_versions() -> None:
     assert tox_env_name
     parts = version("duckdb").replace(".", "")
 
-    if tox_env_name == "duckdb_master" or "mypy" in tox_env_name:
+    installed_version = f"duckdb{parts}"
+
+    if tox_env_name == "duckdb_master":
+        assert "dev" in installed_version
+    elif "mypy" in tox_env_name:
         return
 
     requested_version = tox_env_name.split("-")[1]
-    installed_version = f"duckdb{parts}"
 
     assert requested_version == installed_version
