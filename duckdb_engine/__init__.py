@@ -411,10 +411,13 @@ class Dialect(PGDialect_psycopg2):
         In the latter scenario the schema associated with the default database is used.
         """
         s = """
-            SELECT table_oid
-            FROM duckdb_tables()
+            SELECT oid, table_name
+            FROM (
+                SELECT table_oid AS oid, table_name,              database_name, schema_name FROM duckdb_tables()
+                UNION ALL BY NAME
+                SELECT view_oid AS oid , view_name AS table_name, database_name, schema_name FROM duckdb_views()
+            )
             WHERE schema_name NOT LIKE 'pg\\_%' ESCAPE '\\'
-            AND table_name = :table_name
             """
         sql, params = self._build_query_where(table_name=table_name, schema_name=schema)
         s += sql
