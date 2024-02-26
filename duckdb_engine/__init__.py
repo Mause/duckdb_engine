@@ -281,8 +281,8 @@ class Dialect(PGDialect_psycopg2):
 
         for extension in preload_extensions:
             conn.execute(f"LOAD {extension}")
+
         for function in preload_functions:
-            # conn.create_function(function)
             self.create_functions(function,conn)            
 
         apply_config(self, conn, ext)

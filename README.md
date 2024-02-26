@@ -17,7 +17,7 @@ Basic SQLAlchemy driver for [DuckDB](https://duckdb.org/)
     - [Unsigned integer support](#unsigned-integer-support)
   - [Alembic Integration](#alembic-integration)
   - [Preloading extensions (experimental)](#preloading-extensions-experimental)
-  - [Preloading functions (experimental)](#preloading-functions-experimental)
+  - [Preloading user-defined functions (experimental)](#preloading-user-defined-functions-experimental)
   - [The name](#the-name)
 
 <!-- Created by https://github.com/ekalinin/github-markdown-toc -->
@@ -181,7 +181,7 @@ create_engine(
 )
 ```
 
-## Preloading functions (experimental)
+## Preloading user-defined functions (experimental)
 
 > DuckDB 0.8.1+ includes builtin support for user-defined function (UDF) , see [the extension documentation](https://duckdb.org/docs/archive/0.8.1/api/python/function) for more information.
 
@@ -203,8 +203,9 @@ create_engine(
 and here is a very simple `udf.py`,
 
 ```python
-def add_built_in_type(x:int)->int:
+def add_built_in_type(x:int) -> int:
     return x + 1
+
 def create_functions(conn):
     conn.create_function('add_built_in_type', add_built_in_type, ['BIGINT'], 'BIGINT', type='native')
 ```
