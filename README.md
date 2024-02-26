@@ -17,6 +17,7 @@ Basic SQLAlchemy driver for [DuckDB](https://duckdb.org/)
     - [Unsigned integer support](#unsigned-integer-support)
   - [Alembic Integration](#alembic-integration)
   - [Preloading extensions (experimental)](#preloading-extensions-experimental)
+  - [Preloading functions (experimental)](#preloading-functions-experimental)
   - [The name](#the-name)
 
 <!-- Created by https://github.com/ekalinin/github-markdown-toc -->
@@ -172,10 +173,7 @@ from sqlalchemy import create_engine
 create_engine(
     'duckdb:///:memory:',
     connect_args={
-        'preload_extensions': ['https'],
-        "preload_functions": [
-            "/data/path/to/udf.py"
-        ],        
+        'preload_extensions': ['https'],      
         'config': {
             's3_region': 'ap-southeast-1'
         }
@@ -183,13 +181,32 @@ create_engine(
 )
 ```
 
-and here is a very simple `udf.py`
+## Preloading functions (experimental)
+
+> DuckDB 0.8.1+ includes builtin support for user-defined function (UDF) , see [the extension documentation](https://duckdb.org/docs/archive/0.8.1/api/python/function) for more information.
+
+Until the DuckDB python client allows you to natively preload functions, I've added experimental support via a `connect_args` parameter
+
+```python
+from sqlalchemy import create_engine
+
+create_engine(
+    'duckdb:///:memory:',
+    connect_args={
+        "preload_functions": [
+            "/data/path/to/udf.py"
+        ]
+    }
+)
+```
+
+and here is a very simple `udf.py`,
 
 ```python
 def add_built_in_type(x:int)->int:
     return x + 1
-
-conn.create_function('add_built_in_type', add_built_in_type, ['BIGINT'], 'BIGINT', type='native')
+def create_functions(conn):
+    conn.create_function('add_built_in_type', add_built_in_type, ['BIGINT'], 'BIGINT', type='native')
 ```
 
 ## The name
