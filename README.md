@@ -173,7 +173,7 @@ from sqlalchemy import create_engine
 create_engine(
     'duckdb:///:memory:',
     connect_args={
-        'preload_extensions': ['https'],      
+        'preload_extensions': ['https'],
         'config': {
             's3_region': 'ap-southeast-1'
         }

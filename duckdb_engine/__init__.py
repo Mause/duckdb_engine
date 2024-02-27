@@ -247,7 +247,7 @@ class Dialect(PGDialect_psycopg2):
         kwargs["use_native_hstore"] = False
         super().__init__(*args, **kwargs)
 
-    def create_functions(self,path,conn):
+    def create_functions(self, path, conn):
         """
         Create functions using the specified path and connection.
 
@@ -255,8 +255,9 @@ class Dialect(PGDialect_psycopg2):
         :param conn: The connection to be used for creating the functions.
         :return: None
         """
-        import os
         import importlib.util
+        import os
+
         filename = os.path.basename(path)
         spec = importlib.util.spec_from_file_location(filename, path)
         module = importlib.util.module_from_spec(spec)
@@ -283,7 +284,7 @@ class Dialect(PGDialect_psycopg2):
             conn.execute(f"LOAD {extension}")
 
         for function in preload_functions:
-            self.create_functions(function,conn)            
+            self.create_functions(function, conn)
 
         apply_config(self, conn, ext)
 
