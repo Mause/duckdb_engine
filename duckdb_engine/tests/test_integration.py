@@ -25,7 +25,8 @@ def test_plain_register(conn: Connection) -> None:
 
 @mark.remote_data
 @mark.skipif(
-    "dev" in duckdb.__version__, reason="md extension not available for dev builds"  # type: ignore[attr-defined]
+    "dev" in duckdb.__version__,
+    reason="md extension not available for dev builds",  # type: ignore[attr-defined]
 )
 def test_motherduck() -> None:
     importorskip("duckdb", "0.7.1")
