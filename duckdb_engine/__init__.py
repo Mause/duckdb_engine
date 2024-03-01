@@ -1,4 +1,5 @@
 import re
+import sys
 import warnings
 from typing import (
     TYPE_CHECKING,
@@ -224,6 +225,7 @@ class Dialect(PGDialect_psycopg2):
     supports_sane_rowcount = False
     supports_server_side_cursors = False
     inspector = DuckDBInspector
+    max_identifier_length = sys.maxsize
     # colspecs TODO: remap types to duckdb types
     colspecs = util.update_copy(
         PGDialect.colspecs,

@@ -592,3 +592,23 @@ def test_361(engine: Engine) -> None:
 
         stmt = select(date_part).select_from(test).group_by(date_part)
         assert conn.execute(stmt).fetchall() == [(2022,)]
+
+
+def test_long_column_names(engine: Engine) -> None:
+    long_name = "a_very_very_very_very_very_very_very_very_very_long_column_name"
+
+    with engine.begin() as con:
+        con.exec_driver_sql(f"CREATE OR REPLACE TABLE t ({long_name} INT)")
+
+    t = Table("t", MetaData(), autoload_with=engine)
+    t1 = select(t.c.values()[0]).select_from(t).subquery()
+    query = select(t1.c[long_name])
+    assert "a_very_very_very_very_very_very_very_very_very_long_colum_1" not in str(
+        query.compile(engine)
+    )
+
+    with engine.begin() as con:
+        result = con.execute(query)
+        batch = result.connection.connection.fetch_record_batch()
+
+    assert batch.schema.names[0] == long_name
