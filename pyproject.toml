@@ -56,6 +56,13 @@ plugins = ['sqlalchemy.ext.mypy.plugin']
 [tool.isort]
 profile = "black"
 
+[tool.ruff]
+target-version = "py37"
+
+[tool.ruff.lint]
+select = ["E", "I"]
+ignore = ['E203', 'E501']
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
