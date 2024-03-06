@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.2](https://github.com/Mause/duckdb_engine/compare/v0.11.1...v0.11.2) (2024-03-01)
+
+
+### Bug Fixes
+
+* support views in has_table ([52d6a43](https://github.com/Mause/duckdb_engine/commit/52d6a43146518af85d5513c4d663ec3a8bc59bda))
+
 ## [0.11.1](https://github.com/Mause/duckdb_engine/compare/v0.11.0...v0.11.1) (2024-02-06)
 
 

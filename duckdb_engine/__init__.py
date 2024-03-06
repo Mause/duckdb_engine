@@ -38,7 +38,7 @@ from ._supports import has_comment_support
 from .config import apply_config, get_core_config
 from .datatypes import ISCHEMA_NAMES, register_extension_types
 
-__version__ = "0.11.1"
+__version__ = "0.11.2"
 sqlalchemy_version = sqlalchemy.__version__
 duckdb_version: str = duckdb.__version__  # type: ignore[attr-defined]
 supports_attach: bool = duckdb_version >= "0.7.0"
@@ -432,10 +432,13 @@ class Dialect(PGDialect_psycopg2):
         In the latter scenario the schema associated with the default database is used.
         """
         s = """
-            SELECT table_oid
-            FROM duckdb_tables()
+            SELECT oid, table_name
+            FROM (
+                SELECT table_oid AS oid, table_name,              database_name, schema_name FROM duckdb_tables()
+                UNION ALL BY NAME
+                SELECT view_oid AS oid , view_name AS table_name, database_name, schema_name FROM duckdb_views()
+            )
             WHERE schema_name NOT LIKE 'pg\\_%' ESCAPE '\\'
-            AND table_name = :table_name
             """
         sql, params = self._build_query_where(table_name=table_name, schema_name=schema)
         s += sql
