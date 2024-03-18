@@ -15,6 +15,7 @@ repository = "https://github.com/Mause/duckdb_engine"
 python = ">=3.7"
 duckdb = ">=0.4.0"
 sqlalchemy = ">=1.3.22"
+packaging = "^21"
 
 [tool.poetry.group.dev.dependencies]
 numpy = "*"
@@ -30,6 +31,7 @@ pytest-cov = {extras = ["coverage"], version = "^4.0.0"}
 snapshottest = "^0.6.0"
 pytest-remotedata = "^0.4.0"
 toml = "^0.10.2"
+importlib-metadata = "^5"
 
 [tool.poetry.plugins."sqlalchemy.dialects"]
 duckdb = "duckdb_engine:Dialect"
