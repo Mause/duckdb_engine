@@ -5,19 +5,20 @@
 Basic SQLAlchemy driver for [DuckDB](https://duckdb.org/)
 
 <!--ts-->
-* [duckdb_engine](#duckdb_engine)
-   * [Installation](#installation)
-   * [Usage](#usage)
-   * [Usage in IPython/Jupyter](#usage-in-ipythonjupyter)
-   * [Configuration](#configuration)
-   * [How to register a pandas DataFrame](#how-to-register-a-pandas-dataframe)
-   * [Things to keep in mind](#things-to-keep-in-mind)
-      * [Auto-incrementing ID columns](#auto-incrementing-id-columns)
-      * [Pandas read_sql() chunksize](#pandas-read_sql-chunksize)
-      * [Unsigned integer support](#unsigned-integer-support)
-   * [Alembic Integration](#alembic-integration)
-   * [Preloading extensions (experimental)](#preloading-extensions-experimental)
-   * [The name](#the-name)
+- [duckdb\_engine](#duckdb_engine)
+  - [Installation](#installation)
+  - [Usage](#usage)
+  - [Usage in IPython/Jupyter](#usage-in-ipythonjupyter)
+  - [Configuration](#configuration)
+  - [How to register a pandas DataFrame](#how-to-register-a-pandas-dataframe)
+  - [Things to keep in mind](#things-to-keep-in-mind)
+    - [Auto-incrementing ID columns](#auto-incrementing-id-columns)
+    - [Pandas `read_sql()` chunksize](#pandas-read_sql-chunksize)
+    - [Unsigned integer support](#unsigned-integer-support)
+  - [Alembic Integration](#alembic-integration)
+  - [Preloading extensions (experimental)](#preloading-extensions-experimental)
+  - [Preloading user-defined functions (experimental)](#preloading-user-defined-functions-experimental)
+  - [The name](#the-name)
 
 <!-- Created by https://github.com/ekalinin/github-markdown-toc -->
 <!-- Added by: me, at: Wed 20 Sep 2023 12:44:27 AWST -->
@@ -178,6 +179,35 @@ create_engine(
         }
     }
 )
+```
+
+## Preloading user-defined functions (experimental)
+
+> DuckDB 0.8.1+ includes builtin support for user-defined function (UDF) , see [the extension documentation](https://duckdb.org/docs/archive/0.8.1/api/python/function) for more information.
+
+Until the DuckDB python client allows you to natively preload functions, I've added experimental support via a `connect_args` parameter
+
+```python
+from sqlalchemy import create_engine
+
+create_engine(
+    'duckdb:///:memory:',
+    connect_args={
+        "preload_functions": [
+            "/data/path/to/udf.py"
+        ]
+    }
+)
+```
+
+and here is a very simple `udf.py`,
+
+```python
+def add_built_in_type(x:int) -> int:
+    return x + 1
+
+def create_functions(conn):
+    conn.create_function('add_built_in_type', add_built_in_type, ['BIGINT'], 'BIGINT', type='native')
 ```
 
 ## The name
