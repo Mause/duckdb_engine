@@ -16,9 +16,8 @@ from typing import (
 
 import duckdb
 import sqlalchemy
-from sqlalchemy import pool, text
+from sqlalchemy import pool, text, util
 from sqlalchemy import types as sqltypes
-from sqlalchemy import util
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.dialects.postgresql.base import (
     PGDialect,

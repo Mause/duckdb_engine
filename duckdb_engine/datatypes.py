@@ -42,12 +42,14 @@ class UInt8(Integer):
 
 class UTinyInteger(Integer):
     "AKA UInt1"
+
     name = "UTinyInt"
     # UTINYINT	-	0	255
 
 
 class TinyInteger(Integer):
     "AKA Int1"
+
     name = "TinyInt"
     # TINYINT	INT1	-128	127
 
