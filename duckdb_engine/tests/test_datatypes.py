@@ -1,12 +1,24 @@
+import decimal
+import json
 import warnings
-from typing import Type
+from typing import Any, Dict, Type
 from uuid import uuid4
 
 import duckdb
 from pytest import importorskip, mark
-from sqlalchemy import Column, Integer, MetaData, String, Table, inspect, text
+from sqlalchemy import (
+    Column,
+    Integer,
+    MetaData,
+    Sequence,
+    String,
+    Table,
+    inspect,
+    select,
+    text,
+)
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.engine import Engine
+from sqlalchemy.engine import Engine, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import sqltypes
@@ -43,6 +55,58 @@ def test_unsigned_integer_type(
     session.commit()
 
     assert session.query(table).one()
+
+
+@mark.remote_data()
+def test_raw_json(engine: Engine) -> None:
+    importorskip("duckdb", "0.9.3.dev4040")
+
+    with engine.connect() as conn:
+        assert conn.execute(text("load json"))
+
+        assert conn.execute(text("select {'Hello': 'world'}::JSON")).fetchone() == (
+            {"Hello": "world"},
+        )
+
+
+@mark.remote_data()
+def test_custom_json_serializer() -> None:
+    def default(o: Any) -> Any:
+        if isinstance(o, decimal.Decimal):
+            return {"__tag": "decimal", "value": str(o)}
+
+    def object_hook(pairs: Dict[str, Any]) -> Any:
+        if pairs.get("__tag", None) == "decimal":
+            return decimal.Decimal(pairs["value"])
+        else:
+            return pairs
+
+    engine = create_engine(
+        "duckdb://",
+        json_serializer=json.JSONEncoder(default=default).encode,
+        json_deserializer=json.JSONDecoder(object_hook=object_hook).decode,
+    )
+
+    Base = declarative_base()
+
+    class Entry(Base):
+        __tablename__ = "test_json"
+        id = Column(Integer, Sequence("id_seq"), primary_key=True)
+        data = Column(JSON, nullable=False)
+
+    Base.metadata.create_all(engine)
+
+    with engine.connect() as conn:
+        session = Session(bind=conn)
+
+        data = {"hello": decimal.Decimal("42")}
+
+        session.add(Entry(data=data))  # type: ignore[call-arg]
+        session.commit()
+
+        (res,) = session.execute(select(Entry)).one()
+
+        assert res.data == data
 
 
 def test_json(engine: Engine, session: Session) -> None:

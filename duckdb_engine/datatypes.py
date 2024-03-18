@@ -188,6 +188,7 @@ ISCHEMA_NAMES = {
     "timestamp_ms": sqltypes.TIMESTAMP,
     "timestamp_ns": sqltypes.TIMESTAMP,
     "enum": sqltypes.Enum,
+    "json": sqltypes.JSON,
 }
 
 
