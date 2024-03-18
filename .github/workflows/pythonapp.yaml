@@ -44,7 +44,7 @@ jobs:
       - name: List tox envs
         run: tox -l
       - name: Test with tox
-        run: tox -e duckdb_master,ibis --verbose
+        run: tox -e duckdb_master --verbose
         if: matrix.bleeding_edge
       - name: Test with tox
         run: tox --verbose
