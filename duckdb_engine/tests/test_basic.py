@@ -30,7 +30,7 @@ from sqlalchemy import (
     types,
 )
 from sqlalchemy.dialects import registry  # type: ignore
-from sqlalchemy.engine import Engine
+from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.declarative import declarative_base
@@ -233,21 +233,23 @@ def test_get_table_names(inspector: Inspector, session: Session) -> None:
         assert inspector.has_table(table_name)
 
 
-def test_get_views(engine: Engine) -> None:
-    con = engine.connect()
-    views = engine.dialect.get_view_names(con)
+def test_get_views(conn: Connection, dialect: Dialect) -> None:
+    views = dialect.get_view_names(conn)
     assert views == []
 
-    con.execute(text("create view test as select 1"))
-    con.execute(
+    conn.execute(text("create view test as select 1"))
+    conn.execute(
         text("create schema scheme; create view scheme.schema_test as select 1")
     )
 
-    views = engine.dialect.get_view_names(con)
+    views = dialect.get_view_names(conn)
     assert views == ["test"]
 
-    views = engine.dialect.get_view_names(con, schema="scheme")
+    views = dialect.get_view_names(conn, schema="scheme")
     assert views == ["schema_test"]
+
+    assert dialect.has_table(conn, table_name="test")
+    assert dialect.has_table(conn, table_name="schema_test", schema="scheme")
 
 
 @mark.skipif(os.uname().machine == "aarch64", reason="not supported on aarch64")
