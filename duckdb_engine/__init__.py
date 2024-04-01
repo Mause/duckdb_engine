@@ -700,8 +700,14 @@ def visit_create_column_with_serial_support(
     if "SERIAL" not in column_sql or not kw.get("first_pk"):
         return column_sql
     table_name = instance.element.table.name
-    autoinc_type = f"INTEGER DEFAULT(nextval('{_serial_sequence_name(table_name)}'))"
-    return column_sql.replace("SERIAL", autoinc_type)
+    if "BIGSERIAL" in column_sql:
+        serial_type = "BIGSERIAL"
+        int_type = "BIGINT"
+    else:
+        serial_type = "SERIAL"
+        int_type = "INTEGER"
+    autoinc_type = f"{int_type} DEFAULT(nextval('{_serial_sequence_name(table_name)}'))"
+    return column_sql.replace(serial_type, autoinc_type)
 
 
 if sqlalchemy.__version__ >= "2.0.14":
