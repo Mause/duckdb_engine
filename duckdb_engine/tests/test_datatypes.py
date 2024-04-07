@@ -24,10 +24,12 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import sqltypes
 from sqlalchemy.types import JSON
 
+from .._supports import has_uhugeint_support
 from ..datatypes import Map, Struct, types
 
 
 @mark.parametrize("coltype", types)
+@mark.skipif(not has_uhugeint_support, reason="duckdb version too old")
 def test_unsigned_integer_type(
     engine: Engine, session: Session, coltype: Type[Integer]
 ) -> None:
