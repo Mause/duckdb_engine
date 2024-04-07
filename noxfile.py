@@ -12,7 +12,10 @@ def group(title: str) -> Generator[None, None, None]:
     try:
         gha.start_group(title)
         yield
-    finally:
+    except Exception as e:
+        gha.end_group()
+        gha.error(f"{title} failed with {e}")
+    else:
         gha.end_group()
 
 
