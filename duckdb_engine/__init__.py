@@ -138,7 +138,7 @@ class ConnectionWrapper:
         parameters: Optional[List[Dict]] = None,
         context: Optional[Any] = None,
     ) -> None:
-        self.__c.executemany(statement, parameters)
+        self.__c.executemany(statement, list(parameters) if parameters else [])
 
     def execute(
         self,
