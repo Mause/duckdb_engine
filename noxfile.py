@@ -1,9 +1,19 @@
 import re
+from contextlib import contextmanager
 from itertools import product
-from typing import List
+from typing import Generator, List
 
 import github_action_utils as gha
 import nox
+
+
+@contextmanager
+def group(title: str) -> Generator[None, None, None]:
+    try:
+        gha.start_group(title)
+        yield
+    finally:
+        gha.end_group()
 
 
 def expandvars(string: str) -> List[str]:
@@ -25,14 +35,14 @@ envlist = expandvars(
 )
 @nox.parametrize("sqlalchemy", ["1.3", "1.4", "2.0"])
 def tests(session: nox.Session, duckdb: str, sqlalchemy: str) -> None:
-    with gha.group(f"{session.name} - Install"):
+    with group(f"{session.name} - Install"):
         poetry(session)
         session.install(f"sqlalchemy~={sqlalchemy}")
         if duckdb == "master":
             session.install("duckdb", "--pre", "-U")
         else:
             session.install(f"duckdb=={duckdb}")
-    with gha.group(f"{session.name} Test"):
+    with group(f"{session.name} Test"):
         session.run(
             "pytest",
             "--junitxml=results.xml",
