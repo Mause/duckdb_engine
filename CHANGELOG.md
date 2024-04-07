@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.11.3](https://github.com/Mause/duckdb_engine/compare/v0.11.2...v0.11.3) (2024-04-07)
+
+
+### Bug Fixes
+
+* _loads_domains in SQLA2 ([4c67e26](https://github.com/Mause/duckdb_engine/commit/4c67e2616a1b5e1d86eac895ad188bafbbd1a190))
+* allow parsing json in dynamic queries ([895685e](https://github.com/Mause/duckdb_engine/commit/895685e95cab1e9c5f6d3b9cd5f5f763bac9d8d1))
+
 ## [0.11.2](https://github.com/Mause/duckdb_engine/compare/v0.11.1...v0.11.2) (2024-03-01)
 
 
