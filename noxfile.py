@@ -59,6 +59,7 @@ def poetry(session: nox.Session) -> None:
 
 @nox.session(py=["3.8"])
 def mypy(session: nox.Session) -> None:
+    session.install("mypy")
     session.run("mypy", ".")
 
 
