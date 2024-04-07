@@ -11,7 +11,6 @@ from typing import (
     Set,
     Tuple,
     Type,
-    cast,
 )
 
 import duckdb
@@ -160,22 +159,10 @@ class CursorWrapper:
         return getattr(self.__c, name)
 
     def fetchmany(self, size: Optional[int] = None) -> List:
-        if hasattr(self.__c, "fetchmany"):
-            # fetchmany was only added in 0.5.0
-            if size is None:
-                return self.__c.fetchmany()
-            else:
-                return self.__c.fetchmany(size)
-
-        try:
-            return cast(list, self.__c.fetch_df_chunk().values.tolist())
-        except RuntimeError as e:
-            if e.args[0].startswith(
-                "Invalid Input Error: Attempting to fetch from an unsuccessful or closed streaming query result"
-            ):
-                return []
-            else:
-                raise e
+        if size is None:
+            return self.__c.fetchmany()
+        else:
+            return self.__c.fetchmany(size)
 
 
 class DuckDBEngineWarning(Warning):
