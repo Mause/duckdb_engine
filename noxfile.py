@@ -1,7 +1,5 @@
-import re
 from contextlib import contextmanager
-from itertools import product
-from typing import Generator, List
+from typing import Generator
 
 import github_action_utils as gha
 import nox
@@ -18,19 +16,6 @@ def group(title: str) -> Generator[None, None, None]:
         raise
     else:
         gha.end_group()
-
-
-def expandvars(string: str) -> List[str]:
-    bits = [
-        part[1:-1].split(",") if part.startswith("{") else [part]
-        for part in (re.split(r"(\{[^}]+})", string))
-    ]
-    return ["".join(s) for s in product(*bits)]
-
-
-envlist = expandvars(
-    "{mypy,duckdb040,duckdb051,duckdb061,duckdb071,duckdb081}-sqlalchemy{13,14,20}"
-)
 
 
 @nox.session(py=["3.7", "3.8", "3.9", "3.10"])
