@@ -5,6 +5,19 @@ permissions:
   checks: write
 
 jobs:
+  nox:
+    runs-on: ubuntu-latest
+
+    env:
+      FORCE_COLOR: 1
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove cached duckdb extensions
+        run: rm -rf ~/.duckdb
+      - run: pipx install nox
+      - run: nox
+
   build_backend:
     runs-on: ubuntu-latest
 
