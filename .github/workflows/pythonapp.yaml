@@ -11,12 +11,17 @@ jobs:
     env:
       FORCE_COLOR: 1
 
+    strategy:
+      fail-fast: false
+      matrix:
+        python: [3.7, 3.8, 3.9, "3.10", "3.11", "3.12"]
+
     steps:
       - uses: actions/checkout@v4
       - name: Remove cached duckdb extensions
         run: rm -rf ~/.duckdb
       - uses: fjwillemsen/setup-nox2@v3.0.0
-      - run: nox
+      - run: nox --pythons '${{ matrix.python }}'
 
   build_backend:
     runs-on: ubuntu-latest
