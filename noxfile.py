@@ -2,6 +2,7 @@ import re
 from itertools import product
 from typing import List
 
+import github_action_utils as gha
 import nox
 
 
@@ -24,22 +25,24 @@ envlist = expandvars(
 )
 @nox.parametrize("sqlalchemy", ["1.3", "1.4", "2.0"])
 def tests(session: nox.Session, duckdb: str, sqlalchemy: str) -> None:
-    poetry(session)
-    session.install(f"sqlalchemy~={sqlalchemy}")
-    if duckdb == "master":
-        session.install("duckdb", "--pre", "-U")
-    else:
-        session.install(f"duckdb=={duckdb}")
-    session.run(
-        "pytest",
-        "--junitxml=results.xml",
-        "--cov",
-        "--cov-report",
-        "xml:coverage.xml",
-        "--verbose",
-        "-rs",
-        "--remote-data",
-    )
+    with gha.group(f"{session.name} - Install"):
+        poetry(session)
+        session.install(f"sqlalchemy~={sqlalchemy}")
+        if duckdb == "master":
+            session.install("duckdb", "--pre", "-U")
+        else:
+            session.install(f"duckdb=={duckdb}")
+    with gha.group(f"{session.name} Test"):
+        session.run(
+            "pytest",
+            "--junitxml=results.xml",
+            "--cov",
+            "--cov-report",
+            "xml:coverage.xml",
+            "--verbose",
+            "-rs",
+            "--remote-data",
+        )
 
 
 def poetry(session: nox.Session) -> None:
