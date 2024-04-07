@@ -88,49 +88,26 @@ class ConnectionWrapper:
         self.__c = c
         self.notices = list()
 
-    def cursor(self) -> "Connection":
-        return self
-
-    def fetchmany(self, size: Optional[int] = None) -> List:
-        if hasattr(self.__c, "fetchmany"):
-            # fetchmany was only added in 0.5.0
-            if size is None:
-                return self.__c.fetchmany()
-            else:
-                return self.__c.fetchmany(size)
-
-        try:
-            return cast(list, self.__c.fetch_df_chunk().values.tolist())
-        except RuntimeError as e:
-            if e.args[0].startswith(
-                "Invalid Input Error: Attempting to fetch from an unsuccessful or closed streaming query result"
-            ):
-                return []
-            else:
-                raise e
-
-    @property
-    def c(self) -> duckdb.DuckDBPyConnection:
-        warnings.warn(
-            "Directly accessing the internal connection object is deprecated (please go via the __getattr__ impl)",
-            DeprecationWarning,
-        )
-        return self.__c
+    def cursor(self) -> "CursorWrapper":
+        return CursorWrapper(self.__c, self)
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self.__c, name)
 
-    @property
-    def connection(self) -> "Connection":
-        return self
-
     def close(self) -> None:
-        # duckdb doesn't support 'soft closes'
-        pass
+        self.__c.close()
+        self.closed = True
 
-    @property
-    def rowcount(self) -> int:
-        return -1
+
+class CursorWrapper:
+    __c: duckdb.DuckDBPyConnection
+    __connection_wrapper: "ConnectionWrapper"
+
+    def __init__(
+        self, c: duckdb.DuckDBPyConnection, connection_wrapper: "ConnectionWrapper"
+    ) -> None:
+        self.__c = c
+        self.__connection_wrapper = connection_wrapper
 
     def executemany(
         self,
@@ -169,6 +146,34 @@ class ConnectionWrapper:
                 == "TransactionContext Error: cannot commit - no transaction is active"
             ):
                 return
+            else:
+                raise e
+
+    @property
+    def connection(self) -> "Connection":
+        return self.__connection_wrapper
+
+    def close(self) -> None:
+        pass  # closing cursors is not supported in duckdb
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self.__c, name)
+
+    def fetchmany(self, size: Optional[int] = None) -> List:
+        if hasattr(self.__c, "fetchmany"):
+            # fetchmany was only added in 0.5.0
+            if size is None:
+                return self.__c.fetchmany()
+            else:
+                return self.__c.fetchmany(size)
+
+        try:
+            return cast(list, self.__c.fetch_df_chunk().values.tolist())
+        except RuntimeError as e:
+            if e.args[0].startswith(
+                "Invalid Input Error: Attempting to fetch from an unsuccessful or closed streaming query result"
+            ):
+                return []
             else:
                 raise e
 
@@ -319,7 +324,7 @@ class Dialect(PGDialect_psycopg2):
                 raise e
 
     def do_begin(self, connection: "Connection") -> None:
-        connection.execute("begin")
+        connection.begin()
 
     def get_view_names(
         self,
