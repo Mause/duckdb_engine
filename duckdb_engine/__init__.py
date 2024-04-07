@@ -561,12 +561,16 @@ class Dialect(PGDialect_psycopg2):
 
         # dictionary with (name, ) if default search path or (schema, name)
         # as keys
+        domains: Dict[tuple, dict] = {}
+        """
+        TODO: fix these pg_collation errors in SQLA2
         domains = {
             ((d["schema"], d["name"]) if not d["visible"] else (d["name"],)): d
             for d in self._load_domains(  # type: ignore[attr-defined]
                 connection, schema="*", info_cache=kw.get("info_cache")
             )
         }
+        """
 
         # dictionary with (name, ) if default search path or (schema, name)
         # as keys
