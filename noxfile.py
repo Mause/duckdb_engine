@@ -15,6 +15,7 @@ def group(title: str) -> Generator[None, None, None]:
     except Exception as e:
         gha.end_group()
         gha.error(f"{title} failed with {e}")
+        raise
     else:
         gha.end_group()
 
