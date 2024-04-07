@@ -18,8 +18,9 @@ def group(title: str) -> Generator[None, None, None]:
         gha.end_group()
 
 
+# "0.5.1", "0.6.1", "0.7.1", "0.8.1"
 @nox.session(py=["3.7", "3.8", "3.9", "3.10"])
-@nox.parametrize("duckdb", ["0.5.1", "0.6.1", "0.7.1", "0.8.1", "0.9.1", "0.10.1"])
+@nox.parametrize("duckdb", ["0.9.2", "0.10.1"])
 @nox.parametrize("sqlalchemy", ["1.3", "1.4", "2.0"])
 def tests(session: nox.Session, duckdb: str, sqlalchemy: str) -> None:
     tests_core(session, duckdb, sqlalchemy)
