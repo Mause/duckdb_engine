@@ -41,7 +41,7 @@ from .datatypes import ISCHEMA_NAMES, register_extension_types
 
 __version__ = "0.11.3"
 sqlalchemy_version = sqlalchemy.__version__
-duckdb_version: str = duckdb.__version__  # type: ignore[attr-defined]
+duckdb_version: str = duckdb.__version__
 supports_attach: bool = duckdb_version >= "0.7.0"
 supports_user_agent: bool = duckdb_version >= "0.9.2"
 

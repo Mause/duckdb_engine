@@ -23,7 +23,7 @@ def test_plain_register(conn: Connection) -> None:
     conn.execute(text("select * from test_df"))
 
 
-duckdb_version = duckdb.__version__  # type: ignore[attr-defined]
+duckdb_version = duckdb.__version__
 
 
 @mark.remote_data
