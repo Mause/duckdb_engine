@@ -12,7 +12,7 @@ from sqlalchemy import (
     select,
 )
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import declarative_base, relationship, sessionmaker
+from sqlalchemy.orm import Mapped, declarative_base, relationship, sessionmaker
 
 Base = declarative_base()
 
@@ -23,7 +23,7 @@ class A(Base):
     id: int = Column(Integer, Sequence("id_seq"), primary_key=True)
     data: str = Column(String)
     create_date: datetime = Column(DateTime, server_default=func.now())
-    bs: "B" = relationship("B")
+    bs: Mapped["B"] = relationship("B")
 
     # required in order to access columns with server defaults
     # or SQL expression defaults, after a flush, without
