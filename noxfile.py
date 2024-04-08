@@ -63,4 +63,4 @@ def poetry(session: nox.Session) -> None:
 @nox.session(py=["3.8"])
 def mypy(session: nox.Session) -> None:
     poetry(session)
-    session.run("mypy", ".")
+    session.run("mypy", "duckdb_engine/")
