@@ -1,7 +1,7 @@
 import duckdb
 from packaging.version import Version
 
-duckdb_version = Version(duckdb.__version__)  # type: ignore[attr-defined]
+duckdb_version = Version(duckdb.__version__)
 
 
 has_uhugeint_support = duckdb_version >= Version("0.10.0")

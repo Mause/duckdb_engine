@@ -5,6 +5,25 @@ permissions:
   checks: write
 
 jobs:
+  nox:
+    runs-on: ubuntu-latest
+
+    env:
+      FORCE_COLOR: 1
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python: [3.8, 3.9, "3.10"]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove cached duckdb extensions
+        run: rm -rf ~/.duckdb
+      - uses: fjwillemsen/setup-nox2@v3.0.0
+      - run: pip install github-action-utils uv
+      - run: nox --pythons '${{ matrix.python }}'
+
   build_backend:
     runs-on: ubuntu-latest
 

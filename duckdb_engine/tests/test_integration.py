@@ -1,6 +1,6 @@
 import duckdb
 import pandas as pd
-from pytest import importorskip, mark, raises
+from pytest import mark, raises
 from sqlalchemy import __version__, text
 from sqlalchemy.engine import create_engine
 from sqlalchemy.engine.base import Connection
@@ -23,13 +23,17 @@ def test_plain_register(conn: Connection) -> None:
     conn.execute(text("select * from test_df"))
 
 
+duckdb_version = duckdb.__version__
+
+
 @mark.remote_data
 @mark.skipif(
-    "dev" in duckdb.__version__, reason="md extension not available for dev builds"  # type: ignore[attr-defined]
+    "dev" in duckdb_version, reason="md extension not available for dev builds"
+)
+@mark.skipif(
+    duckdb_version != "0.9.2", reason="md extension not available for this version"
 )
 def test_motherduck() -> None:
-    importorskip("duckdb", "0.7.1")
-
     engine = create_engine(
         "duckdb:///md:motherdb",
         connect_args={"config": {"motherduck_token": "motherduckdb_token"}},

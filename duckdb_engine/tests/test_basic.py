@@ -434,7 +434,7 @@ def test_comment_support(engine: Engine) -> None:
 def test_rowcount() -> None:
     import duckdb
 
-    assert duckdb.default_connection.rowcount == -1  # type: ignore
+    assert duckdb.default_connection.rowcount == -1
 
 
 def test_sessions(session: Session) -> None:

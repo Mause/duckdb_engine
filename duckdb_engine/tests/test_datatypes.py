@@ -4,7 +4,7 @@ import warnings
 from typing import Any, Dict, Type
 from uuid import uuid4
 
-import duckdb
+from packaging.version import Version
 from pytest import importorskip, mark
 from sqlalchemy import (
     Column,
@@ -24,7 +24,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import sqltypes
 from sqlalchemy.types import JSON
 
-from .._supports import has_uhugeint_support
+from .._supports import duckdb_version, has_uhugeint_support
 from ..datatypes import Map, Struct, types
 
 
@@ -173,7 +173,7 @@ def test_all_types_reflection(engine: Engine) -> None:
         table = Table("t2", MetaData(), autoload_with=conn)
         for col in table.columns:
             name = col.name
-            if name.endswith("_enum") and duckdb.__version__ < "0.7.1":  # type: ignore[attr-defined]
+            if name.endswith("_enum") and duckdb_version < Version("0.7.1"):
                 continue
             if "array" in name or "struct" in name or "map" in name or "union" in name:
                 assert col.type == sqltypes.NULLTYPE, name
