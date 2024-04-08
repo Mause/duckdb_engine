@@ -21,7 +21,7 @@ jobs:
       - name: Remove cached duckdb extensions
         run: rm -rf ~/.duckdb
       - uses: fjwillemsen/setup-nox2@v3.0.0
-      - run: pip install github-action-utils
+      - run: pip install github-action-utils uv
       - run: nox --pythons '${{ matrix.python }}'
 
   build_backend:

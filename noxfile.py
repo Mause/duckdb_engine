@@ -4,6 +4,9 @@ from typing import Generator
 import github_action_utils as gha
 import nox
 
+nox.options.default_venv_backend = "uv"
+nox.options.error_on_external_run = True
+
 
 @contextmanager
 def group(title: str) -> Generator[None, None, None]:
