@@ -42,13 +42,13 @@ class B(Base):
 async def test_asyncio() -> None:
     engine = create_async_engine("duckdb:///:memory:")
     async_session = sessionmaker(engine, class_=AsyncSession)
-    Base.metadata.create_all(engine.sync_engine)
+    async with engine.connect() as conn:
+        await conn.run_sync(Base.metadata.create_all)
     async with async_session() as sess:
         async with sess.begin():
             sess.add(A(data="a1"))
-        await sess.flush()
-        await sess.commit()
-        await sess.close()
 
         res = (await sess.execute(select(A))).scalars().one()
         assert res.data == "a1"
+
+    await engine.dispose()
