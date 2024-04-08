@@ -49,6 +49,9 @@ def tests_core(session: nox.Session, duckdb: str, sqlalchemy: str) -> None:
             "--verbose",
             "-rs",
             "--remote-data",
+            env={
+                "SQLALCHEMY_WARN_20": "true",
+            },
         )
 
 
@@ -61,9 +64,3 @@ def poetry(session: nox.Session) -> None:
 def mypy(session: nox.Session) -> None:
     poetry(session)
     session.run("mypy", ".")
-
-
-# passenv = HOME
-# setenv =
-#     SQLALCHEMY_WARN_20: true
-# envlogdir = logs
