@@ -57,7 +57,7 @@ def tests_core(session: nox.Session, duckdb: str, sqlalchemy: str) -> None:
 
 def poetry(session: nox.Session) -> None:
     session.install("poetry")
-    session.run("poetry", "install", "--with", "dev")
+    session.run("poetry", "install", "--with", "dev", "--verbose", silent=False)
 
 
 @nox.session(py=["3.8"])
