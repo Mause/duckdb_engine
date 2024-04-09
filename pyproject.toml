@@ -20,7 +20,7 @@ packaging = "^21"
 [tool.poetry.group.dev.dependencies]
 numpy = "*"
 pytest = "^7.3.1"
-pre-commit = "^2.21.0"
+pre-commit = "^3.0.0"
 mypy = "^1.4"
 hypothesis = "^6.75.2"
 pandas = "^1"
