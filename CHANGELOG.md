@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.11.4](https://github.com/Mause/duckdb_engine/compare/v0.11.3...v0.11.4) (2024-04-09)
+
+
+### Bug Fixes
+
+* **deps:** update dependency duckdb to v0.10.1 ([6938db8](https://github.com/Mause/duckdb_engine/commit/6938db8fd9e867d32cf2039a2b483f8f633bd4a3))
+* **deps:** update dependency packaging to v24 ([01914b6](https://github.com/Mause/duckdb_engine/commit/01914b668b601b5e5db487b1acfc5d5ea4aa1c7c))
+* drop python 3.7 support ([9acdd66](https://github.com/Mause/duckdb_engine/commit/9acdd660f9f50f120393128f06c12da7e89dfefd))
+
 ## [0.11.3](https://github.com/Mause/duckdb_engine/compare/v0.11.2...v0.11.3) (2024-04-07)
 
 
