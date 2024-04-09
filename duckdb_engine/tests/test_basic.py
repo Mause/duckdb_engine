@@ -362,39 +362,45 @@ def test_table_reflect(session: Session, engine: Engine) -> None:
     user_table = Table("test", meta)
     insp = inspect(engine)
 
+    reflect_table(insp, user_table, None)
+
+
+def reflect_table(insp: Inspector, *args: Any, **kwargs: Any) -> None:
     reflect_table = (
         insp.reflecttable if hasattr(insp, "reflecttable") else insp.reflect_table
     )
-    reflect_table(user_table, None)
+    return reflect_table(*args, **kwargs)
 
 
-@mark.xfail(reason="duckdb doesnt fully support enums in the postgres views yet")
-def test_enum_type_format(session: Session, engine: Engine) -> None:
+@mark.xfail(raises=AssertionError, reason="not yet supported by duckdb")
+def test_enum_type_format(engine: Engine) -> None:
     importorskip("duckdb", "0.6.1")
 
     sql = [
         "CREATE TYPE enum_t AS ENUM('a', 'b');",
         "CREATE TABLE tmp (enum_col enum_t);",
     ]
-    for s in sql:
-        session.execute(text(s))
+    with engine.connect() as conn:
+        for s in sql:
+            conn.execute(text(s))
 
-    (column,) = session.execute(
-        text("select * from duckdb_columns() where column_name = 'enum_col'")
-    )
-    (type_actual,) = session.execute(
-        text("select * from duckdb_types() where type_name = 'enum_t'"),
-    )
+        (column,) = conn.execute(
+            text("select * from duckdb_columns() where column_name = 'enum_col'")
+        )
+        (type_actual,) = conn.execute(
+            text("select * from duckdb_types() where type_name = 'enum_t'"),
+        )
 
-    type_oid = type_actual["type_oid"]
-    data_type_id = column["data_type_id"]
+        type_oid = type_actual["type_oid"]
+        data_type_id = column["data_type_id"]
 
-    (result,) = session.execute(
-        text("SELECT pg_catalog.format_type(:type_oid, 0)"), {"type_oid": type_oid}
-    )
-    assert result[0] == "enum"
+        (result,) = conn.execute(
+            text("SELECT pg_catalog.format_type(:type_oid, 0)"), {"type_oid": type_oid}
+        )
 
-    assert type_oid == data_type_id
+        assert result[0] == "enum"
+
+        assert type_oid == data_type_id
 
 
 def test_enum_reflection(session: Session, engine: Engine) -> None:
@@ -406,11 +412,13 @@ def test_enum_reflection(session: Session, engine: Engine) -> None:
         "INSERT INTO tmp VALUES ('b');",
         "INSERT INTO tmp VALUES ('a');",
     ]
-    for s in sql:
-        session.execute(text(s))
+
+    with engine.connect() as conn:
+        for s in sql:
+            conn.execute(text(s))
 
     tmp = Table("tmp", MetaData())
-    inspect(engine).reflecttable(tmp, include_columns=[])
+    reflect_table(inspect(engine), tmp, include_columns=[])
 
 
 def test_fetch_df_chunks() -> None:
