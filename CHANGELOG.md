@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.5](https://github.com/Mause/duckdb_engine/compare/v0.11.4...v0.11.5) (2024-04-16)
+
+
+### Miscellaneous Chores
+
+* loosen packaging pin
+
 ## [0.11.4](https://github.com/Mause/duckdb_engine/compare/v0.11.3...v0.11.4) (2024-04-09)
 
 
