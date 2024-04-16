@@ -5,7 +5,7 @@
 
 ### Miscellaneous Chores
 
-* force release 0.11.5 ([4bf5640](https://github.com/Mause/duckdb_engine/commit/4bf5640dd98ac2e086cbe03d182f37eccd4bcd25))
+* loosen packaging pin
 
 ## [0.11.4](https://github.com/Mause/duckdb_engine/compare/v0.11.3...v0.11.4) (2024-04-09)
 
