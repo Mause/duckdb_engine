@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.12.0-rc0](https://github.com/Mause/duckdb_engine/compare/v0.11.5...v0.12.0-rc0) (2024-04-18)
+
+
+### Bug Fixes
+
+* allow connections to be properly closed ([0e57a64](https://github.com/Mause/duckdb_engine/commit/0e57a645f4dbdddde6ffc9a274ba104ea0070147))
+* **deps:** update dependency duckdb to v0.10.2 ([961cf9e](https://github.com/Mause/duckdb_engine/commit/961cf9ec07a67fb6a5cd597fe096b616150d7bc1))
+* **deps:** update dependency packaging to v24 ([c0b7754](https://github.com/Mause/duckdb_engine/commit/c0b7754ad1e6872e9ecc2b204228e3310bce64d0))
+
+
+### Miscellaneous Chores
+
+* release 0.12.0-rc0 ([dc71073](https://github.com/Mause/duckdb_engine/commit/dc7107338c6b212ca6cccc7bcec398c378bd1a15))
+
 ## [0.11.5](https://github.com/Mause/duckdb_engine/compare/v0.11.4...v0.11.5) (2024-04-16)
 
 
