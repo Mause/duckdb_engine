@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.0](https://github.com/Mause/duckdb_engine/compare/v0.12.0-rc0...v0.12.0) (2024-04-21)
+
+
+### Miscellaneous Chores
+
+* release 0.12.0 (same as rc0) ([7842f2c](https://github.com/Mause/duckdb_engine/commit/7842f2c0ad12ae9dadbbc8145ef910cb4c4d1fee))
+
 ## [0.12.0-rc0](https://github.com/Mause/duckdb_engine/compare/v0.11.5...v0.12.0-rc0) (2024-04-18)
 
 
