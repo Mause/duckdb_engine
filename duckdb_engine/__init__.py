@@ -703,6 +703,9 @@ def visit_create_column_with_serial_support(
     if "BIGSERIAL" in column_sql:
         serial_type = "BIGSERIAL"
         int_type = "BIGINT"
+    elif "SMALLSERIAL" in column_sql:
+        serial_type = "SMALLSERIAL"
+        int_type = "SMALLINT"
     else:
         serial_type = "SERIAL"
         int_type = "INTEGER"
