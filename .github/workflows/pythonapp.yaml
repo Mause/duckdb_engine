@@ -49,3 +49,11 @@ jobs:
           env_vars: PYTHON,BLEEDING_EDGE  # set from matrix
           fail_ci_if_error: true
           verbose: true
+
+  check-package:
+    name: Build & inspect our package.
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hynek/build-and-inspect-python-package@v2
