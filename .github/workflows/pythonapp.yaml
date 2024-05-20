@@ -54,6 +54,12 @@ jobs:
     name: Build & inspect our package.
     runs-on: ubuntu-latest
 
+    permissions:
+      attestations: write
+      id-token: write
+
     steps:
       - uses: actions/checkout@v4
       - uses: hynek/build-and-inspect-python-package@v2
+        with:
+          attest-build-provenance-github: true
