@@ -36,8 +36,8 @@ from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, relationship, sessionmaker
 
-from .. import Dialect, supports_attach, supports_user_agent
-from .._supports import has_comment_support
+from .. import Dialect
+from .._supports import has_comment_support, supports_attach, supports_user_agent
 
 try:
     # sqlalchemy 2
@@ -255,11 +255,17 @@ def test_get_views(conn: Connection, dialect: Dialect) -> None:
 @mark.skipif(os.uname().machine == "aarch64", reason="not supported on aarch64")
 @mark.remote_data
 def test_preload_extension() -> None:
-    duckdb.default_connection.execute("INSTALL httpfs")
     engine = create_engine(
         "duckdb:///",
         connect_args={
             "preload_extensions": ["httpfs"],
+            "preinstall_extensions": [
+                {
+                    "name": "httpfs",
+                    "registry": "nightly.duckdb.org",
+                    "version": "latest",
+                }
+            ],
             "config": {"s3_region": "ap-southeast-2", "s3_use_ssl": True},
         },
     )
