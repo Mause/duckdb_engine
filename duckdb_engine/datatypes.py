@@ -16,7 +16,7 @@ from sqlalchemy.engine import Dialect
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql import sqltypes, type_api
 from sqlalchemy.sql.type_api import TypeEngine
-from sqlalchemy.types import BigInteger, Integer, SmallInteger
+from sqlalchemy.types import BigInteger, Integer, SmallInteger, String
 
 # INTEGER	INT4, INT, SIGNED	-2147483648	2147483647
 # SMALLINT	INT2, SHORT	-32768	32767
@@ -181,6 +181,13 @@ ISCHEMA_NAMES = {
     "uhugeint": UHugeInteger,
     "tinyint": TinyInteger,
     "utinyint": UTinyInteger,
+    "int8": BigInteger,
+    "int4": Integer,
+    "int2": SmallInteger,
+    "timetz": sqltypes.TIME,
+    "timestamptz": sqltypes.TIMESTAMP,
+    "float4": sqltypes.FLOAT,
+    "float8": sqltypes.FLOAT,
     "usmallint": USmallInteger,
     "uinteger": UInteger,
     "ubigint": UBigInteger,
@@ -188,7 +195,8 @@ ISCHEMA_NAMES = {
     "timestamp_ms": sqltypes.TIMESTAMP,
     "timestamp_ns": sqltypes.TIMESTAMP,
     "enum": sqltypes.Enum,
-    "json": sqltypes.JSON,
+    "bool": sqltypes.BOOLEAN,
+    "varchar": String,
 }
 
 
