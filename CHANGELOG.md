@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.1](https://github.com/Mause/duckdb_engine/compare/v0.12.0...v0.12.1) (2024-05-24)
+
+
+### Bug Fixes
+
+* add new types names for 0.10.3 ([8e0ca8e](https://github.com/Mause/duckdb_engine/commit/8e0ca8ee2f6d8341ea8274b465259ac4b54d312c))
+
 ## [0.12.0](https://github.com/Mause/duckdb_engine/compare/v0.12.0-rc0...v0.12.0) (2024-04-21)
 
 
