@@ -6,14 +6,17 @@ from uuid import uuid4
 
 from packaging.version import Version
 from pytest import importorskip, mark
+from snapshottest.module import SnapshotTest
 from sqlalchemy import (
     Column,
     Integer,
+    Interval,
     MetaData,
     Sequence,
     String,
     Table,
     inspect,
+    schema,
     select,
     text,
 )
@@ -23,6 +26,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import sqltypes
 from sqlalchemy.types import JSON
+
+from duckdb_engine.datatypes import DuckDBInterval
 
 from .._supports import duckdb_version, has_uhugeint_support
 from ..datatypes import Map, Struct, types
@@ -206,3 +211,11 @@ def test_nested_types(engine: Engine, session: Session) -> None:
 
     assert result.struct == struct_data
     assert result.map == map_data
+
+
+def test_interval(engine: Engine, snapshot: SnapshotTest) -> None:
+    test_table = Table("test_table", MetaData(), Column("duration", Interval))
+
+    assert isinstance(engine.dialect.type_descriptor(Interval), DuckDBInterval)
+
+    snapshot.assert_match(str(schema.CreateTable(test_table).compile(engine)))

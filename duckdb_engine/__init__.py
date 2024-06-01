@@ -36,7 +36,7 @@ from sqlalchemy.sql.selectable import Select
 
 from ._supports import has_comment_support
 from .config import apply_config, get_core_config
-from .datatypes import ISCHEMA_NAMES, register_extension_types
+from .datatypes import ISCHEMA_NAMES, DuckDBInterval, register_extension_types
 
 __version__ = "0.12.1"
 sqlalchemy_version = sqlalchemy.__version__
@@ -236,6 +236,7 @@ class Dialect(PGDialect_psycopg2):
             sqltypes.Numeric: sqltypes.Numeric,
             sqltypes.Interval: sqltypes.Interval,
             sqltypes.JSON: sqltypes.JSON,
+            sqltypes.Interval: DuckDBInterval,
             UUID: UUID,
         },
     )
