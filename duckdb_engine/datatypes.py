@@ -267,8 +267,7 @@ class DuckDBIntervalUnderlying(TypeEngine):
 
 
 class DuckDBInterval(sqltypes.Interval):
-    # impl = sqltypes.Interval
-    impl = DuckDBIntervalUnderlying
+    impl = None
 
     def bind_processor(self, dialect: Dialect) -> "_BindProcessor[timedelta]":
         return lambda value: value

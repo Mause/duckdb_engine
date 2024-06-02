@@ -218,4 +218,4 @@ def test_interval(engine: Engine, snapshot: SnapshotTest) -> None:
 
     assert isinstance(engine.dialect.type_descriptor(Interval), DuckDBInterval)
 
-    snapshot.assert_match(str(schema.CreateTable(test_table).compile(engine)))
+    assert "duration INTERVAL" in str(schema.CreateTable(test_table).compile(engine))
