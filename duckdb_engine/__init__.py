@@ -36,7 +36,7 @@ from sqlalchemy.sql.selectable import Select
 
 from ._supports import has_comment_support
 from .config import apply_config, get_core_config
-from .datatypes import ISCHEMA_NAMES, DuckDBInterval, register_extension_types
+from .datatypes import ISCHEMA_NAMES, register_extension_types
 
 __version__ = "0.12.1"
 sqlalchemy_version = sqlalchemy.__version__
@@ -234,9 +234,7 @@ class Dialect(PGDialect_psycopg2):
             # the psycopg2 driver registers a _PGNumeric with custom logic for
             # postgres type_codes (such as 701 for float) that duckdb doesn't have
             sqltypes.Numeric: sqltypes.Numeric,
-            sqltypes.Interval: sqltypes.Interval,
             sqltypes.JSON: sqltypes.JSON,
-            sqltypes.Interval: DuckDBInterval,
             UUID: UUID,
         },
     )

@@ -27,8 +27,6 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import sqltypes
 from sqlalchemy.types import JSON
 
-from duckdb_engine.datatypes import DuckDBInterval
-
 from .._supports import duckdb_version, has_uhugeint_support
 from ..datatypes import Map, Struct, types
 
@@ -215,7 +213,5 @@ def test_nested_types(engine: Engine, session: Session) -> None:
 
 def test_interval(engine: Engine, snapshot: SnapshotTest) -> None:
     test_table = Table("test_table", MetaData(), Column("duration", Interval))
-
-    assert isinstance(engine.dialect.type_descriptor(Interval), DuckDBInterval)
 
     assert "duration INTERVAL" in str(schema.CreateTable(test_table).compile(engine))

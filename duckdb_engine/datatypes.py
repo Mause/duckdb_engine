@@ -8,8 +8,7 @@ select * from duckdb_types where type_category = 'NUMERIC';
 """
 
 import typing
-from datetime import timedelta
-from typing import TYPE_CHECKING, Any, Callable, Dict, Optional, Type
+from typing import Any, Callable, Dict, Optional, Type
 
 from sqlalchemy import exc
 from sqlalchemy.dialects.postgresql.base import PGIdentifierPreparer, PGTypeCompiler
@@ -18,9 +17,6 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql import sqltypes, type_api
 from sqlalchemy.sql.type_api import TypeEngine
 from sqlalchemy.types import BigInteger, Integer, SmallInteger, String
-
-if TYPE_CHECKING:
-    from sqlalchemy.sql.type_api import _BindProcessor, _ResultProcessor
 
 # INTEGER	INT4, INT, SIGNED	-2147483648	2147483647
 # SMALLINT	INT2, SHORT	-32768	32767
@@ -260,28 +256,3 @@ def visit_map(instance: Map, compiler: PGTypeCompiler, **kw: Any) -> str:
         process_type(instance.key_type, compiler),
         process_type(instance.value_type, compiler),
     )
-
-
-class DuckDBIntervalUnderlying(TypeEngine):
-    pass
-
-
-class DuckDBInterval(sqltypes.Interval):
-    impl = None
-
-    def bind_processor(self, dialect: Dialect) -> "_BindProcessor[timedelta]":
-        return lambda value: value
-
-    def result_processor(
-        self, dialect: Dialect, coltype: str
-    ) -> "_ResultProcessor[timedelta]":
-        return lambda value: value
-
-
-@compiles(sqltypes.Interval, "duckdb")  # type: ignore[misc]
-def visit_create_column(
-    instance: sqltypes.Interval,
-    compiler: PGTypeCompiler,
-    **kw: Any,
-) -> str:
-    return "INTERVAL"
