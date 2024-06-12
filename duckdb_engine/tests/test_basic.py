@@ -374,6 +374,12 @@ def test_fetch_df_chunks() -> None:
     duckdb.connect(":memory:").execute("select 1").fetch_df_chunk(1)
 
 
+def test_fetchmany(engine: Engine) -> None:
+    with engine.connect() as conn:
+        res = conn.execute(text("select 1"))
+        assert res.fetchmany(1) == [(1,)]
+
+
 def test_description() -> None:
     import duckdb
 
@@ -594,3 +600,9 @@ def test_361(engine: Engine) -> None:
 
         stmt = select(date_part).select_from(test).group_by(date_part)
         assert conn.execute(stmt).fetchall() == [(2022,)]
+
+
+def test_close(engine: Engine) -> None:
+    with engine.connect() as conn:
+        res = conn.execute(text("select 1"))
+        res.close()

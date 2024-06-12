@@ -6,14 +6,17 @@ from uuid import uuid4
 
 from packaging.version import Version
 from pytest import importorskip, mark
+from snapshottest.module import SnapshotTest
 from sqlalchemy import (
     Column,
     Integer,
+    Interval,
     MetaData,
     Sequence,
     String,
     Table,
     inspect,
+    schema,
     select,
     text,
 )
@@ -206,3 +209,9 @@ def test_nested_types(engine: Engine, session: Session) -> None:
 
     assert result.struct == struct_data
     assert result.map == map_data
+
+
+def test_interval(engine: Engine, snapshot: SnapshotTest) -> None:
+    test_table = Table("test_table", MetaData(), Column("duration", Interval))
+
+    assert "duration INTERVAL" in str(schema.CreateTable(test_table).compile(engine))

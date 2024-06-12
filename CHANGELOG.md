@@ -1,5 +1,42 @@
 # Changelog
 
+## [0.13.0](https://github.com/Mause/duckdb_engine/compare/v0.12.1...v0.13.0) (2024-06-02)
+
+
+### Features
+
+* first class interval support ([286abb5](https://github.com/Mause/duckdb_engine/commit/286abb585227455b4237147327cdfb5a8e90f938))
+
+
+### Bug Fixes
+
+* **deps:** update dependency duckdb to v0.10.3 ([7b5249a](https://github.com/Mause/duckdb_engine/commit/7b5249a8a22e748614ab24d91f0ed8124345591a))
+
+## [0.12.1](https://github.com/Mause/duckdb_engine/compare/v0.12.0...v0.12.1) (2024-05-24)
+
+
+### Bug Fixes
+
+* add new types names for 0.10.3 ([8e0ca8e](https://github.com/Mause/duckdb_engine/commit/8e0ca8ee2f6d8341ea8274b465259ac4b54d312c))
+
+## [0.12.0](https://github.com/Mause/duckdb_engine/compare/v0.12.0-rc0...v0.12.0) (2024-04-21)
+
+
+### Miscellaneous Chores
+
+* release 0.12.0 (same as rc0) ([7842f2c](https://github.com/Mause/duckdb_engine/commit/7842f2c0ad12ae9dadbbc8145ef910cb4c4d1fee))
+
+## [0.12.0-rc0](https://github.com/Mause/duckdb_engine/compare/v0.11.5...v0.12.0-rc0) (2024-04-18)
+
+
+### Bug Fixes
+
+* allow connections to be properly closed ([0e57a64](https://github.com/Mause/duckdb_engine/commit/0e57a645f4dbdddde6ffc9a274ba104ea0070147))
+
+### Miscellaneous Chores
+
+* release 0.12.0-rc0 ([dc71073](https://github.com/Mause/duckdb_engine/commit/dc7107338c6b212ca6cccc7bcec398c378bd1a15))
+
 ## [0.11.5](https://github.com/Mause/duckdb_engine/compare/v0.11.4...v0.11.5) (2024-04-16)
 
 

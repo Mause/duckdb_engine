@@ -11,7 +11,6 @@ from typing import (
     Set,
     Tuple,
     Type,
-    cast,
 )
 
 import duckdb
@@ -38,7 +37,7 @@ from ._supports import has_comment_support
 from .config import apply_config, get_core_config
 from .datatypes import ISCHEMA_NAMES, register_extension_types
 
-__version__ = "0.11.5"
+__version__ = "0.13.0"
 sqlalchemy_version = sqlalchemy.__version__
 duckdb_version: str = duckdb.__version__
 supports_attach: bool = duckdb_version >= "0.7.0"
@@ -87,49 +86,26 @@ class ConnectionWrapper:
         self.__c = c
         self.notices = list()
 
-    def cursor(self) -> "Connection":
-        return self
-
-    def fetchmany(self, size: Optional[int] = None) -> List:
-        if hasattr(self.__c, "fetchmany"):
-            # fetchmany was only added in 0.5.0
-            if size is None:
-                return self.__c.fetchmany()
-            else:
-                return self.__c.fetchmany(size)
-
-        try:
-            return cast(list, self.__c.fetch_df_chunk().values.tolist())
-        except RuntimeError as e:
-            if e.args[0].startswith(
-                "Invalid Input Error: Attempting to fetch from an unsuccessful or closed streaming query result"
-            ):
-                return []
-            else:
-                raise e
-
-    @property
-    def c(self) -> duckdb.DuckDBPyConnection:
-        warnings.warn(
-            "Directly accessing the internal connection object is deprecated (please go via the __getattr__ impl)",
-            DeprecationWarning,
-        )
-        return self.__c
+    def cursor(self) -> "CursorWrapper":
+        return CursorWrapper(self.__c, self)
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self.__c, name)
 
-    @property
-    def connection(self) -> "Connection":
-        return self
-
     def close(self) -> None:
-        # duckdb doesn't support 'soft closes'
-        pass
+        self.__c.close()
+        self.closed = True
 
-    @property
-    def rowcount(self) -> int:
-        return -1
+
+class CursorWrapper:
+    __c: duckdb.DuckDBPyConnection
+    __connection_wrapper: "ConnectionWrapper"
+
+    def __init__(
+        self, c: duckdb.DuckDBPyConnection, connection_wrapper: "ConnectionWrapper"
+    ) -> None:
+        self.__c = c
+        self.__connection_wrapper = connection_wrapper
 
     def executemany(
         self,
@@ -170,6 +146,22 @@ class ConnectionWrapper:
                 return
             else:
                 raise e
+
+    @property
+    def connection(self) -> "Connection":
+        return self.__connection_wrapper
+
+    def close(self) -> None:
+        pass  # closing cursors is not supported in duckdb
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self.__c, name)
+
+    def fetchmany(self, size: Optional[int] = None) -> List:
+        if size is None:
+            return self.__c.fetchmany()
+        else:
+            return self.__c.fetchmany(size)
 
 
 class DuckDBEngineWarning(Warning):
@@ -241,7 +233,6 @@ class Dialect(PGDialect_psycopg2):
             # the psycopg2 driver registers a _PGNumeric with custom logic for
             # postgres type_codes (such as 701 for float) that duckdb doesn't have
             sqltypes.Numeric: sqltypes.Numeric,
-            sqltypes.Interval: sqltypes.Interval,
             sqltypes.JSON: sqltypes.JSON,
             UUID: UUID,
         },
@@ -318,7 +309,7 @@ class Dialect(PGDialect_psycopg2):
                 raise e
 
     def do_begin(self, connection: "Connection") -> None:
-        connection.execute("begin")
+        connection.begin()
 
     def get_view_names(
         self,
