@@ -262,7 +262,7 @@ def test_preload_extension() -> None:
             "preinstall_extensions": [
                 {
                     "name": "httpfs",
-                    "registry": "nightly.duckdb.org",
+                    "registry": "http://nightly.duckdb.org",
                     "version": "latest",
                 }
             ],
