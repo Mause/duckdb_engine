@@ -16,9 +16,10 @@ from typing import (
 
 import duckdb
 import sqlalchemy
-from sqlalchemy import String, pool, text
+
+from sqlalchemy import String, pool, text, util
+
 from sqlalchemy import types as sqltypes
-from sqlalchemy import util
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.dialects.postgresql.base import (
     PGDialect,
@@ -45,7 +46,7 @@ from ._supports import (
 from .config import apply_config, get_core_config
 from .datatypes import ISCHEMA_NAMES, register_extension_types
 
-__version__ = "0.12.1"
+__version__ = "0.13.0"
 sqlalchemy_version = sqlalchemy.__version__
 duckdb_version: str = duckdb.__version__
 
@@ -245,7 +246,6 @@ class Dialect(PGDialect_psycopg2):
             # the psycopg2 driver registers a _PGNumeric with custom logic for
             # postgres type_codes (such as 701 for float) that duckdb doesn't have
             sqltypes.Numeric: sqltypes.Numeric,
-            sqltypes.Interval: sqltypes.Interval,
             sqltypes.JSON: sqltypes.JSON,
             UUID: UUID,
         },

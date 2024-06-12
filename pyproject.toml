@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "duckdb_engine"
-version = "0.12.1"
+version = "0.13.0"
 description = "SQLAlchemy driver for duckdb"
 authors = ["Elliana <me@mause.me>"]
 license = "MIT"
@@ -55,6 +55,13 @@ plugins = ['sqlalchemy.ext.mypy.plugin']
 
 [tool.isort]
 profile = "black"
+
+[tool.ruff]
+target-version = "py38"
+
+[tool.ruff.lint]
+select = ["E", "I"]
+ignore = ['E203', 'E501']
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
