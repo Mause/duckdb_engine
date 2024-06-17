@@ -254,18 +254,37 @@ def test_get_views(conn: Connection, dialect: Dialect) -> None:
 
 @mark.skipif(os.uname().machine == "aarch64", reason="not supported on aarch64")
 @mark.remote_data
+def test_preinstall_extension() -> None:
+    importorskip("duckdb", "1.0.0")
+    engine = create_engine(
+        "duckdb:///",
+        connect_args={
+            "preinstall_extensions": [
+                {
+                    "name": "delta",
+                    "registry": "nightly.duckdb.org",
+                    "version": "latest",
+                }
+            ],
+            "config": {"s3_region": "ap-southeast-2", "s3_use_ssl": True},
+        },
+    )
+
+    # check that we get an error indicating that the extension was loaded
+    with engine.connect() as conn:
+        conn.execute(
+            text("SELECT * FROM duckdb_extensions() where extension_name = 'delta'")
+        )
+
+
+@mark.skipif(os.uname().machine == "aarch64", reason="not supported on aarch64")
+@mark.remote_data
 def test_preload_extension() -> None:
+    duckdb.default_connection.execute("INSTALL httpfs")
     engine = create_engine(
         "duckdb:///",
         connect_args={
             "preload_extensions": ["httpfs"],
-            "preinstall_extensions": [
-                {
-                    "name": "httpfs",
-                    "registry": "http://nightly.duckdb.org",
-                    "version": "latest",
-                }
-            ],
             "config": {"s3_region": "ap-southeast-2", "s3_use_ssl": True},
         },
     )
