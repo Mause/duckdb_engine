@@ -288,9 +288,13 @@ class Dialect(PGDialect_psycopg2):
         else:
             return pool.QueuePool
 
-    @staticmethod
-    def dbapi(**kwargs: Any) -> Type[DBAPI]:
+    @classmethod
+    def dbapi(cls, **kwargs: Any) -> Type[DBAPI]:
         return DBAPI
+
+    @classmethod
+    def get_async_dialect_cls(cls, url: URL) -> Type["Dialect"]:
+        return AsyncDialect
 
     def _get_server_version_info(self, connection: "Connection") -> Tuple[int, int]:
         return (8, 0)
@@ -578,6 +582,17 @@ class Dialect(PGDialect_psycopg2):
         columns = self._get_columns_info(rows, domains, enums, schema)  # type: ignore[attr-defined]
 
         return columns.items()
+
+
+class AsyncDialect(Dialect):
+    is_async = True
+
+    @classmethod
+    def get_pool_class(cls, url: URL) -> Type[pool.Pool]:
+        if url.database == ":memory:":
+            return pool.FallbackAsyncAdaptedQueuePool
+        else:
+            return pool.AsyncAdaptedQueuePool
 
 
 if sqlalchemy.__version__ >= "2.0.14":
