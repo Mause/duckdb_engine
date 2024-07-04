@@ -262,7 +262,7 @@ def test_preinstall_extension() -> None:
             "preinstall_extensions": [
                 {
                     "name": "delta",
-                    "registry": "nightly.duckdb.org",
+                    "registry": "nightly-extensions.duckdb.org",
                     "version": "latest",
                 }
             ],
