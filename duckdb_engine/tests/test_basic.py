@@ -261,8 +261,8 @@ def test_preinstall_extension() -> None:
         connect_args={
             "preinstall_extensions": [
                 {
-                    "name": "delta",
-                    "registry": "nightly-extensions.duckdb.org",
+                    "name": "scrooge",
+                    "registry": "community",
                     "version": "latest",
                 }
             ],
