@@ -303,7 +303,7 @@ class Dialect(PGDialect_psycopg2):
 
         process = String().literal_processor(self)
         for ext in preinstall_extensions:
-            duckdb.execute(build(ext))
+            duckdb.execute(build(ext))  # type: ignore[call-arg]
 
     def on_connect(self) -> None:
         pass
