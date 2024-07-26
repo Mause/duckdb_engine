@@ -606,3 +606,28 @@ def test_close(engine: Engine) -> None:
     with engine.connect() as conn:
         res = conn.execute(text("select 1"))
         res.close()
+
+
+def test_with_cache(tmp_path: Path) -> None:
+    tmp_db_path = str(tmp_path / "db_cached")
+    engine1 = create_engine(f"duckdb:///{tmp_db_path}?threads=1")
+    engine2 = create_engine(f"duckdb:///{tmp_db_path}?threads=2")
+    with engine1.connect() as conn1:
+        with engine2.connect() as conn2:
+            res1 = conn1.execute(text("select value from duckdb_settings() where name = 'threads'")).fetchall()
+            res2 = conn2.execute(text("select value from duckdb_settings() where name = 'threads'")).fetchall()
+            assert res1 == res2
+            assert res1[0][0] == '1'
+
+
+def test_no_cache(tmp_path: Path) -> None:
+    tmp_db_path = str(tmp_path / "db_no_cache")
+    engine1 = create_engine(f"duckdb:///{tmp_db_path}?threads=1")
+    engine2 = create_engine(f"duckdb:///{tmp_db_path}?threads=2&no_cache=true")
+    with engine1.connect() as conn1:
+        with engine2.connect() as conn2:
+            res1 = conn1.execute(text("select value from duckdb_settings() where name = 'threads'")).fetchall()
+            res2 = conn2.execute(text("select value from duckdb_settings() where name = 'threads'")).fetchall()
+            assert res1 != res2
+            assert res1[0][0] == '1'
+            assert res2[0][0] == '2'

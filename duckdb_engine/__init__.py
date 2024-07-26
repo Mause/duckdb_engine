@@ -1,4 +1,6 @@
+import os
 import re
+import uuid
 import warnings
 from typing import (
     TYPE_CHECKING,
@@ -476,6 +478,8 @@ class Dialect(PGDialect_psycopg2):
     def create_connect_args(self, url: URL) -> Tuple[tuple, dict]:
         opts = url.translate_connect_args(database="database")
         opts["url_config"] = dict(url.query)
+        if opts["url_config"].pop("no_cache", False):
+            opts["database"] += f"?no_cache={uuid.uuid4()}"
         return (), opts
 
     @classmethod
