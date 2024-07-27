@@ -478,8 +478,9 @@ class Dialect(PGDialect_psycopg2):
     def create_connect_args(self, url: URL) -> Tuple[tuple, dict]:
         opts = url.translate_connect_args(database="database")
         opts["url_config"] = dict(url.query)
-        if opts["url_config"].pop("no_cache", False):
-            opts["database"] += f"?no_cache={uuid.uuid4()}"
+        user = opts["url_config"].pop("user", None)
+        if user is not None:
+            opts["database"] += f"?user={user}"
         return (), opts
 
     @classmethod
