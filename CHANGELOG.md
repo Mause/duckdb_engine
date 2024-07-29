@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.1](https://github.com/Mause/duckdb_engine/compare/v0.13.0...v0.13.1) (2024-07-29)
+
+
+### Bug Fixes
+
+* fix: Pass user config option via database name #1064
+
 ## [0.13.0](https://github.com/Mause/duckdb_engine/compare/v0.12.1...v0.13.0) (2024-06-02)
 
 
