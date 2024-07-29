@@ -1,4 +1,6 @@
+import os
 import re
+import uuid
 import warnings
 from typing import (
     TYPE_CHECKING,
@@ -476,6 +478,9 @@ class Dialect(PGDialect_psycopg2):
     def create_connect_args(self, url: URL) -> Tuple[tuple, dict]:
         opts = url.translate_connect_args(database="database")
         opts["url_config"] = dict(url.query)
+        user = opts["url_config"].pop("user", None)
+        if user is not None:
+            opts["database"] += f"?user={user}"
         return (), opts
 
     @classmethod
