@@ -16,12 +16,17 @@ from sqlalchemy.engine import Dialect
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql import sqltypes, type_api
 from sqlalchemy.sql.type_api import TypeEngine
+from packaging.version import Version
 from sqlalchemy.types import BigInteger, Integer, SmallInteger, String
 
 # INTEGER	INT4, INT, SIGNED	-2147483648	2147483647
 # SMALLINT	INT2, SHORT	-32768	32767
 # BIGINT	INT8, LONG	-9223372036854775808	9223372036854775807
 (BigInteger, SmallInteger)  # pure reexport
+
+from . import duckdb_version
+
+IS_GT_1 = Version(duckdb_version) > Version('1.0.0')
 
 
 class UInt64(Integer):
@@ -157,7 +162,10 @@ class Map(TypeEngine):
     def result_processor(
         self, dialect: Dialect, coltype: str
     ) -> Optional[Callable[[Optional[dict]], Optional[dict]]]:
-        return lambda value: dict(zip(value["key"], value["value"])) if value else {}
+        if IS_GT_1:
+            return lambda value: value
+        else:
+            return lambda value: dict(zip(value["key"], value["value"])) if value else {}
 
 
 class Union(TypeEngine):
