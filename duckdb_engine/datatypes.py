@@ -10,13 +10,13 @@ select * from duckdb_types where type_category = 'NUMERIC';
 import typing
 from typing import Any, Callable, Dict, Optional, Type
 
+from packaging.version import Version
 from sqlalchemy import exc
 from sqlalchemy.dialects.postgresql.base import PGIdentifierPreparer, PGTypeCompiler
 from sqlalchemy.engine import Dialect
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql import sqltypes, type_api
 from sqlalchemy.sql.type_api import TypeEngine
-from packaging.version import Version
 from sqlalchemy.types import BigInteger, Integer, SmallInteger, String
 
 # INTEGER	INT4, INT, SIGNED	-2147483648	2147483647
@@ -26,7 +26,7 @@ from sqlalchemy.types import BigInteger, Integer, SmallInteger, String
 
 from . import duckdb_version
 
-IS_GT_1 = Version(duckdb_version) > Version('1.0.0')
+IS_GT_1 = Version(duckdb_version) > Version("1.0.0")
 
 
 class UInt64(Integer):
@@ -165,7 +165,9 @@ class Map(TypeEngine):
         if IS_GT_1:
             return lambda value: value
         else:
-            return lambda value: dict(zip(value["key"], value["value"])) if value else {}
+            return (
+                lambda value: dict(zip(value["key"], value["value"])) if value else {}
+            )
 
 
 class Union(TypeEngine):
