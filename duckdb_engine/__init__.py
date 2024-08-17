@@ -320,13 +320,22 @@ class Dialect(PGDialect_psycopg2):
         include: Optional[Any] = None,
         **kw: Any,
     ) -> Any:
-        s = "SELECT table_name FROM information_schema.tables WHERE table_type='VIEW' and table_schema=:schema_name"
-        rs = connection.execute(
-            text(s), {"schema_name": schema if schema is not None else "main"}
-        )
-
-        return [row[0] for row in rs]
-
+        s = """
+            SELECT database_name, schema_name, view_name
+            FROM duckdb_views()
+            WHERE schema_name NOT LIKE 'pg\\_%' ESCAPE '\\'
+            """
+        sql, params = self._build_query_where(schema_name=schema)
+        s += sql
+        rs = connection.execute(text(s), params)
+        return [
+            view
+            for (
+                db,
+                sc,
+                view,
+            ) in rs
+        ]
     @cache  # type: ignore[call-arg]
     def get_schema_names(self, connection: "Connection", **kw: "Any"):  # type: ignore[no-untyped-def]
         """
