@@ -336,6 +336,7 @@ class Dialect(PGDialect_psycopg2):
                 view,
             ) in rs
         ]
+
     @cache  # type: ignore[call-arg]
     def get_schema_names(self, connection: "Connection", **kw: "Any"):  # type: ignore[no-untyped-def]
         """
