@@ -164,6 +164,7 @@ def test_simple_string(s: str) -> None:
 
 
 def test_get_tables(inspector: Inspector) -> None:
+    tables = inspector.get_table_names()
     for table_name in inspector.get_table_names():
         assert inspector.has_table(table_name)
     assert inspector.get_view_names() == []
@@ -234,7 +235,7 @@ def test_get_table_names(inspector: Inspector, session: Session) -> None:
 
 
 def test_get_views(conn: Connection, dialect: Dialect) -> None:
-    views = dialect.get_view_names(conn)
+    views = dialect.get_view_names(conn, schema="scheme")
     assert views == []
 
     conn.execute(text("create view test as select 1"))
