@@ -321,18 +321,30 @@ class Dialect(PGDialect_psycopg2):
         **kw: Any,
     ) -> Any:
         s = """
-            SELECT database_name, schema_name, view_name
-            FROM duckdb_views()
-            WHERE schema_name NOT LIKE 'pg\\_%' ESCAPE '\\'
+            SELECT table_name 
+            FROM information_schema.tables
+            WHERE 
+                table_type='VIEW'
+                AND table_schema = :schema_name                
             """
-        sql, params = self._build_query_where(schema_name=schema)
-        s += sql
+        params = {}
+        database_name = None
+        
+        if schema is not None:
+            database_name, schema = self.identifier_preparer._separate(schema)
+        else:
+            schema = "main"
+            
+        params.update({"schema_name": schema})
+        
+        if database_name is not None:
+            s += "AND table_catalog = :database_name\n"
+            params.update({"database_name": database_name})
+        
         rs = connection.execute(text(s), params)
         return [
             view
             for (
-                db,
-                sc,
                 view,
             ) in rs
         ]

@@ -164,7 +164,6 @@ def test_simple_string(s: str) -> None:
 
 
 def test_get_tables(inspector: Inspector) -> None:
-    tables = inspector.get_table_names()
     for table_name in inspector.get_table_names():
         assert inspector.has_table(table_name)
     assert inspector.get_view_names() == []
@@ -235,7 +234,7 @@ def test_get_table_names(inspector: Inspector, session: Session) -> None:
 
 
 def test_get_views(conn: Connection, dialect: Dialect) -> None:
-    views = dialect.get_view_names(conn, schema="scheme")
+    views = dialect.get_view_names(conn)
     assert views == []
 
     conn.execute(text("create view test as select 1"))
@@ -248,11 +247,14 @@ def test_get_views(conn: Connection, dialect: Dialect) -> None:
 
     views = dialect.get_view_names(conn, schema="scheme")
     assert views == ["schema_test"]
+    
+    views = dialect.get_view_names(conn, schema="memory.scheme")
+    assert views == ["schema_test"]
 
     assert dialect.has_table(conn, table_name="test")
     assert dialect.has_table(conn, table_name="schema_test", schema="scheme")
-
-
+    
+    
 @mark.skipif(os.uname().machine == "aarch64", reason="not supported on aarch64")
 @mark.remote_data
 def test_preload_extension() -> None:
