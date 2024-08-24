@@ -321,33 +321,28 @@ class Dialect(PGDialect_psycopg2):
         **kw: Any,
     ) -> Any:
         s = """
-            SELECT table_name 
+            SELECT table_name
             FROM information_schema.tables
-            WHERE 
+            WHERE
                 table_type='VIEW'
-                AND table_schema = :schema_name                
+                AND table_schema = :schema_name
             """
         params = {}
         database_name = None
-        
+
         if schema is not None:
             database_name, schema = self.identifier_preparer._separate(schema)
         else:
             schema = "main"
-            
+
         params.update({"schema_name": schema})
-        
+
         if database_name is not None:
             s += "AND table_catalog = :database_name\n"
             params.update({"database_name": database_name})
-        
+
         rs = connection.execute(text(s), params)
-        return [
-            view
-            for (
-                view,
-            ) in rs
-        ]
+        return [view for (view,) in rs]
 
     @cache  # type: ignore[call-arg]
     def get_schema_names(self, connection: "Connection", **kw: "Any"):  # type: ignore[no-untyped-def]
