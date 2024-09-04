@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: npx release-please debug-config --repo-url https://github.com/Mause/duckdb_engine
-      - uses: google-github-actions/release-please-action@v4
+      - uses: googleapis/release-please-action@v4
         with:
           release-type: python
           token: ${{ secrets.ACCESS_TOKEN }}
