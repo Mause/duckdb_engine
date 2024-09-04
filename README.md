@@ -74,7 +74,7 @@ You can configure DuckDB by passing `connect_args` to the create_engine function
 create_engine(
     'duckdb:///:memory:',
     connect_args={
-        'read_only': True,
+        'read_only': False,
         'config': {
             'memory_limit': '500mb'
         }
