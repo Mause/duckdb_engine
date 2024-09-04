@@ -248,6 +248,9 @@ def test_get_views(conn: Connection, dialect: Dialect) -> None:
     views = dialect.get_view_names(conn, schema="scheme")
     assert views == ["schema_test"]
 
+    views = dialect.get_view_names(conn, schema="memory.scheme")
+    assert views == ["schema_test"]
+
     assert dialect.has_table(conn, table_name="test")
     assert dialect.has_table(conn, table_name="schema_test", schema="scheme")
 
