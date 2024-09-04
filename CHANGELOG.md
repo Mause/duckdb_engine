@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.13.2](https://github.com/Mause/duckdb_engine/compare/v0.13.1...v0.13.2) (2024-09-04)
+
+
+### Bug Fixes
+
+* **get_view_names:** Use proper schema ([#1082](https://github.com/Mause/duckdb_engine/issues/1082)) ([d5319c8](https://github.com/Mause/duckdb_engine/commit/d5319c80d3883425734062640ebd8562cf8525fb))
+
+
+### Documentation
+
+* use `read_only=False` so that example doesn't raise an exception. ([#1079](https://github.com/Mause/duckdb_engine/issues/1079)) ([d0688b4](https://github.com/Mause/duckdb_engine/commit/d0688b4b3e740fb357b6862ebe1ac698506f6488))
+
 ## [0.13.1](https://github.com/Mause/duckdb_engine/compare/v0.13.0...v0.13.1) (2024-07-29)
 
 
