@@ -24,12 +24,12 @@ repos:
           - "types-setuptools==57.4.17"
           - "nox"
   - repo: https://github.com/tox-dev/tox-ini-fmt
-    rev: "1.3.1"
+    rev: "1.4.1"
     hooks:
       - id: tox-ini-fmt
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
-    rev: 'v0.6.3'
+    rev: 'v0.6.8'
     hooks:
       - id: ruff
         args:
