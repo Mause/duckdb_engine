@@ -1,12 +1,17 @@
+from pyarrow import RecordBatch, RecordBatchReader
+from pyarrow import Table as ArrowTable
 from sqlalchemy import MetaData, Table, create_engine, text
-from pyarrow import Table as ArrowTable, RecordBatch, RecordBatchReader
 
 
 def test_fetch_arrow() -> None:
     engine = create_engine(f"duckdb:///:memory:")
     with engine.begin() as con:
         con.execute(text("CREATE TABLE tbl (label VARCHAR, value DOUBLE)"))
-        con.execute(text("INSERT INTO tbl VALUES ('xx',-1.0), ('ww',-4.5), ('zz',6.0), ('yy',2.5)"))
+        con.execute(
+            text(
+                "INSERT INTO tbl VALUES ('xx',-1.0), ('ww',-4.5), ('zz',6.0), ('yy',2.5)"
+            )
+        )
 
     md = MetaData()
     t = Table("tbl", md, autoload_with=engine)
