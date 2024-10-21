@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.13.3](https://github.com/Mause/duckdb_engine/compare/v0.13.2...v0.13.3) (2024-10-21)
+
+
+### Bug Fixes
+
+* add varint type ([220c18f](https://github.com/Mause/duckdb_engine/commit/220c18f310d113bbfffa9c82379eca6c7cf7f95b))
+* restrict varint to supported versions ([ccdbc06](https://github.com/Mause/duckdb_engine/commit/ccdbc06c7fd07eba02e91cecdefe54b4ea6ea44b))
+* update Map type for 1.0+ ([7574837](https://github.com/Mause/duckdb_engine/commit/757483786a1eba7a606de90c665dcd86dd00dcec))
+
 ## [0.13.2](https://github.com/Mause/duckdb_engine/compare/v0.13.1...v0.13.2) (2024-09-04)
 
 
