@@ -614,7 +614,7 @@ def test_close(engine: Engine) -> None:
 def test_with_cache(tmp_path: Path) -> None:
     tmp_db_path = str(tmp_path / "db_cached")
     engine1 = create_engine(f"duckdb:///{tmp_db_path}?threads=1")
-    engine2 = create_engine(f"duckdb:///{tmp_db_path}?threads=2")
+    engine2 = create_engine(f"duckdb:///{tmp_db_path}")
     with engine1.connect() as conn1:
         with engine2.connect() as conn2:
             res1 = conn1.execute(
