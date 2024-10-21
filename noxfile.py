@@ -1,7 +1,6 @@
 from contextlib import contextmanager
 from typing import Generator
 
-import github_action_utils as gha
 import nox
 
 nox.options.default_venv_backend = "uv"
@@ -10,15 +9,7 @@ nox.options.error_on_external_run = True
 
 @contextmanager
 def group(title: str) -> Generator[None, None, None]:
-    try:
-        gha.start_group(title)
-        yield
-    except Exception as e:
-        gha.end_group()
-        gha.error(f"{title} failed with {e}")
-        raise
-    else:
-        gha.end_group()
+    yield
 
 
 # TODO: "0.5.1", "0.6.1", "0.7.1", "0.8.1"
