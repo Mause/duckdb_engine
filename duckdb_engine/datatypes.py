@@ -82,6 +82,10 @@ class UInteger(Integer):
     pass
 
 
+class VarInt(Integer):
+    pass
+
+
 def compile_uint(element: Integer, compiler: PGTypeCompiler, **kw: Any) -> str:
     return getattr(element, "name", type(element).__name__)
 
@@ -199,6 +203,7 @@ ISCHEMA_NAMES = {
     "enum": sqltypes.Enum,
     "bool": sqltypes.BOOLEAN,
     "varchar": String,
+    "varint": VarInt,
 }
 
 
