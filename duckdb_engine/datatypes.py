@@ -88,8 +88,10 @@ class UInteger(Integer):
     pass
 
 
-class VarInt(Integer):
-    pass
+if IS_GT_1:
+
+    class VarInt(Integer):
+        pass
 
 
 def compile_uint(element: Integer, compiler: PGTypeCompiler, **kw: Any) -> str:
@@ -214,8 +216,9 @@ ISCHEMA_NAMES = {
     "enum": sqltypes.Enum,
     "bool": sqltypes.BOOLEAN,
     "varchar": String,
-    "varint": VarInt,
 }
+if IS_GT_1:
+    ISCHEMA_NAMES["varint"] = VarInt
 
 
 def register_extension_types() -> None:
