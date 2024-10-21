@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.4](https://github.com/Mause/duckdb_engine/compare/v0.13.3...v0.13.4) (2024-10-21)
+
+
+### Bug Fixes
+
+* **deps:** update dependency duckdb to v1.1.2 ([d363897](https://github.com/Mause/duckdb_engine/commit/d363897bc63bb7814f48e454d2afc3c633073205))
+
 ## [0.13.3](https://github.com/Mause/duckdb_engine/compare/v0.13.2...v0.13.3) (2024-10-21)
 
 

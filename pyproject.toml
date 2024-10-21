@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "duckdb_engine"
-version = "0.13.3"
+version = "0.13.4"
 description = "SQLAlchemy driver for duckdb"
 authors = ["Elliana <me@mause.me>"]
 license = "MIT"
