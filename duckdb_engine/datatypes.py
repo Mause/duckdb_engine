@@ -10,6 +10,8 @@ select * from duckdb_types where type_category = 'NUMERIC';
 import typing
 from typing import Any, Callable, Dict, Optional, Type
 
+import duckdb
+from packaging.version import Version
 from sqlalchemy import exc
 from sqlalchemy.dialects.postgresql.base import PGIdentifierPreparer, PGTypeCompiler
 from sqlalchemy.engine import Dialect
@@ -22,6 +24,10 @@ from sqlalchemy.types import BigInteger, Integer, SmallInteger, String
 # SMALLINT	INT2, SHORT	-32768	32767
 # BIGINT	INT8, LONG	-9223372036854775808	9223372036854775807
 (BigInteger, SmallInteger)  # pure reexport
+
+duckdb_version = duckdb.__version__
+
+IS_GT_1 = Version(duckdb_version) > Version("1.0.0")
 
 
 class UInt64(Integer):
@@ -80,6 +86,12 @@ class UHugeInteger(Integer):
 class UInteger(Integer):
     # UINTEGER	-	0	4294967295
     pass
+
+
+if IS_GT_1:
+
+    class VarInt(Integer):
+        pass
 
 
 def compile_uint(element: Integer, compiler: PGTypeCompiler, **kw: Any) -> str:
@@ -153,7 +165,12 @@ class Map(TypeEngine):
     def result_processor(
         self, dialect: Dialect, coltype: str
     ) -> Optional[Callable[[Optional[dict]], Optional[dict]]]:
-        return lambda value: dict(zip(value["key"], value["value"])) if value else {}
+        if IS_GT_1:
+            return lambda value: value
+        else:
+            return (
+                lambda value: dict(zip(value["key"], value["value"])) if value else {}
+            )
 
 
 class Union(TypeEngine):
@@ -200,6 +217,8 @@ ISCHEMA_NAMES = {
     "bool": sqltypes.BOOLEAN,
     "varchar": String,
 }
+if IS_GT_1:
+    ISCHEMA_NAMES["varint"] = VarInt
 
 
 def register_extension_types() -> None:

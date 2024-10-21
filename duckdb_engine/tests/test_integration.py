@@ -31,7 +31,7 @@ duckdb_version = duckdb.__version__
     "dev" in duckdb_version, reason="md extension not available for dev builds"
 )
 @mark.skipif(
-    duckdb_version != "0.9.2", reason="md extension not available for this version"
+    duckdb_version != "1.1.1", reason="md extension not available for this version"
 )
 def test_motherduck() -> None:
     engine = create_engine(
