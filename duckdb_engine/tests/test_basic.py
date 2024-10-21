@@ -36,8 +36,8 @@ from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, relationship, sessionmaker
 
-from .. import Dialect, supports_attach, supports_user_agent
-from .._supports import has_comment_support
+from .. import Dialect
+from .._supports import has_comment_support, supports_attach, supports_user_agent
 
 try:
     # sqlalchemy 2
@@ -253,6 +253,31 @@ def test_get_views(conn: Connection, dialect: Dialect) -> None:
 
     assert dialect.has_table(conn, table_name="test")
     assert dialect.has_table(conn, table_name="schema_test", schema="scheme")
+
+
+@mark.skipif(os.uname().machine == "aarch64", reason="not supported on aarch64")
+@mark.remote_data
+def test_preinstall_extension() -> None:
+    importorskip("duckdb", "1.0.0")
+    engine = create_engine(
+        "duckdb:///",
+        connect_args={
+            "preinstall_extensions": [
+                {
+                    "name": "scrooge",
+                    "registry": "community",
+                    "version": "latest",
+                }
+            ],
+            "config": {"s3_region": "ap-southeast-2", "s3_use_ssl": True},
+        },
+    )
+
+    # check that we get an error indicating that the extension was loaded
+    with engine.connect() as conn:
+        conn.execute(
+            text("SELECT * FROM duckdb_extensions() where extension_name = 'delta'")
+        )
 
 
 @mark.skipif(os.uname().machine == "aarch64", reason="not supported on aarch64")
