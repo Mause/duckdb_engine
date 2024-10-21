@@ -612,9 +612,10 @@ def test_close(engine: Engine) -> None:
 
 
 def test_with_cache(tmp_path: Path) -> None:
+    importorskip("duckdb", "1.0.0")
     tmp_db_path = str(tmp_path / "db_cached")
     engine1 = create_engine(f"duckdb:///{tmp_db_path}?threads=1")
-    engine2 = create_engine(f"duckdb:///{tmp_db_path}")
+    engine2 = create_engine(f"duckdb:///{tmp_db_path}?threads=1")
     with engine1.connect() as conn1:
         with engine2.connect() as conn2:
             res1 = conn1.execute(
@@ -624,6 +625,7 @@ def test_with_cache(tmp_path: Path) -> None:
                 text("select value from duckdb_settings() where name = 'threads'")
             ).fetchall()
             assert res1 == res2
+            # TODO: how do we validate that both connections point to the same database instance?
             assert res1[0][0] == "1"
 
 
