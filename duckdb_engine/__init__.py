@@ -46,7 +46,6 @@ supports_attach: bool = duckdb_version >= "0.7.0"
 supports_user_agent: bool = duckdb_version >= "0.9.2"
 
 if TYPE_CHECKING:
-    from pyarrow import RecordBatchReader, Table
     from sqlalchemy.base import Connection
     from sqlalchemy.engine.interfaces import _IndexDict
     from sqlalchemy.sql.type_api import _ResultProcessor
