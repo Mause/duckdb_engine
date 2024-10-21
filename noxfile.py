@@ -38,7 +38,8 @@ def nightly(session: nox.Session) -> None:
 def tests_core(session: nox.Session, duckdb: str, sqlalchemy: str) -> None:
     with group(f"{session.name} - Install"):
         poetry(session)
-        session.install(f"sqlalchemy~={sqlalchemy}")
+        operator = "==" if sqlalchemy.count(".") == 2 else f"~="
+        session.install(f"sqlalchemy{operator}{sqlalchemy}")
         if duckdb == "master":
             session.install("duckdb", "--pre", "-U")
         else:
