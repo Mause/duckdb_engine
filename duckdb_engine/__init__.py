@@ -17,7 +17,7 @@ from typing import (
 
 import duckdb
 import sqlalchemy
-from sqlalchemy import pool, text, util
+from sqlalchemy import pool, text, util, select, sql
 from sqlalchemy import types as sqltypes
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.dialects.postgresql.base import (
@@ -25,6 +25,7 @@ from sqlalchemy.dialects.postgresql.base import (
     PGIdentifierPreparer,
     PGInspector,
     PGTypeCompiler,
+    pg_catalog,
 )
 from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
 from sqlalchemy.engine.default import DefaultDialect
@@ -34,6 +35,7 @@ from sqlalchemy.engine.url import URL
 from sqlalchemy.exc import NoSuchTableError
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql.selectable import Select
+from sqlalchemy.sql import bindparam
 
 from ._supports import has_comment_support
 from .config import apply_config, get_core_config
@@ -600,6 +602,31 @@ class Dialect(PGDialect_psycopg2):
         columns = self._get_columns_info(rows, domains, enums, schema)  # type: ignore[attr-defined]
 
         return columns.items()
+
+    def _comment_query(self, schema, has_filter_names, scope, kind):
+        relkinds = self._kind_to_relkinds(kind)
+        query = (
+            select(
+                pg_catalog.pg_class.c.relname,
+                pg_catalog.pg_description.c.description,
+            )
+            .select_from(pg_catalog.pg_class)
+            .outerjoin(
+                pg_catalog.pg_description,
+                sql.and_(
+                    pg_catalog.pg_class.c.oid
+                    == pg_catalog.pg_description.c.objoid,
+                    pg_catalog.pg_description.c.objsubid == 0,
+                ),
+            )
+            .where(self._pg_class_relkind_condition(relkinds))
+        )
+        query = self._pg_class_filter_scope_schema(query, schema, scope)
+        if has_filter_names:
+            query = query.where(
+                pg_catalog.pg_class.c.relname.in_(bindparam("filter_names"))
+            )
+        return query
 
 
 if sqlalchemy.__version__ >= "2.0.14":
