@@ -17,7 +17,7 @@ from typing import (
 
 import duckdb
 import sqlalchemy
-from sqlalchemy import pool, text, util, select, sql
+from sqlalchemy import pool, select, sql, text, util
 from sqlalchemy import types as sqltypes
 from sqlalchemy.dialects.postgresql import UUID, pg_catalog
 from sqlalchemy.dialects.postgresql.base import (
@@ -33,8 +33,8 @@ from sqlalchemy.engine.reflection import cache
 from sqlalchemy.engine.url import URL
 from sqlalchemy.exc import NoSuchTableError
 from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.sql.selectable import Select
 from sqlalchemy.sql import bindparam
+from sqlalchemy.sql.selectable import Select
 
 from ._supports import has_comment_support
 from .config import apply_config, get_core_config
@@ -615,8 +615,7 @@ class Dialect(PGDialect_psycopg2):
             .outerjoin(
                 pg_catalog.pg_description,
                 sql.and_(
-                    pg_catalog.pg_class.c.oid
-                    == pg_catalog.pg_description.c.objoid,
+                    pg_catalog.pg_class.c.oid == pg_catalog.pg_description.c.objoid,
                     pg_catalog.pg_description.c.objsubid == 0,
                 ),
             )
