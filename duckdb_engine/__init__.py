@@ -19,13 +19,12 @@ import duckdb
 import sqlalchemy
 from sqlalchemy import pool, text, util, select, sql
 from sqlalchemy import types as sqltypes
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, pg_catalog
 from sqlalchemy.dialects.postgresql.base import (
     PGDialect,
     PGIdentifierPreparer,
     PGInspector,
     PGTypeCompiler,
-    pg_catalog,
 )
 from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
 from sqlalchemy.engine.default import DefaultDialect
@@ -603,6 +602,8 @@ class Dialect(PGDialect_psycopg2):
 
         return columns.items()
 
+    # fix for https://github.com/Mause/duckdb_engine/issues/1128
+    # (Overrides sqlalchemy method)
     def _comment_query(self, schema, has_filter_names, scope, kind):
         relkinds = self._kind_to_relkinds(kind)
         query = (
