@@ -19,7 +19,10 @@ import duckdb
 import sqlalchemy
 from sqlalchemy import pool, select, sql, text, util
 from sqlalchemy import types as sqltypes
-from sqlalchemy.dialects.postgresql import UUID, pg_catalog
+from sqlalchemy.dialects.postgresql import (  # type: ignore[attr-defined]
+    UUID,
+    pg_catalog,
+)
 from sqlalchemy.dialects.postgresql.base import (
     PGDialect,
     PGIdentifierPreparer,
@@ -604,29 +607,36 @@ class Dialect(PGDialect_psycopg2):
 
     # fix for https://github.com/Mause/duckdb_engine/issues/1128
     # (Overrides sqlalchemy method)
-    def _comment_query(self, schema, has_filter_names, scope, kind):
-        relkinds = self._kind_to_relkinds(kind)
-        query = (
-            select(
-                pg_catalog.pg_class.c.relname,
-                pg_catalog.pg_description.c.description,
+    def _comment_query(  # type: ignore[no-untyped-def]
+        self, schema: str, has_filter_names: bool, scope: Any, kind: Any
+    ):
+        if (
+            hasattr(super(), "_kind_to_relkinds")
+            and hasattr(super(), "_pg_class_filter_scope_schema")
+            and hasattr(super(), "_pg_class_relkind_condition")
+        ):
+            relkinds = getattr(super(), "_kind_to_relkinds")(kind)
+            query = (
+                select(
+                    pg_catalog.pg_class.c.relname,
+                    pg_catalog.pg_description.c.description,
+                )
+                .select_from(pg_catalog.pg_class)
+                .outerjoin(
+                    pg_catalog.pg_description,
+                    sql.and_(
+                        pg_catalog.pg_class.c.oid == pg_catalog.pg_description.c.objoid,
+                        pg_catalog.pg_description.c.objsubid == 0,
+                    ),
+                )
+                .where(self._pg_class_relkind_condition(relkinds))  # type: ignore[attr-defined]
             )
-            .select_from(pg_catalog.pg_class)
-            .outerjoin(
-                pg_catalog.pg_description,
-                sql.and_(
-                    pg_catalog.pg_class.c.oid == pg_catalog.pg_description.c.objoid,
-                    pg_catalog.pg_description.c.objsubid == 0,
-                ),
-            )
-            .where(self._pg_class_relkind_condition(relkinds))
-        )
-        query = self._pg_class_filter_scope_schema(query, schema, scope)
-        if has_filter_names:
-            query = query.where(
-                pg_catalog.pg_class.c.relname.in_(bindparam("filter_names"))
-            )
-        return query
+            query = self._pg_class_filter_scope_schema(query, schema, scope)
+            if has_filter_names:
+                query = query.where(
+                    pg_catalog.pg_class.c.relname.in_(bindparam("filter_names"))
+                )
+            return query
 
 
 if sqlalchemy.__version__ >= "2.0.14":

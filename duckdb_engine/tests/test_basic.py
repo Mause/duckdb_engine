@@ -650,7 +650,6 @@ def test_reflection(engine: Engine) -> None:
     metadata = MetaData()
     with engine.connect() as conn:
         conn.execute(text("CREATE TABLE tbl(col1 INTEGER)"))
-        conn.commit()
     try:
         metadata.reflect(engine)
     except Exception as e:
