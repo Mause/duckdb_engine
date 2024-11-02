@@ -2,6 +2,7 @@ import os
 import re
 import uuid
 import warnings
+from functools import lru_cache
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -607,6 +608,7 @@ class Dialect(PGDialect_psycopg2):
 
     # fix for https://github.com/Mause/duckdb_engine/issues/1128
     # (Overrides sqlalchemy method)
+    @lru_cache()
     def _comment_query(  # type: ignore[no-untyped-def]
         self, schema: str, has_filter_names: bool, scope: Any, kind: Any
     ):
@@ -629,7 +631,7 @@ class Dialect(PGDialect_psycopg2):
                         pg_catalog.pg_description.c.objsubid == 0,
                     ),
                 )
-                .where(self._pg_class_relkind_condition(relkinds))  # type: ignore[attr-defined]
+                .where(getattr(super(), "_pg_class_relkind_condition")(relkinds))
             )
             query = self._pg_class_filter_scope_schema(query, schema, scope)
             if has_filter_names:
