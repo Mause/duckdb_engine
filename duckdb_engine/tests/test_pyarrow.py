@@ -4,7 +4,7 @@ from sqlalchemy import MetaData, Table, create_engine, text
 
 
 def test_fetch_arrow() -> None:
-    engine = create_engine(f"duckdb:///:memory:")
+    engine = create_engine("duckdb:///:memory:")
     with engine.begin() as con:
         con.execute(text("CREATE TABLE tbl (label VARCHAR, value DOUBLE)"))
         con.execute(
