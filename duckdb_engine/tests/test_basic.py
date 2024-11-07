@@ -644,3 +644,10 @@ def test_no_cache(tmp_path: Path) -> None:
             assert res1 != res2
             assert res1[0][0] == "1"
             assert res2[0][0] == "2"
+
+
+def test_reflection(engine: Engine) -> None:
+    metadata = MetaData()
+    with engine.connect() as conn:
+        conn.execute(text("CREATE TABLE tbl(col1 INTEGER)"))
+    metadata.reflect(engine)

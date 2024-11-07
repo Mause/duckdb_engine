@@ -1,5 +1,6 @@
 import re
 import warnings
+from functools import lru_cache
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -15,7 +16,7 @@ from typing import (
 
 import duckdb
 import sqlalchemy
-from sqlalchemy import pool, text, util
+from sqlalchemy import pool, select, sql, text, util
 from sqlalchemy import types as sqltypes
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.dialects.postgresql.base import (
@@ -31,6 +32,7 @@ from sqlalchemy.engine.reflection import cache
 from sqlalchemy.engine.url import URL
 from sqlalchemy.exc import NoSuchTableError
 from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.sql import bindparam
 from sqlalchemy.sql.selectable import Select
 
 from ._supports import has_comment_support
@@ -598,6 +600,51 @@ class Dialect(PGDialect_psycopg2):
         columns = self._get_columns_info(rows, domains, enums, schema)  # type: ignore[attr-defined]
 
         return columns.items()
+
+    # fix for https://github.com/Mause/duckdb_engine/issues/1128
+    # (Overrides sqlalchemy method)
+    @lru_cache()
+    def _comment_query(  # type: ignore[no-untyped-def]
+        self, schema: str, has_filter_names: bool, scope: Any, kind: Any
+    ):
+        if sqlalchemy.__version__ >= "2.0.36":
+            from sqlalchemy.dialects.postgresql import (  # type: ignore[attr-defined]
+                pg_catalog,
+            )
+
+            if (
+                hasattr(super(), "_kind_to_relkinds")
+                and hasattr(super(), "_pg_class_filter_scope_schema")
+                and hasattr(super(), "_pg_class_relkind_condition")
+            ):
+                relkinds = getattr(super(), "_kind_to_relkinds")(kind)
+                query = (
+                    select(
+                        pg_catalog.pg_class.c.relname,
+                        pg_catalog.pg_description.c.description,
+                    )
+                    .select_from(pg_catalog.pg_class)
+                    .outerjoin(
+                        pg_catalog.pg_description,
+                        sql.and_(
+                            pg_catalog.pg_class.c.oid
+                            == pg_catalog.pg_description.c.objoid,
+                            pg_catalog.pg_description.c.objsubid == 0,
+                        ),
+                    )
+                    .where(getattr(super(), "_pg_class_relkind_condition")(relkinds))
+                )
+                query = self._pg_class_filter_scope_schema(query, schema, scope)
+                if has_filter_names:
+                    query = query.where(
+                        pg_catalog.pg_class.c.relname.in_(bindparam("filter_names"))
+                    )
+                return query
+        else:
+            if hasattr(super(), "_comment_query"):
+                return getattr(super(), "_comment_query")(
+                    schema, has_filter_names, scope, kind
+                )
 
 
 if sqlalchemy.__version__ >= "2.0.14":
