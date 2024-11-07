@@ -53,9 +53,6 @@ warn_redundant_casts = true
 warn_unused_ignores = true
 plugins = ['sqlalchemy.ext.mypy.plugin']
 
-[tool.isort]
-profile = "black"
-
 [tool.ruff]
 target-version = "py38"
 
