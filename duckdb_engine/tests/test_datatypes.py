@@ -211,6 +211,29 @@ def test_nested_types(engine: Engine, session: Session) -> None:
     assert result.map == map_data
 
 
+def test_double_nested_types(engine: Engine, session: Session) -> None:
+    """Test for https://github.com/Mause/duckdb_engine/issues/1138"""
+    importorskip("duckdb", "0.5.0")  # nested types require at least duckdb 0.5.0
+    base = declarative_base()
+
+    class Entry(base):
+        __tablename__ = "test_struct"
+
+        id = Column(Integer, primary_key=True, default=0)
+        outer = Column(Struct({"inner": Struct({"val": Integer})}))
+
+    base.metadata.create_all(bind=engine)
+
+    outer = {"inner": {"val": 42}}
+
+    session.add(Entry(outer=outer))  # type: ignore[call-arg]
+    session.commit()
+
+    result = session.query(Entry).one()
+
+    assert result.outer == outer
+
+
 def test_interval(engine: Engine, snapshot: SnapshotTest) -> None:
     test_table = Table("test_table", MetaData(), Column("duration", Interval))
 

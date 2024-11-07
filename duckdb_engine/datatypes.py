@@ -233,7 +233,7 @@ def visit_struct(
     identifier_preparer: PGIdentifierPreparer,
     **kw: Any,
 ) -> str:
-    return "STRUCT" + struct_or_union(instance, compiler, identifier_preparer)
+    return "STRUCT" + struct_or_union(instance, compiler, identifier_preparer, **kw)
 
 
 @compiles(Union, "duckdb")  # type: ignore[misc]
@@ -243,13 +243,14 @@ def visit_union(
     identifier_preparer: PGIdentifierPreparer,
     **kw: Any,
 ) -> str:
-    return "UNION" + struct_or_union(instance, compiler, identifier_preparer)
+    return "UNION" + struct_or_union(instance, compiler, identifier_preparer, **kw)
 
 
 def struct_or_union(
     instance: typing.Union[Union, Struct],
     compiler: PGTypeCompiler,
     identifier_preparer: PGIdentifierPreparer,
+    **kw: Any,
 ) -> str:
     fields = instance.fields
     if fields is None:
@@ -257,7 +258,10 @@ def struct_or_union(
     return "({})".format(
         ", ".join(
             "{} {}".format(
-                identifier_preparer.quote_identifier(key), process_type(value, compiler)
+                identifier_preparer.quote_identifier(key),
+                process_type(
+                    value, compiler, identifier_preparer=identifier_preparer, **kw
+                ),
             )
             for key, value in fields.items()
         )
@@ -267,13 +271,14 @@ def struct_or_union(
 def process_type(
     value: typing.Union[TypeEngine, Type[TypeEngine]],
     compiler: PGTypeCompiler,
+    **kw: Any,
 ) -> str:
-    return compiler.process(type_api.to_instance(value))
+    return compiler.process(type_api.to_instance(value), **kw)
 
 
 @compiles(Map, "duckdb")  # type: ignore[misc]
 def visit_map(instance: Map, compiler: PGTypeCompiler, **kw: Any) -> str:
     return "MAP({}, {})".format(
-        process_type(instance.key_type, compiler),
-        process_type(instance.value_type, compiler),
+        process_type(instance.key_type, compiler, **kw),
+        process_type(instance.value_type, compiler, **kw),
     )
