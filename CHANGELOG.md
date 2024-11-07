@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.13.5](https://github.com/Mause/duckdb_engine/compare/v0.13.4...v0.13.5) (2024-11-07)
+
+
+### Bug Fixes
+
+* **deps:** update dependency duckdb to v1.1.3 ([3152ddb](https://github.com/Mause/duckdb_engine/commit/3152ddbf02c16cfb4bcdc1f56174be0473dc5bbd))
+* **nightly:** fix default connection references for nightly ([c0848d2](https://github.com/Mause/duckdb_engine/commit/c0848d270a08981a2bdcae8bddd1ecafafd9b6ca))
+* **reflection bug:** Fixed bug causing TypeError when using metadata.reflect() ([b96c1d2](https://github.com/Mause/duckdb_engine/commit/b96c1d2eccf362f12b67adde6203d49214ee47f3))
+* **sqlalchemy versions:** Added statement to apply changes only for sqlalchemy version 2.0.36 and above ([d6fcd32](https://github.com/Mause/duckdb_engine/commit/d6fcd32461f69d348a55401cc3b8d5c737eb54ab))
+
 ## [0.13.4](https://github.com/Mause/duckdb_engine/compare/v0.13.3...v0.13.4) (2024-10-22)
 
 
