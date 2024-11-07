@@ -20,9 +20,7 @@ import duckdb
 import sqlalchemy
 from sqlalchemy import pool, select, sql, text, util
 from sqlalchemy import types as sqltypes
-from sqlalchemy.dialects.postgresql import (  # type: ignore[attr-defined]
-    UUID,
-)
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.dialects.postgresql.base import (
     PGDialect,
     PGIdentifierPreparer,
@@ -612,7 +610,10 @@ class Dialect(PGDialect_psycopg2):
         self, schema: str, has_filter_names: bool, scope: Any, kind: Any
     ):
         if sqlalchemy.__version__ >= "2.0.36":
-            from sqlalchemy.dialects.postgresql import pg_catalog  # type: ignore[attr-defined]
+            from sqlalchemy.dialects.postgresql import (  # type: ignore[attr-defined]
+                pg_catalog,
+            )
+
             if (
                 hasattr(super(), "_kind_to_relkinds")
                 and hasattr(super(), "_pg_class_filter_scope_schema")
@@ -628,7 +629,8 @@ class Dialect(PGDialect_psycopg2):
                     .outerjoin(
                         pg_catalog.pg_description,
                         sql.and_(
-                            pg_catalog.pg_class.c.oid == pg_catalog.pg_description.c.objoid,
+                            pg_catalog.pg_class.c.oid
+                            == pg_catalog.pg_description.c.objoid,
                             pg_catalog.pg_description.c.objsubid == 0,
                         ),
                     )
@@ -642,7 +644,9 @@ class Dialect(PGDialect_psycopg2):
                 return query
         else:
             if hasattr(super(), "_comment_query"):
-                return getattr(super(), "_comment_query")(schema, has_filter_names, scope, kind)
+                return getattr(super(), "_comment_query")(
+                    schema, has_filter_names, scope, kind
+                )
 
 
 if sqlalchemy.__version__ >= "2.0.14":
