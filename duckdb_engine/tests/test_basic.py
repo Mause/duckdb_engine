@@ -258,7 +258,7 @@ def test_get_views(conn: Connection, dialect: Dialect) -> None:
 @mark.skipif(os.uname().machine == "aarch64", reason="not supported on aarch64")
 @mark.remote_data
 def test_preload_extension() -> None:
-    duckdb.default_connection.execute("INSTALL httpfs")
+    duckdb.connect().execute("INSTALL httpfs")
     engine = create_engine(
         "duckdb:///",
         connect_args={
@@ -443,7 +443,7 @@ def test_comment_support(engine: Engine) -> None:
 def test_rowcount() -> None:
     import duckdb
 
-    assert duckdb.default_connection.rowcount == -1
+    assert duckdb.connect().rowcount == -1
 
 
 def test_sessions(session: Session) -> None:

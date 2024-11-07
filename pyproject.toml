@@ -53,14 +53,11 @@ warn_redundant_casts = true
 warn_unused_ignores = true
 plugins = ['sqlalchemy.ext.mypy.plugin']
 
-[tool.isort]
-profile = "black"
-
 [tool.ruff]
 target-version = "py38"
 
 [tool.ruff.lint]
-select = ["E", "I"]
+select = ["E", "F", "I"]
 ignore = ['E203', 'E501']
 
 [build-system]
