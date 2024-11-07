@@ -11,11 +11,12 @@ from typing import (
     Set,
     Tuple,
     Type,
+    TypedDict,
 )
 
 import duckdb
 import sqlalchemy
-from sqlalchemy import pool, text, util
+from sqlalchemy import String, pool, text, util
 from sqlalchemy import types as sqltypes
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.dialects.postgresql.base import (
@@ -33,15 +34,19 @@ from sqlalchemy.exc import NoSuchTableError
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql.selectable import Select
 
-from ._supports import has_comment_support
+from ._supports import (
+    has_comment_support,
+    has_extension_registry_support,
+    has_extension_version_support,
+    supports_attach,
+    supports_user_agent,
+)
 from .config import apply_config, get_core_config
 from .datatypes import ISCHEMA_NAMES, register_extension_types
 
 __version__ = "0.13.4"
 sqlalchemy_version = sqlalchemy.__version__
 duckdb_version: str = duckdb.__version__
-supports_attach: bool = duckdb_version >= "0.7.0"
-supports_user_agent: bool = duckdb_version >= "0.9.2"
 
 if TYPE_CHECKING:
     from sqlalchemy.base import Connection
@@ -217,6 +222,12 @@ class DuckDBNullType(sqltypes.NullType):
             return super().result_processor(dialect, coltype)
 
 
+class ExtensionConfig(TypedDict):
+    name: str
+    registry: Optional[str]
+    version: Optional[str]
+
+
 class Dialect(PGDialect_psycopg2):
     name = "duckdb"
     driver = "duckdb_engine"
@@ -259,8 +270,11 @@ class Dialect(PGDialect_psycopg2):
     def connect(self, *cargs: Any, **cparams: Any) -> "Connection":
         core_keys = get_core_config()
         preload_extensions = cparams.pop("preload_extensions", [])
+        preinstall_extensions = cparams.pop("preinstall_extensions", [])
         config = cparams.setdefault("config", {})
         config.update(cparams.pop("url_config", {}))
+
+        self._install_extensions(preinstall_extensions)
 
         ext = {k: config.pop(k) for k in list(config) if k not in core_keys}
         if supports_user_agent:
@@ -277,6 +291,19 @@ class Dialect(PGDialect_psycopg2):
         apply_config(self, conn, ext)
 
         return ConnectionWrapper(conn)
+
+    def _install_extensions(self, preinstall_extensions: List[ExtensionConfig]) -> None:
+        def build(ext: ExtensionConfig) -> str:
+            parts = [f'INSTALL {process(ext["name"])}']
+            if has_extension_registry_support:
+                parts.append(f'FROM {process(ext["registry"])}')
+            if has_extension_version_support():
+                parts.append(f'VERSION {process(ext["version"])}')
+            return " ".join(parts)
+
+        process = String().literal_processor(self)
+        for ext in preinstall_extensions:
+            duckdb.execute(build(ext))  # type: ignore[call-arg]
 
     def on_connect(self) -> None:
         pass
