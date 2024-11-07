@@ -1,6 +1,4 @@
-import os
 import re
-import uuid
 import warnings
 from typing import (
     TYPE_CHECKING,

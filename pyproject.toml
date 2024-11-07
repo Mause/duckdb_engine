@@ -57,7 +57,7 @@ plugins = ['sqlalchemy.ext.mypy.plugin']
 target-version = "py38"
 
 [tool.ruff.lint]
-select = ["E", "I"]
+select = ["E", "F", "I"]
 ignore = ['E203', 'E501']
 
 [build-system]
