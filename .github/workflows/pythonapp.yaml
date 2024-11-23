@@ -39,7 +39,7 @@ jobs:
           junit_files: results.xml
           comment_mode: off
           check_name:  "Test Results - ${{ join(matrix.*, ', ') }}"
-      - uses: codecov/codecov-action@v5.0.0
+      - uses: codecov/codecov-action@v5.0.7
         env:
           PYTHON: ${{matrix.python}}
           BLEEDING_EDGE: ${{matrix.bleeding_edge}}
