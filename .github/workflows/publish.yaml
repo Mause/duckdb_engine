@@ -1,4 +1,4 @@
-name: Publish python package
+name: Publish Python 🐍 distribution 📦 to PyPI and TestPyPI
 on:
   workflow_dispatch:
   release:
@@ -6,7 +6,9 @@ on:
 
 jobs:
   build:
+    name: Build distribution 📦
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -35,7 +37,7 @@ jobs:
     needs: build
     environment:
       name: pypi
-      url: https://pypi.org/p/duckdb_engine/
+      url: https://pypi.org/p/duckdb_engine
     permissions:
       id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
     steps:
@@ -44,9 +46,7 @@ jobs:
       with:
         name: python-package-distributions
         path: dist/
-    - run: ls
-    - run: ls *
-    - name: Publish package distributions to PyPI
+    - name: Publish distribution 📦 to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
 
   publish-to-testpypi:
