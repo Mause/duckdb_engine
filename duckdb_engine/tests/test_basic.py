@@ -539,9 +539,8 @@ def test_user_agent() -> None:
     reason="custom_user_agent is not supported for DuckDB version < 0.9.2",
 )
 def test_user_agent_with_custom_user_agent() -> None:
-    eng = create_engine(
-        "duckdb:///:memory:", connect_args={"config": {"custom_user_agent": "custom"}}
-    )
+    connect_args = {"config": {"custom_user_agent": "custom"}}
+    eng = create_engine("duckdb:///:memory:", connect_args=connect_args)
 
     with eng.connect() as conn:
         res = conn.execute(text("PRAGMA USER_AGENT"))
@@ -550,6 +549,9 @@ def test_user_agent_with_custom_user_agent() -> None:
         assert re.match(
             r"duckdb/.*(.*) python duckdb_engine/.*(sqlalchemy/.*) custom", row[0]
         )
+
+    # Check that connect hasn't mutated the caller's data.
+    assert connect_args["config"]["custom_user_agent"] == "custom"
 
 
 def test_do_ping(tmp_path: Path, caplog: LogCaptureFixture) -> None:
