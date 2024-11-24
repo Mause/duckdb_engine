@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.13.6](https://github.com/Mause/duckdb_engine/compare/v0.13.5...v0.13.6) (2024-11-24)
+
+
+### Bug Fixes
+
+* avoid mutating caller's connect args (don't accumulate user_agents) ([8f39aca](https://github.com/Mause/duckdb_engine/commit/8f39aca57a3f64ac02dc2766a48f74ec37201203))
+* **deps:** update dependency packaging to v24.2 ([f5daa5a](https://github.com/Mause/duckdb_engine/commit/f5daa5a0599bfb7e00702bf29cae2fcc8f8f3aa8))
+
 ## [0.13.5](https://github.com/Mause/duckdb_engine/compare/v0.13.4...v0.13.5) (2024-11-07)
 
 
