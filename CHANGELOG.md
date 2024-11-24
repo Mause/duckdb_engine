@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.7-pre0](https://github.com/Mause/duckdb_engine/compare/v0.13.6...v0.13.7-pre0) (2024-11-24)
+
+
+### Miscellaneous Chores
+
+* release 0.13.7-pre0 ([b31083b](https://github.com/Mause/duckdb_engine/commit/b31083b094065f874e58fe7709a83a7f492f982b))
+
 ## [0.13.6](https://github.com/Mause/duckdb_engine/compare/v0.13.5...v0.13.6) (2024-11-24)
 
 
