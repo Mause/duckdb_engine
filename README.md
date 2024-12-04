@@ -107,22 +107,22 @@ When defining an Integer column as a primary key, `SQLAlchemy` uses the `SERIAL`
 The following example demonstrates how to create an auto-incrementing ID column for a simple table:
 
 ```python
->>> import sqlalchemy
->>> engine = sqlalchemy.create_engine('duckdb:////path/to/duck.db')
->>> metadata = sqlalchemy.MetaData(engine)
->>> user_id_seq = sqlalchemy.Sequence('user_id_seq')
->>> users_table = sqlalchemy.Table(
-...     'users',
-...     metadata,
-...     sqlalchemy.Column(
-...         'id',
-...         sqlalchemy.Integer,
-...         user_id_seq,
-...         server_default=user_id_seq.next_value(),
-...         primary_key=True,
-...     ),
-... )
->>> metadata.create_all(bind=engine)
+import sqlalchemy
+engine = sqlalchemy.create_engine('duckdb:////path/to/duck.db')
+metadata = sqlalchemy.MetaData()
+user_id_seq = sqlalchemy.Sequence('user_id_seq')
+users_table = sqlalchemy.Table(
+     'users',
+     metadata,
+     sqlalchemy.Column(
+         'id',
+         sqlalchemy.Integer,
+         user_id_seq,
+         server_default=user_id_seq.next_value(),
+         primary_key=True,
+     ),
+ )
+metadata.create_all(bind=engine)
 ```
 
 ### Pandas `read_sql()` chunksize
