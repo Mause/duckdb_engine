@@ -121,8 +121,17 @@ users_table = sqlalchemy.Table(
          server_default=user_id_seq.next_value(),
          primary_key=True,
      ),
+     sqlalchemy.Column(
+        'name',
+        sqlalchemy.String(30)
+     )
  )
 metadata.create_all(bind=engine)
+with engine.begin() as conn:
+   conn.execute(sqlalchemy.text("insert into users(name) values(:name)"), [{"name":"Sam"},{"name":"Dave"}])
+with engine.connect() as conn:
+   for row in conn.execute(sqlalchemy.text("select * from users")):
+      print(row)
 ```
 
 ### Pandas `read_sql()` chunksize
