@@ -36,7 +36,7 @@ from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, relationship, sessionmaker
 
-from .. import Dialect, supports_attach, supports_user_agent
+from .. import Dialect, insert, supports_attach, supports_user_agent
 from .._supports import has_comment_support
 
 try:
@@ -653,3 +653,29 @@ def test_reflection(engine: Engine) -> None:
     with engine.connect() as conn:
         conn.execute(text("CREATE TABLE tbl(col1 INTEGER)"))
     metadata.reflect(engine)
+
+
+def test_upsert(session: Session) -> None:
+    class User(Base):
+        __tablename__ = "users"
+
+        id = Column(Integer(), Sequence("id_seq"), primary_key=True)
+        name = Column(String, unique=True)
+        fullname = Column(String)
+
+    Base.metadata.create_all(session.bind)
+    stmt = insert(User).values(
+        [
+            {"name": "spongebob", "fullname": "Spongebob Squarepants"},
+            {"name": "sandy", "fullname": "Sandy Cheeks"},
+            {"name": "patrick", "fullname": "Patrick Star"},
+            {"name": "squidward", "fullname": "Squidward Tentacles"},
+            {"name": "ehkrabs", "fullname": "Eugene H. Krabs"},
+        ]
+    )
+    stmt = stmt.on_conflict_do_update(
+        index_elements=[User.name], set_=dict(fullname=stmt.excluded.fullname)
+    )
+    session.execute(stmt)
+
+    assert session.query(User).count() == 5

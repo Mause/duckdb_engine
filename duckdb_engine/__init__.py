@@ -18,7 +18,7 @@ import duckdb
 import sqlalchemy
 from sqlalchemy import pool, select, sql, text, util
 from sqlalchemy import types as sqltypes
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, insert
 from sqlalchemy.dialects.postgresql.base import (
     PGDialect,
     PGIdentifierPreparer,
@@ -51,6 +51,16 @@ if TYPE_CHECKING:
     from sqlalchemy.sql.type_api import _ResultProcessor
 
 register_extension_types()
+
+
+__all__ = [
+    "Dialect",
+    "ConnectionWrapper",
+    "CursorWrapper",
+    "DBAPI",
+    "DuckDBEngineWarning",
+    "insert",  # reexport of sqlalchemy.dialects.postgresql.insert
+]
 
 
 class DBAPI:
