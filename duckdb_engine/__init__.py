@@ -53,6 +53,15 @@ if TYPE_CHECKING:
 register_extension_types()
 
 
+__all__ = [
+    "Dialect",
+    "ConnectionWrapper",
+    "CursorWrapper",
+    "DBAPI",
+    "DuckDBEngineWarning",
+]
+
+
 class DBAPI:
     paramstyle = "numeric_dollar" if sqlalchemy_version >= "2.0.0" else "qmark"
     apilevel = duckdb.apilevel
