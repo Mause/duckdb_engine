@@ -18,7 +18,7 @@ import duckdb
 import sqlalchemy
 from sqlalchemy import pool, select, sql, text, util
 from sqlalchemy import types as sqltypes
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, insert
 from sqlalchemy.dialects.postgresql.base import (
     PGDialect,
     PGIdentifierPreparer,
@@ -59,6 +59,7 @@ __all__ = [
     "CursorWrapper",
     "DBAPI",
     "DuckDBEngineWarning",
+    "insert",  # reexport of sqlalchemy.dialects.postgresql.insert
 ]
 
 
