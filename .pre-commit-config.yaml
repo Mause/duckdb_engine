@@ -40,5 +40,8 @@ repos:
       rev: "1.19.1"
       hooks:
       -   id: blacken-docs
+          args:
+           - --line-length
+           - '80'
           additional_dependencies:
           - black==22.12.0

@@ -118,9 +118,9 @@ class Struct(TypeEngine):
     from sqlalchemy import Table, Column, String, MetaData
 
     Table(
-        'hello',
+        "hello",
         MetaData(),
-        Column('name', Struct({'first': String, 'last': String}))
+        Column("name", Struct({"first": String, "last": String})),
     )
     ```
 
@@ -141,11 +141,7 @@ class Map(TypeEngine):
     from duckdb_engine.datatypes import Map
     from sqlalchemy import Table, Column, String, MetaData
 
-    Table(
-        'hello',
-        MetaData(),
-        Column('name', Map(String, String))
-    )
+    Table("hello", MetaData(), Column("name", Map(String, String)))
     ```
     """
 
@@ -184,9 +180,9 @@ class Union(TypeEngine):
     from sqlalchemy import Table, Column, String, MetaData
 
     Table(
-        'hello',
+        "hello",
         MetaData(),
-        Column('name', Union({"name": String, "age": String}))
+        Column("name", Union({"name": String, "age": String})),
     )
     ```
     """
