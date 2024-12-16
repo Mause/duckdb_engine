@@ -36,7 +36,13 @@ DuckDB Engine also has a conda feedstock available, the instructions for the use
 Once you've installed this package, you should be able to just use it, as SQLAlchemy does a python path search
 
 ```python
-from sqlalchemy import Column, Integer, Sequence, String, create_engine
+from sqlalchemy import (
+    Column,
+    Integer,
+    Sequence,
+    String,
+    create_engine,
+)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm.session import Session
 
@@ -46,7 +52,11 @@ Base = declarative_base()
 class FakeModel(Base):  # type: ignore
     __tablename__ = "fake"
 
-    id = Column(Integer, Sequence("fakemodel_id_sequence"), primary_key=True)
+    id = Column(
+        Integer,
+        Sequence("fakemodel_id_sequence"),
+        primary_key=True,
+    )
     name = Column(String)
 
 
@@ -74,13 +84,11 @@ You can configure DuckDB by passing `connect_args` to the create_engine function
 from sqlalchemy.engine import create_engine
 
 create_engine(
-    'duckdb:///:memory:',
+    "duckdb:///:memory:",
     connect_args={
-        'read_only': False,
-        'config': {
-            'memory_limit': '500mb'
-        }
-    }
+        "read_only": False,
+        "config": {"memory_limit": "500mb"},
+    },
 )
 ```
 
@@ -89,21 +97,23 @@ The supported configuration parameters are listed in the [DuckDB docs](https://d
 ## How to register a pandas DataFrame
 
 ```python
-breakpoint()
 import pandas as pd
 from sqlalchemy import text, __version__ as sqla_version
 from sqlalchemy.engine import create_engine
 
 conn = create_engine("duckdb:///:memory:").connect()
 
-df = pd.DataFrame([{'id': 0}])
+df = pd.DataFrame([{"id": 0}])
 
-if sqla_version.startswith('1.3.'):
+if sqla_version.startswith("1.3."):
     # with SQLAlchemy 1.3
     conn.execute("register", ("dataframe_name", df))
 else:
     # with SQLAlchemy 1.4+
-    conn.execute(text("register(:name, :df)"), {"name": "dataframe_name", "df": df})
+    conn.execute(
+        text("register(:name, :df)"),
+        {"name": "dataframe_name", "df": df},
+    )
 
 conn.execute(text("select * from dataframe_name"))
 ```
@@ -118,19 +128,20 @@ The following example demonstrates how to create an auto-incrementing ID column 
 
 ```python
 import sqlalchemy
-engine = sqlalchemy.create_engine('duckdb:////path/to/duck.db')
-metadata = sqlalchemy.MetaData()
-user_id_seq = sqlalchemy.Sequence('user_id_seq')
+
+engine = sqlalchemy.create_engine("duckdb:///:memory:")
+metadata = sqlalchemy.MetaData(engine)
+user_id_seq = sqlalchemy.Sequence("user_id_seq")
 users_table = sqlalchemy.Table(
-     'users',
-     metadata,
-     sqlalchemy.Column(
-         'id',
-         sqlalchemy.Integer,
-         user_id_seq,
-         server_default=user_id_seq.next_value(),
-         primary_key=True,
-     ),
+    "users",
+    metadata,
+    sqlalchemy.Column(
+        "id",
+        sqlalchemy.Integer,
+        user_id_seq,
+        server_default=user_id_seq.next_value(),
+        primary_key=True,
+    ),
 )
 metadata.create_all(bind=engine)
 ```
@@ -144,9 +155,10 @@ The `pandas.read_sql()` method can read tables from `duckdb_engine` into DataFra
 ```python notest
 import pandas as pd
 import sqlalchemy
-engine = sqlalchemy.create_engine('duckdb:////path/to/duck.db')
-df = pd.read_sql('users', engine)                ### Works as expected
-df = pd.read_sql('users', engine, chunksize=25)  ### Throws an exception
+
+engine = sqlalchemy.create_engine("duckdb:////path/to/duck.db")
+df = pd.read_sql("users", engine)  ### Works as expected
+df = pd.read_sql("users", engine, chunksize=25)  ### Throws an exception
 ```
 
 ### Unsigned integer support
@@ -161,6 +173,7 @@ This support can be enabling by adding an Alembic implementation class for the `
 
 ```python notest
 from alembic.ddl.impl import DefaultImpl
+
 
 class AlembicDuckDBImpl(DefaultImpl):
     """Alembic implementation for DuckDB."""
@@ -180,13 +193,11 @@ Until the DuckDB python client allows you to natively preload extensions, I've a
 from sqlalchemy import create_engine
 
 create_engine(
-    'duckdb:///:memory:',
+    "duckdb:///:memory:",
     connect_args={
-        'preload_extensions': ['https'],
-        'config': {
-            's3_region': 'ap-southeast-1'
-        }
-    }
+        "preload_extensions": ["https"],
+        "config": {"s3_region": "ap-southeast-1"},
+    },
 )
 ```
 
