@@ -71,6 +71,8 @@ Alex Monahan's great demo of this on [his blog](https://alex-monahan.github.io/2
 
 You can configure DuckDB by passing `connect_args` to the create_engine function
 ```python
+from sqlalchemy.engine import create_engine
+
 create_engine(
     'duckdb:///:memory:',
     connect_args={
@@ -87,10 +89,16 @@ The supported configuration parameters are listed in the [DuckDB docs](https://d
 ## How to register a pandas DataFrame
 
 ```python
+import pandas as pd
+from sqlalchemy import text
+from sqlalchemy.engine import create_engine
+
 conn = create_engine("duckdb:///:memory:").connect()
 
+df = pd.DataFrame([{'id': 0}])
+
 # with SQLAlchemy 1.3
-conn.execute("register", ("dataframe_name", pd.DataFrame(...)))
+conn.execute("register", ("dataframe_name", df))
 
 # with SQLAlchemy 1.4+
 conn.execute(text("register(:name, :df)"), {"name": "test_df", "df": df})
@@ -121,7 +129,7 @@ users_table = sqlalchemy.Table(
          server_default=user_id_seq.next_value(),
          primary_key=True,
      ),
- )
+)
 metadata.create_all(bind=engine)
 ```
 
@@ -131,12 +139,12 @@ metadata.create_all(bind=engine)
 
 The `pandas.read_sql()` method can read tables from `duckdb_engine` into DataFrames, but the `sqlalchemy.engine.result.ResultProxy` trips up when `fetchmany()` is called. Therefore, for now `chunksize=None` (default) is necessary when reading duckdb tables into DataFrames. For example:
 
-```python
->>> import pandas as pd
->>> import sqlalchemy
->>> engine = sqlalchemy.create_engine('duckdb:////path/to/duck.db')
->>> df = pd.read_sql('users', engine)                ### Works as expected
->>> df = pd.read_sql('users', engine, chunksize=25)  ### Throws an exception
+```python notest
+import pandas as pd
+import sqlalchemy
+engine = sqlalchemy.create_engine('duckdb:////path/to/duck.db')
+df = pd.read_sql('users', engine)                ### Works as expected
+df = pd.read_sql('users', engine, chunksize=25)  ### Throws an exception
 ```
 
 ### Unsigned integer support
@@ -149,7 +157,7 @@ SQLAlchemy's companion library `alembic` can optionally be used to manage databa
 
 This support can be enabling by adding an Alembic implementation class for the `duckdb` dialect.
 
-```python
+```python notest
 from alembic.ddl.impl import DefaultImpl
 
 class AlembicDuckDBImpl(DefaultImpl):
