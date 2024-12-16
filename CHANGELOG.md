@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.14.0](https://github.com/Mause/duckdb_engine/compare/v0.13.7-pre0...v0.14.0) (2024-12-16)
+
+
+### Features
+
+* reexport postgresql insert function ([51dbb18](https://github.com/Mause/duckdb_engine/commit/51dbb186cff25c340c8395ef660cd6485923ec04))
+
+
+### Miscellaneous Chores
+
+* release 0.14.0 ([b07a965](https://github.com/Mause/duckdb_engine/commit/b07a9650f698001fa5a845d193402fddddefceb3))
+
 ## [0.13.7-pre0](https://github.com/Mause/duckdb_engine/compare/v0.13.6...v0.13.7-pre0) (2024-11-24)
 
 
