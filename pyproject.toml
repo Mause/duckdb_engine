@@ -30,6 +30,7 @@ pytest-cov = {extras = ["coverage"], version = "^5.0.0"}
 snapshottest = "^0.6.0"
 pytest-remotedata = "^0.4.0"
 toml = "^0.10.2"
+pytest-markdown-docs = "^0.7.1"
 
 [tool.poetry.group.devtools.dependencies]
 pdbpp = "^0.10.3"
@@ -39,7 +40,7 @@ pre-commit = { version = "^4.0.0", markers = "python_version >= '3.9'" }
 duckdb = "duckdb_engine:Dialect"
 
 [tool.pytest.ini_options]
-addopts = "--hypothesis-show-statistics --strict --strict-markers"
+addopts = "--hypothesis-show-statistics --strict --strict-markers --markdown-docs"
 xfail_strict = true
 
 [tool.mypy]
