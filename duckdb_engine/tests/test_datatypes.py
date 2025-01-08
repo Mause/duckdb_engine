@@ -25,7 +25,7 @@ from sqlalchemy.engine import Engine, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import sqltypes
-from sqlalchemy.types import JSON
+from sqlalchemy.types import FLOAT, JSON
 
 from .._supports import duckdb_version, has_uhugeint_support
 from ..datatypes import Map, Struct, types
@@ -238,3 +238,13 @@ def test_interval(engine: Engine, snapshot: SnapshotTest) -> None:
     test_table = Table("test_table", MetaData(), Column("duration", Interval))
 
     assert "duration INTERVAL" in str(schema.CreateTable(test_table).compile(engine))
+
+
+def test_div_is_floordiv(engine: Engine) -> None:
+    test_table = Table(
+        "test_table", MetaData(), Column("value", FLOAT), Column("eur2usd_rate", FLOAT)
+    )
+
+    stmt = test_table.c.value / test_table.c.eur2usd_rate
+
+    assert str(stmt.compile(engine)) == "test_table.value / test_table.eur2usd_rate"
