@@ -188,6 +188,18 @@ def index_warning() -> None:
 
 
 class DuckDBIdentifierPreparer(PGIdentifierPreparer):
+    def __init__(self, dialect: "Dialect", **kwargs: Any) -> None:
+        super().__init__(dialect, **kwargs)
+
+        self.reserved_words.update(
+            {
+                keyword_name
+                for (keyword_name,) in duckdb.execute(
+                    "select keyword_name from duckdb_keywords() where keyword_category == 'reserved'"
+                ).fetchall()
+            }
+        )
+
     def _separate(self, name: Optional[str]) -> Tuple[Optional[Any], Optional[str]]:
         """
         Get database name and schema name from schema if it contains a database name
