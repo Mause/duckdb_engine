@@ -184,23 +184,26 @@ def test_get_schema_names(inspector: Inspector, session: Session) -> None:
         session.commit()
 
     # Deliberately excluding pg_catalog schema (to align with Postgres)
-    names = inspector.get_schema_names()
-    if supports_attach:
-        assert names == [
-            '"daffy duck".information_schema',
-            '"daffy duck".main',
-            '"daffy duck"."quack quack"',
-            '"daffy duck"."you\'re "" despicable"',
-            "memory.information_schema",
-            "memory.main",
-            'memory."quack quack"',
-            "system.information_schema",
-            "system.main",
-            "temp.information_schema",
-            "temp.main",
-        ]
-    else:
-        assert names == ["quack quack", "information_schema", "main", "temp"]
+    names = set(inspector.get_schema_names())
+    expected = {
+        '"daffy duck".main',
+        '"daffy duck"."quack quack"',
+        '"daffy duck"."you\'re "" despicable"',
+        "memory.main",
+        'memory."quack quack"',
+        "system.information_schema",
+        "system.main",
+        "temp.main",
+    }
+    if Version(duckdb.__version__) <= Version("1.1.3"):
+        expected.update(
+            {
+                '"daffy duck".information_schema',
+                "memory.information_schema",
+                "temp.information_schema",
+            }
+        )
+    assert names == expected
 
 
 @mark.skipif(
