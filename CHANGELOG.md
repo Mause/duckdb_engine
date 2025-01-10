@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.14.1](https://github.com/Mause/duckdb_engine/compare/v0.14.0...v0.14.1) (2025-01-10)
+
+
+### Bug Fixes
+
+* set div_is_floordiv to False to avoid bad casts ([dfbed6d](https://github.com/Mause/duckdb_engine/commit/dfbed6df21470192551636cefa6ff7386d2cf6ae))
+
 ## [0.14.0](https://github.com/Mause/duckdb_engine/compare/v0.13.7-pre0...v0.14.0) (2024-12-16)
 
 
