@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.14.2](https://github.com/Mause/duckdb_engine/compare/v0.14.1...v0.14.2) (2025-01-10)
+
+
+### Bug Fixes
+
+* use full list of reserved words ([6dbadf1](https://github.com/Mause/duckdb_engine/commit/6dbadf1edfe6fd6f0c698b6dc12debb654dde8bc))
+
 ## [0.14.1](https://github.com/Mause/duckdb_engine/compare/v0.14.0...v0.14.1) (2025-01-10)
 
 
