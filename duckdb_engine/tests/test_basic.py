@@ -22,6 +22,7 @@ from sqlalchemy import (
     Sequence,
     String,
     Table,
+    column,
     create_engine,
     func,
     inspect,
@@ -682,3 +683,9 @@ def test_upsert(session: Session) -> None:
     session.execute(stmt)
 
     assert session.query(User).count() == 5
+
+
+def test_reserved_keywords(engine: Engine) -> None:
+    stmt = select(column("qualify"))
+
+    assert str(stmt.compile(engine)) == 'SELECT "qualify"'
