@@ -237,7 +237,6 @@ class Dialect(PGDialect_psycopg2):
     supports_comments = has_comment_support()
     supports_sane_rowcount = False
     supports_server_side_cursors = False
-    div_is_floordiv = False  # TODO: tweak this to be based on DuckDB version
     inspector = DuckDBInspector
     colspecs = util.update_copy(
         PGDialect.colspecs,
@@ -310,6 +309,11 @@ class Dialect(PGDialect_psycopg2):
 
     def get_default_isolation_level(self, connection: "Connection") -> None:
         raise NotImplementedError()
+
+    @property
+    def div_is_floordiv(self) -> bool:
+        with self.connect() as c:
+            return c.select('select current_setting("integer_division")').fetchone()[0]
 
     def do_rollback(self, connection: "Connection") -> None:
         try:
