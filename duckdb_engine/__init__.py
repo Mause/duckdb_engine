@@ -39,7 +39,7 @@ from ._supports import has_comment_support
 from .config import apply_config, get_core_config
 from .datatypes import ISCHEMA_NAMES, register_extension_types
 
-__version__ = "0.14.1"
+__version__ = "0.14.2"
 sqlalchemy_version = sqlalchemy.__version__
 duckdb_version: str = duckdb.__version__
 supports_attach: bool = duckdb_version >= "0.7.0"
@@ -188,6 +188,18 @@ def index_warning() -> None:
 
 
 class DuckDBIdentifierPreparer(PGIdentifierPreparer):
+    def __init__(self, dialect: "Dialect", **kwargs: Any) -> None:
+        super().__init__(dialect, **kwargs)
+
+        self.reserved_words.update(
+            {
+                keyword_name
+                for (keyword_name,) in duckdb.execute(
+                    "select keyword_name from duckdb_keywords() where keyword_category == 'reserved'"
+                ).fetchall()
+            }
+        )
+
     def _separate(self, name: Optional[str]) -> Tuple[Optional[Any], Optional[str]]:
         """
         Get database name and schema name from schema if it contains a database name
