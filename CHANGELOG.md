@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.15.0](https://github.com/Mause/duckdb_engine/compare/v0.14.2...v0.15.0) (2025-01-16)
+
+
+### Features
+
+* Add supported MotherDuck connection string parameters ([c57f024](https://github.com/Mause/duckdb_engine/commit/c57f0249573abe65d15e93a605299e3d453e1d11))
+
 ## [0.14.2](https://github.com/Mause/duckdb_engine/compare/v0.14.1...v0.14.2) (2025-01-10)
 
 
