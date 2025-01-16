@@ -11,13 +11,16 @@ TYPES: Dict[Type, TypeEngine] = {int: Integer(), str: String(), bool: Boolean()}
 
 @lru_cache()
 def get_core_config() -> Set[str]:
+    # List of connection string parameters that are supported by MotherDuck
+    # See: https://motherduck.com/docs/key-tasks/authenticating-and-connecting-to-motherduck/authenticating-to-motherduck/
+    motherduck_config_keys = {"motherduck_token", "attach_mode", "saas_mode"}
+
     rows = (
         duckdb.connect(":memory:")
         .execute("SELECT name FROM duckdb_settings()")
         .fetchall()
     )
-    # special case for motherduck here - they accept this config at extension load time
-    return {name for (name,) in rows} | {"motherduck_token"}
+    return {name for (name,) in rows} | motherduck_config_keys
 
 
 def apply_config(
