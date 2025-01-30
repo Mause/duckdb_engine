@@ -194,9 +194,11 @@ class DuckDBIdentifierPreparer(PGIdentifierPreparer):
         self.reserved_words.update(
             {
                 keyword_name
-                for (keyword_name,) in duckdb.cursor().execute(
+                for (keyword_name,) in duckdb.cursor()
+                .execute(
                     "select keyword_name from duckdb_keywords() where keyword_category == 'reserved'"
-                ).fetchall()
+                )
+                .fetchall()
             }
         )
 
