@@ -1,4 +1,5 @@
 import decimal
+import enum
 import json
 import warnings
 from typing import Any, Dict, Type
@@ -9,6 +10,7 @@ from pytest import importorskip, mark
 from snapshottest.module import SnapshotTest
 from sqlalchemy import (
     Column,
+    Enum,
     Integer,
     Interval,
     MetaData,
@@ -28,7 +30,7 @@ from sqlalchemy.sql import sqltypes
 from sqlalchemy.types import FLOAT, JSON
 
 from .._supports import duckdb_version, has_uhugeint_support
-from ..datatypes import Map, Struct, types
+from ..datatypes import Map, Struct, Union, types
 
 
 @mark.parametrize("coltype", types)
@@ -232,6 +234,39 @@ def test_double_nested_types(engine: Engine, session: Session) -> None:
     result = session.query(Entry).one()
 
     assert result.outer == outer
+
+
+def test_double_nested_type_ddl(engine: Engine, session: Session) -> None:
+    """If we create a table with a nested type, then all the children types,
+    (such as ENUMS) need to have already been created with an eg CREATE TYPE ...
+    DDL statement."""
+    importorskip("duckdb", "0.5.0")  # nested types require at least duckdb 0.5.0
+    base = declarative_base()
+
+    class Severity(enum.Enum):
+        LOW = "L"
+        MEDIUM = "M"
+        HIGH = "H"
+
+    class Entry(base):
+        __tablename__ = "test_struct"
+
+        id = Column(Integer, primary_key=True, default=0)
+        struct = Column(Struct({"severity": Enum(Severity)}))
+        map = Column(Map(String, Enum(Severity)))
+        union = Column(Union({"age": Integer, "severity": Enum(Severity)}))
+
+    base.metadata.create_all(bind=engine)
+
+    struct = {"struct": {"severity": "L"}}
+    map = {"one": "L", "two": "M"}
+    union = {"age": 42}
+    session.add(Entry(struct=struct, map=map, union=union))  # type: ignore[call-arg]
+    session.commit()
+    result = session.query(Entry).one()
+    assert result.struct == struct
+    assert result.map == map
+    assert result.union == union
 
 
 def test_interval(engine: Engine, snapshot: SnapshotTest) -> None:
