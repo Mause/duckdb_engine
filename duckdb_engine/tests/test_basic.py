@@ -693,8 +693,8 @@ def test_reserved_keywords(engine: Engine) -> None:
 
 
 def test_register_filesystem() -> None:
-    memory_fs = fsspec.filesystem('memory')
-    file_fs = fsspec.filesystem('file')
+    memory_fs = fsspec.filesystem("memory")
+    file_fs = fsspec.filesystem("file")
     engine = create_engine(
         "duckdb:///",
         connect_args={
@@ -703,5 +703,5 @@ def test_register_filesystem() -> None:
     )
 
     with engine.connect() as conn:
-        duckdb_conn  = getattr(conn.connection.dbapi_connection, '_ConnectionWrapper__c')
+        duckdb_conn = getattr(conn.connection.dbapi_connection, "_ConnectionWrapper__c")
         assert duckdb.list_filesystems(connection=duckdb_conn) == ["memory", "file"]
