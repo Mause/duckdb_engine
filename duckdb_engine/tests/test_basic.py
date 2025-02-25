@@ -692,7 +692,7 @@ def test_reserved_keywords(engine: Engine) -> None:
     assert str(stmt.compile(engine)) == 'SELECT "qualify"'
 
 
-def test_register_filesystem():
+def test_register_filesystem() -> None:
     memory_fs = fsspec.filesystem('memory')
     file_fs = fsspec.filesystem('file')
     engine = create_engine(
@@ -703,5 +703,5 @@ def test_register_filesystem():
     )
 
     with engine.connect() as conn:
-        underling_conn  = conn.connection.dbapi_connection._ConnectionWrapper__c
-        assert duckdb.list_filesystems(connection=underling_conn) == ["memory", "file"]
+        duckdb_conn  = getattr(conn.connection.dbapi_connection, '_ConnectionWrapper__c')
+        assert duckdb.list_filesystems(connection=duckdb_conn) == ["memory", "file"]
