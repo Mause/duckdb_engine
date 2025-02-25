@@ -294,10 +294,15 @@ class Dialect(PGDialect_psycopg2):
                 user_agent = f"{user_agent} {config['custom_user_agent']}"
             config["custom_user_agent"] = user_agent
 
+        filesystems = cparams.pop("register_filesystems", [])
+
         conn = duckdb.connect(*cargs, **cparams)
 
         for extension in preload_extensions:
             conn.execute(f"LOAD {extension}")
+
+        for filesystem in filesystems:
+            conn.register_filesystem(filesystem)
 
         apply_config(self, conn, ext)
 
