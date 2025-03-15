@@ -1,8 +1,13 @@
 from contextlib import contextmanager
 from typing import Generator
 
-import github_action_utils as gha
-import nox
+try:
+    import github_action_utils as gha
+    import nox
+except ImportError:
+    import pytest
+
+    pytest.skip(allow_module_level=True)
 
 nox.options.default_venv_backend = "uv"
 nox.options.error_on_external_run = True
