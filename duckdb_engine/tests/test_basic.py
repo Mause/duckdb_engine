@@ -30,19 +30,18 @@ from sqlalchemy import (
     text,
     types,
 )
-from sqlalchemy.dialects import registry  # type: ignore
+from sqlalchemy.dialects import registry
 from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.exc import DBAPIError
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session, relationship, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, Session, relationship, sessionmaker
 
 from .. import Dialect, insert, supports_attach, supports_user_agent
 from .._supports import has_comment_support
 
 try:
     # sqlalchemy 2
-    from sqlalchemy.engine import ObjectKind  # type: ignore[attr-defined]
+    from sqlalchemy.engine import ObjectKind
     from sqlalchemy.orm import Mapped
 except ImportError:
     # sqlalchemy 1
@@ -61,7 +60,7 @@ def engine() -> Engine:
     return eng
 
 
-Base = declarative_base()
+class Base(DeclarativeBase): ...
 
 
 class CompressedString(types.TypeDecorator):
@@ -74,7 +73,7 @@ class CompressedString(types.TypeDecorator):
             return None
         return zlib.compress(value.encode("utf-8"), level=9)
 
-    def process_result_value(self, value: bytes, dialect: Any) -> str:
+    def process_result_value(self, value: bytes, dialect: Any) -> str:  # type: ignore[override]
         return zlib.decompress(value).decode("utf-8")
 
 
@@ -83,7 +82,7 @@ class TableWithBinary(Base):
 
     id = Column(Integer(), Sequence("id_seq"), primary_key=True)
 
-    text = Column(CompressedString())
+    text = Column(CompressedString())  # type: ignore[var-annotated]
 
 
 class FakeModel(Base):
@@ -345,7 +344,7 @@ def test_get_multi_columns(engine: Engine) -> None:
             schema=None,
             filter_names=set(),
             scope=None,
-            kind=(ObjectKind.TABLE,),
+            kind=(ObjectKind.TABLE,),  # type: ignore[arg-type]
         )
 
 
@@ -563,7 +562,7 @@ def test_do_ping(tmp_path: Path, caplog: LogCaptureFixture) -> None:
         "duckdb:///" + str(tmp_path / "db"), pool_pre_ping=True, pool_size=1
     )
 
-    logger = cast(logging.Logger, engine.pool.logger)  # type: ignore
+    logger = cast(logging.Logger, engine.pool.logger)
     logger.setLevel(logging.DEBUG)
 
     with caplog.at_level(logging.DEBUG, logger=logger.name):
@@ -667,7 +666,7 @@ def test_upsert(session: Session) -> None:
         name = Column(String, unique=True)
         fullname = Column(String)
 
-    Base.metadata.create_all(session.bind)
+    Base.metadata.create_all(session.bind)  # type: ignore[arg-type]
     stmt = insert(User).values(
         [
             {"name": "spongebob", "fullname": "Spongebob Squarepants"},
@@ -686,6 +685,6 @@ def test_upsert(session: Session) -> None:
 
 
 def test_reserved_keywords(engine: Engine) -> None:
-    stmt = select(column("qualify"))
+    stmt = select(column("qualify"))  # type: ignore[var-annotated]
 
     assert str(stmt.compile(engine)) == 'SELECT "qualify"'

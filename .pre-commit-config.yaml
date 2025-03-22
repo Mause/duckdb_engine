@@ -20,7 +20,7 @@ repos:
           - "duckdb==0.10.1"
           - "pytest==6.2.4"
           - "hypothesis==6.14.1"
-          - "sqlalchemy[mypy]==1.4.46"
+          - "sqlalchemy==2.0.39"
           - "types-setuptools==57.4.17"
           - "nox"
   - repo: https://github.com/tox-dev/tox-ini-fmt

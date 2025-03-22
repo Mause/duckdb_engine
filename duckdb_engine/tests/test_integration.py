@@ -11,7 +11,7 @@ df = pd.DataFrame([{"a": 1}])
 
 @mark.skipif(not hasattr(Connection, "exec_driver_sql"), reason="Needs exec_driver_sql")
 def test_register_driver(conn: Connection) -> None:
-    conn.exec_driver_sql("register", ("test_df_driver", df))  # type: ignore[arg-type]
+    conn.exec_driver_sql("register", ("test_df_driver", df))
     conn.execute(text("select * from test_df_driver"))
 
 

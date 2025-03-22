@@ -37,10 +37,12 @@ Once you've installed this package, you should be able to just use it, as SQLAlc
 
 ```python
 from sqlalchemy import Column, Integer, Sequence, String, create_engine
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm.session import Session
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    pass
 
 
 class FakeModel(Base):  # type: ignore
