@@ -524,7 +524,7 @@ def test_url_config_and_dict_config() -> None:
         assert memory_limit in ("500.0MB", "476.8 MiB")
 
 
-user_agent_re = r"duckdb/.*(.*) python(?:/.*) duckdb_engine/.*(sqlalchemy/.*)"
+user_agent_re = r"duckdb/.*(.*) python(/.*)? duckdb_engine/.*(sqlalchemy/.*)"
 
 
 @mark.skipif(
