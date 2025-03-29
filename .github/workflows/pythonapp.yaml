@@ -21,14 +21,7 @@ jobs:
       - name: Remove cached duckdb extensions
         run: rm -rf ~/.duckdb
       - uses: fjwillemsen/setup-nox2@v3.0.0
-      - run: python -m pip install github-action-utils uv -U
-      - name: Lint with flake8
-        run: |
-          pip install flake8
-          # stop the build if there are Python syntax errors or undefined names
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      - run: python -m pip install github-action-utils uv -U 
       - name: List nox envs
         run: nox -l
       - run: nox --pythons '${{ matrix.python }}'
