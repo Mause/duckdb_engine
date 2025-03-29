@@ -5,7 +5,8 @@ description = "SQLAlchemy driver for duckdb"
 authors = [
     {name = "Elliana May", email = "me@mause.me"},
 ]
-license = {text = "MIT"}
+license = "MIT"
+licence-files = ["LICENCE"]
 requires-python = ">=3.9,<4"
 readme = "README.md"
 dependencies = [
