@@ -20,6 +20,7 @@ from sqlalchemy import pool, select, sql, text, util
 from sqlalchemy import types as sqltypes
 from sqlalchemy.dialects.postgresql import UUID, insert
 from sqlalchemy.dialects.postgresql.base import (
+    PGCompiler,
     PGDialect,
     PGIdentifierPreparer,
     PGInspector,
@@ -241,6 +242,11 @@ class DuckDBNullType(sqltypes.NullType):
             return super().result_processor(dialect, coltype)
 
 
+class DuckDBCompiler(PGCompiler):
+    def for_update_clause(self, select: Any, **kw: Any) -> str:
+        return ""
+
+
 class Dialect(PGDialect_psycopg2):
     name = "duckdb"
     driver = "duckdb_engine"
@@ -267,6 +273,7 @@ class Dialect(PGDialect_psycopg2):
     )
     preparer = DuckDBIdentifierPreparer
     identifier_preparer: DuckDBIdentifierPreparer
+    statement_compiler = DuckDBCompiler
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         kwargs["use_native_hstore"] = False
