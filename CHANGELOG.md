@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.15.1](https://github.com/Mause/duckdb_engine/compare/v0.15.0...v0.15.1) (2025-03-29)
+
+
+### Bug Fixes
+
+* panics in multi-threaded environments ([694d227](https://github.com/Mause/duckdb_engine/commit/694d2276a619256643b045ba9568d00ac0e6f9ef))
+* panics in multi-threaded environments ([d42c977](https://github.com/Mause/duckdb_engine/commit/d42c977c5db98a023984c7aed986b702e4228035)), closes [#1190](https://github.com/Mause/duckdb_engine/issues/1190)
+
 ## [0.15.0](https://github.com/Mause/duckdb_engine/compare/v0.14.2...v0.15.0) (2025-01-16)
 
 
