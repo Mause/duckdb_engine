@@ -115,11 +115,12 @@ class Struct(TypeEngine):
 
     ```python
     from duckdb_engine.datatypes import Struct
-    from sqlalchemy import Table, Column, String
+    from sqlalchemy import Table, Column, String, MetaData
 
     Table(
-        'hello',
-        Column('name', Struct({'first': String, 'last': String})
+        "hello",
+        MetaData(),
+        Column("name", Struct({"first": String, "last": String})),
     )
     ```
 
@@ -138,12 +139,9 @@ class Map(TypeEngine):
 
     ```python
     from duckdb_engine.datatypes import Map
-    from sqlalchemy import Table, Column, String
+    from sqlalchemy import Table, Column, String, MetaData
 
-    Table(
-        'hello',
-        Column('name', Map(String, String)
-    )
+    Table("hello", MetaData(), Column("name", Map(String, String)))
     ```
     """
 
@@ -179,11 +177,12 @@ class Union(TypeEngine):
 
     ```python
     from duckdb_engine.datatypes import Union
-    from sqlalchemy import Table, Column, String
+    from sqlalchemy import Table, Column, String, MetaData
 
     Table(
-        'hello',
-        Column('name', Union({"name": String, "age": String})
+        "hello",
+        MetaData(),
+        Column("name", Union({"name": String, "age": String})),
     )
     ```
     """

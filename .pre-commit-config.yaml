@@ -36,3 +36,12 @@ repos:
          - --fix
          - --exit-non-zero-on-fix
       - id: ruff-format
+  -   repo: https://github.com/adamchainz/blacken-docs
+      rev: "1.19.1"
+      hooks:
+      -   id: blacken-docs
+          args:
+           - --line-length
+           - '80'
+          additional_dependencies:
+          - black==22.12.0
