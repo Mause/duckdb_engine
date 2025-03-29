@@ -286,14 +286,14 @@ typing = ["typing-extensions (>=4.12.2) ; python_version < \"3.11\""]
 
 [[package]]
 name = "fsspec"
-version = "2025.2.0"
+version = "2025.3.0"
 description = "File-system specification"
 optional = false
 python-versions = ">=3.8"
 groups = ["dev"]
 files = [
-    {file = "fsspec-2025.2.0-py3-none-any.whl", hash = "sha256:9de2ad9ce1f85e1931858535bc882543171d197001a0a5eb2ddc04f1781ab95b"},
-    {file = "fsspec-2025.2.0.tar.gz", hash = "sha256:1c24b16eaa0a1798afa0337aa0db9b256718ab2a89c425371f5628d22c3b6afd"},
+    {file = "fsspec-2025.3.0-py3-none-any.whl", hash = "sha256:efb87af3efa9103f94ca91a7f8cb7a4df91af9f74fc106c9c7ea0efd7277c1b3"},
+    {file = "fsspec-2025.3.0.tar.gz", hash = "sha256:a935fd1ea872591f2b5148907d103488fc523295e6c64b835cfad8c3eca44972"},
 ]
 
 [package.extras]
