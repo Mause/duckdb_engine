@@ -33,7 +33,7 @@ jobs:
         run: nox -l
       - run: nox --pythons '${{ matrix.python }}'
       - run: uvx poetry build
-      - run: uvx poetry check
+      - run: uvx poetry check --strict
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
