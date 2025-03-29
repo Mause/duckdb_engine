@@ -8,8 +8,8 @@ from typing import (
     Dict,
     Iterable,
     List,
+    Literal,
     Optional,
-    Set,
     Tuple,
     Type,
 )
@@ -27,6 +27,7 @@ from sqlalchemy.dialects.postgresql.base import (
 )
 from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
 from sqlalchemy.engine.default import DefaultDialect
+from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.engine.interfaces import Dialect as RootDialect
 from sqlalchemy.engine.reflection import cache
 from sqlalchemy.engine.url import URL
@@ -46,9 +47,13 @@ supports_attach: bool = duckdb_version >= "0.7.0"
 supports_user_agent: bool = duckdb_version >= "0.9.2"
 
 if TYPE_CHECKING:
-    from sqlalchemy.base import Connection
-    from sqlalchemy.engine.interfaces import _IndexDict
-    from sqlalchemy.sql.type_api import _ResultProcessor
+    from sqlalchemy import Connection
+    from sqlalchemy.engine.interfaces import (
+        ReflectedCheckConstraint,
+        ReflectedColumn,
+        ReflectedIndex,
+    )
+    from sqlalchemy.sql.type_api import _ResultProcessorType
 
 register_extension_types()
 
@@ -81,7 +86,7 @@ class DBAPI:
 class DuckDBInspector(PGInspector):
     def get_check_constraints(
         self, table_name: str, schema: Optional[str] = None, **kw: Any
-    ) -> List[Dict[str, Any]]:
+    ) -> List[ReflectedCheckConstraint]:
         try:
             return super().get_check_constraints(table_name, schema, **kw)
         except Exception as e:
@@ -160,7 +165,7 @@ class CursorWrapper:
                 raise e
 
     @property
-    def connection(self) -> "Connection":
+    def connection(self) -> "ConnectionWrapper":
         return self.__connection_wrapper
 
     def close(self) -> None:
@@ -189,7 +194,7 @@ def index_warning() -> None:
 
 class DuckDBIdentifierPreparer(PGIdentifierPreparer):
     def __init__(self, dialect: "Dialect", **kwargs: Any) -> None:
-        super().__init__(dialect, **kwargs)
+        super().__init__(dialect, **kwargs)  # type: ignore[no-untyped-call]
 
         self.reserved_words.update(
             {
@@ -235,10 +240,10 @@ class DuckDBIdentifierPreparer(PGIdentifierPreparer):
 
 class DuckDBNullType(sqltypes.NullType):
     def result_processor(
-        self, dialect: RootDialect, coltype: sqltypes.TypeEngine
-    ) -> Optional["_ResultProcessor"]:
+        self, dialect: RootDialect, coltype: object
+    ) -> Optional[_ResultProcessorType]:
         if coltype == "JSON":
-            return sqltypes.JSON().result_processor(dialect, coltype)
+            return sqltypes.JSON().result_processor(dialect, coltype)  # type: ignore[no-untyped-call]
         else:
             return super().result_processor(dialect, coltype)
 
@@ -253,7 +258,7 @@ class Dialect(PGDialect_psycopg2):
     supports_server_side_cursors = False
     div_is_floordiv = False  # TODO: tweak this to be based on DuckDB version
     inspector = DuckDBInspector
-    colspecs = util.update_copy(
+    colspecs = util.update_copy(  # type: ignore[no-untyped-call]
         PGDialect.colspecs,
         {
             # the psycopg2 driver registers a _PGNumeric with custom logic for
@@ -263,26 +268,26 @@ class Dialect(PGDialect_psycopg2):
             UUID: UUID,
         },
     )
-    ischema_names = util.update_copy(
+    ischema_names = util.update_copy(  # type: ignore[no-untyped-call]
         PGDialect.ischema_names,
         ISCHEMA_NAMES,
     )
-    preparer = DuckDBIdentifierPreparer
+    preparer = DuckDBIdentifierPreparer  # type: ignore[assignment]
     identifier_preparer: DuckDBIdentifierPreparer
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         kwargs["use_native_hstore"] = False
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)  # type: ignore[no-untyped-call]
 
     def type_descriptor(self, typeobj: Type[sqltypes.TypeEngine]) -> Any:  # type: ignore[override]
-        res = super().type_descriptor(typeobj)
+        res = super().type_descriptor(typeobj)  # type: ignore[no-untyped-call]
 
         if isinstance(res, sqltypes.NullType):
             return DuckDBNullType()
 
         return res
 
-    def connect(self, *cargs: Any, **cparams: Any) -> "Connection":
+    def connect(self, *cargs: Any, **cparams: Any) -> "ConnectionWrapper":  # type: ignore[override]
         core_keys = get_core_config()
         preload_extensions = cparams.pop("preload_extensions", [])
         config = dict(cparams.get("config", {}))
@@ -316,18 +321,27 @@ class Dialect(PGDialect_psycopg2):
             return pool.QueuePool
 
     @staticmethod
-    def dbapi(**kwargs: Any) -> Type[DBAPI]:
+    def dbapi(**kwargs: Any) -> Type[DBAPI]:  # type: ignore[override]
         return DBAPI
 
     def _get_server_version_info(self, connection: "Connection") -> Tuple[int, int]:
         return (8, 0)
 
-    def get_default_isolation_level(self, connection: "Connection") -> None:
+    def get_default_isolation_level(
+        self, connection: "DBAPIConnection"
+    ) -> Literal[
+        "SERIALIZABLE",
+        "REPEATABLE READ",
+        "READ COMMITTED",
+        "READ UNCOMMITTED",
+        "AUTOCOMMIT",
+    ]:
+        # def get_default_isolation_level(self, connection):
         raise NotImplementedError()
 
-    def do_rollback(self, connection: "Connection") -> None:
+    def do_rollback(self, connection: "Connection") -> None:  # type: ignore[override]
         try:
-            super().do_rollback(connection)
+            super().do_rollback(connection)  # type: ignore[no-untyped-call]
         except DBAPI.TransactionException as e:
             if (
                 e.args[0]
@@ -335,7 +349,7 @@ class Dialect(PGDialect_psycopg2):
             ):
                 raise e
 
-    def do_begin(self, connection: "Connection") -> None:
+    def do_begin(self, connection: "Connection") -> None:  # type: ignore[override]
         connection.begin()
 
     def get_view_names(
@@ -369,7 +383,7 @@ class Dialect(PGDialect_psycopg2):
         rs = connection.execute(text(s), params)
         return [view for (view,) in rs]
 
-    @cache  # type: ignore[call-arg]
+    @cache
     def get_schema_names(self, connection: "Connection", **kw: "Any"):  # type: ignore[no-untyped-def]
         """
         Return unquoted database_name.schema_name unless either contains spaces or double quotes.
@@ -379,7 +393,7 @@ class Dialect(PGDialect_psycopg2):
         """
 
         if not supports_attach:
-            return super().get_schema_names(connection, **kw)
+            return super().get_schema_names(connection, **kw)  # type: ignore[no-untyped-call]
 
         s = """
             SELECT database_name, schema_name AS nspname
@@ -421,8 +435,10 @@ class Dialect(PGDialect_psycopg2):
 
         return sql, params
 
-    @cache  # type: ignore[call-arg]
-    def get_table_names(self, connection: "Connection", schema=None, **kw: "Any"):  # type: ignore[no-untyped-def]
+    @cache
+    def get_table_names(
+        self, connection: "Connection", schema: Optional[str] = None, **kw: "Any"
+    ) -> List[str]:
         """
         Return unquoted database_name.schema_name unless either contains spaces or double quotes.
         In that case, escape double quotes and then wrap in double quotes.
@@ -431,7 +447,7 @@ class Dialect(PGDialect_psycopg2):
         """
 
         if not supports_attach:
-            return super().get_table_names(connection, schema, **kw)
+            return super().get_table_names(connection, schema, **kw)  # type: ignore[no-untyped-call]
 
         s = """
             SELECT database_name, schema_name, table_name
@@ -451,14 +467,14 @@ class Dialect(PGDialect_psycopg2):
             ) in rs
         ]
 
-    @cache  # type: ignore[call-arg]
-    def get_table_oid(  # type: ignore[no-untyped-def]
+    @cache
+    def get_table_oid(
         self,
         connection: "Connection",
         table_name: str,
         schema: "Optional[str]" = None,
         **kw: "Any",
-    ):
+    ) -> str:
         """Fetch the oid for (database.)schema.table_name.
         The schema name can be formatted either as database.schema or just the schema name.
         In the latter scenario the schema associated with the default database is used.
@@ -499,12 +515,12 @@ class Dialect(PGDialect_psycopg2):
         table_name: str,
         schema: Optional[str] = None,
         **kw: Any,
-    ) -> List["_IndexDict"]:
+    ) -> List[ReflectedIndex]:
         index_warning()
         return []
 
     # the following methods are for SQLA2 compatibility
-    def get_multi_indexes(
+    def get_multi_indexes(  # type: ignore[override]
         self,
         connection: "Connection",
         schema: Optional[str] = None,
@@ -515,7 +531,7 @@ class Dialect(PGDialect_psycopg2):
         return []
 
     def initialize(self, connection: "Connection") -> None:
-        DefaultDialect.initialize(self, connection)
+        DefaultDialect.initialize(self, connection)  # type: ignore[no-untyped-call]
 
     def create_connect_args(self, url: URL) -> Tuple[tuple, dict]:
         opts = url.translate_connect_args(database="database")
@@ -526,13 +542,13 @@ class Dialect(PGDialect_psycopg2):
         return (), opts
 
     @classmethod
-    def import_dbapi(cls: Type["Dialect"]) -> Type[DBAPI]:
+    def import_dbapi(cls: Type["Dialect"]) -> Type[DBAPI]:  # type: ignore[override]
         return cls.dbapi()
 
     def do_executemany(
         self, cursor: Any, statement: Any, parameters: Any, context: Optional[Any] = ...
     ) -> None:
-        return DefaultDialect.do_executemany(
+        return DefaultDialect.do_executemany(  # type: ignore[no-untyped-call]
             self, cursor, statement, parameters, context
         )
 
@@ -561,15 +577,16 @@ class Dialect(PGDialect_psycopg2):
 
     # FIXME: this method is a hack around the fact that we use a single cursor for all queries inside a connection,
     #   and this is required to fix get_multi_columns
-    def get_multi_columns(
+    def get_multi_columns(  # type: ignore[override]
         self,
         connection: "Connection",
+        *,
         schema: Optional[str] = None,
-        filter_names: Optional[Set[str]] = None,
+        filter_names: Optional[Collection[str]] = None,
         scope: Optional[str] = None,
         kind: Optional[Tuple[str, ...]] = None,
         **kw: Any,
-    ) -> List:
+    ) -> Iterable[tuple[tuple[str | None, str], list[ReflectedColumn]]]:
         """
         Copyright 2005-2023 SQLAlchemy authors and contributors <see AUTHORS file>.
 
@@ -592,8 +609,8 @@ class Dialect(PGDialect_psycopg2):
         SOFTWARE.
         """
 
-        has_filter_names, params = self._prepare_filter_names(filter_names)  # type: ignore[attr-defined]
-        query = self._columns_query(schema, has_filter_names, scope, kind)  # type: ignore[attr-defined]
+        has_filter_names, params = self._prepare_filter_names(filter_names)  # type: ignore[no-untyped-call]
+        query = self._columns_query(schema, has_filter_names, scope, kind)
         rows = list(connection.execute(query, params).mappings())
 
         # dictionary with (name, ) if default search path or (schema, name)
@@ -617,12 +634,12 @@ class Dialect(PGDialect_psycopg2):
                 if rec["visible"]
                 else ((rec["schema"], rec["name"]), rec)
             )
-            for rec in self._load_enums(  # type: ignore[attr-defined]
+            for rec in self._load_enums(  # type: ignore[no-untyped-call]
                 connection, schema="*", info_cache=kw.get("info_cache")
             )
         )
 
-        columns = self._get_columns_info(rows, domains, enums, schema)  # type: ignore[attr-defined]
+        columns = self._get_columns_info(rows, domains, enums, schema)  # type: ignore[no-untyped-call]
 
         return columns.items()
 
@@ -633,7 +650,7 @@ class Dialect(PGDialect_psycopg2):
         self, schema: str, has_filter_names: bool, scope: Any, kind: Any
     ):
         if sqlalchemy.__version__ >= "2.0.36":
-            from sqlalchemy.dialects.postgresql import (  # type: ignore[attr-defined]
+            from sqlalchemy.dialects.postgresql import (
                 pg_catalog,
             )
 
@@ -673,15 +690,15 @@ class Dialect(PGDialect_psycopg2):
 
 
 if sqlalchemy.__version__ >= "2.0.14":
-    from sqlalchemy import TryCast  # type: ignore[attr-defined]
+    from sqlalchemy import TryCast
 
-    @compiles(TryCast, "duckdb")  # type: ignore[misc]
+    @compiles(TryCast, "duckdb")
     def visit_try_cast(
         instance: TryCast,
         compiler: PGTypeCompiler,
         **kw: Any,
     ) -> str:
         return "TRY_CAST({} AS {})".format(
-            compiler.process(instance.clause, **kw),
-            compiler.process(instance.typeclause, **kw),
+            compiler.process(instance.clause, **kw),  # type: ignore[arg-type]
+            compiler.process(instance.typeclause, **kw),  # type: ignore[arg-type]
         )

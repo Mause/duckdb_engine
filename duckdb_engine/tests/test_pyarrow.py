@@ -38,9 +38,9 @@ def test_fetch_arrow() -> None:
             {"label": ["xx", "yy", "zz"], "value": [-1.0, 2.5, 6.0]}
         )
         res = con.execute(stmt).cursor.fetch_record_batch(rows_per_batch=2)
-        assert res.read_next_batch() == RecordBatch.from_pydict(
+        assert res.read_next_batch() == RecordBatch.from_pydict(  # type: ignore[attr-defined]
             {"label": ["xx", "yy"], "value": [-1.0, 2.5]}
         )
-        assert res.read_next_batch() == RecordBatch.from_pydict(
+        assert res.read_next_batch() == RecordBatch.from_pydict(  # type: ignore[attr-defined]
             {"label": ["zz"], "value": [6.0]}
         )

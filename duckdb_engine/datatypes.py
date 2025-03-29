@@ -163,7 +163,7 @@ class Map(TypeEngine):
         )
 
     def result_processor(
-        self, dialect: Dialect, coltype: str
+        self, dialect: Dialect, coltype: object
     ) -> Optional[Callable[[Optional[dict]], Optional[dict]]]:
         if IS_GT_1:
             return lambda value: value
@@ -226,7 +226,7 @@ def register_extension_types() -> None:
         compiles(subclass, "duckdb")(compile_uint)
 
 
-@compiles(Struct, "duckdb")  # type: ignore[misc]
+@compiles(Struct, "duckdb")
 def visit_struct(
     instance: Struct,
     compiler: PGTypeCompiler,
@@ -236,7 +236,7 @@ def visit_struct(
     return "STRUCT" + struct_or_union(instance, compiler, identifier_preparer, **kw)
 
 
-@compiles(Union, "duckdb")  # type: ignore[misc]
+@compiles(Union, "duckdb")
 def visit_union(
     instance: Union,
     compiler: PGTypeCompiler,
@@ -276,7 +276,7 @@ def process_type(
     return compiler.process(type_api.to_instance(value), **kw)
 
 
-@compiles(Map, "duckdb")  # type: ignore[misc]
+@compiles(Map, "duckdb")
 def visit_map(instance: Map, compiler: PGTypeCompiler, **kw: Any) -> str:
     return "MAP({}, {})".format(
         process_type(instance.key_type, compiler, **kw),

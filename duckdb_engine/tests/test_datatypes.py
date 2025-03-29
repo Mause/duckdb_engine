@@ -22,8 +22,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.engine import Engine, create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import DeclarativeBase, Session
 from sqlalchemy.sql import sqltypes
 from sqlalchemy.types import FLOAT, JSON
 
@@ -36,7 +35,7 @@ from ..datatypes import Map, Struct, types
 def test_unsigned_integer_type(
     engine: Engine, session: Session, coltype: Type[Integer]
 ) -> None:
-    Base = declarative_base()
+    class Base(DeclarativeBase): ...
 
     tname = "table"
     table = type(
@@ -92,7 +91,7 @@ def test_custom_json_serializer() -> None:
         json_deserializer=json.JSONDecoder(object_hook=object_hook).decode,
     )
 
-    Base = declarative_base()
+    class Base(DeclarativeBase): ...
 
     class Entry(Base):
         __tablename__ = "test_json"
@@ -106,7 +105,7 @@ def test_custom_json_serializer() -> None:
 
         data = {"hello": decimal.Decimal("42")}
 
-        session.add(Entry(data=data))  # type: ignore[call-arg]
+        session.add(Entry(data=data))
         session.commit()
 
         (res,) = session.execute(select(Entry)).one()
@@ -115,17 +114,17 @@ def test_custom_json_serializer() -> None:
 
 
 def test_json(engine: Engine, session: Session) -> None:
-    base = declarative_base()
+    class Base(DeclarativeBase): ...
 
-    class Entry(base):
+    class Entry(Base):
         __tablename__ = "test_json"
 
         id = Column(Integer, primary_key=True, default=0)
         meta = Column(JSON, nullable=False)
 
-    base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
 
-    session.add(Entry(meta={"hello": "world"}))  # type: ignore[call-arg]
+    session.add(Entry(meta={"hello": "world"}))
     session.commit()
 
     result = session.query(Entry).one()
@@ -135,18 +134,19 @@ def test_json(engine: Engine, session: Session) -> None:
 
 def test_uuid(engine: Engine, session: Session) -> None:
     importorskip("duckdb", "0.7.1")
-    base = declarative_base()
 
-    class Entry(base):
+    class Base(DeclarativeBase): ...
+
+    class Entry(Base):
         __tablename__ = "test_uuid"
 
         id = Column(UUID, primary_key=True, default=0)
 
-    base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
 
     ident = uuid4()
 
-    session.add(Entry(id=ident))  # type: ignore[call-arg]
+    session.add(Entry(id=ident))
     session.commit()
 
     result = session.query(Entry).one()
@@ -187,9 +187,10 @@ def test_all_types_reflection(engine: Engine) -> None:
 
 def test_nested_types(engine: Engine, session: Session) -> None:
     importorskip("duckdb", "0.5.0")  # nested types require at least duckdb 0.5.0
-    base = declarative_base()
 
-    class Entry(base):
+    class Base(DeclarativeBase): ...
+
+    class Entry(Base):
         __tablename__ = "test_struct"
 
         id = Column(Integer, primary_key=True, default=0)
@@ -197,12 +198,12 @@ def test_nested_types(engine: Engine, session: Session) -> None:
         map = Column(Map(String, Integer))
         # union = Column(Union(fields={"name": String, "age": Integer}))
 
-    base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
 
     struct_data = {"name": "Edgar"}
     map_data = {"one": 1, "two": 2}
 
-    session.add(Entry(struct=struct_data, map=map_data))  # type: ignore[call-arg]
+    session.add(Entry(struct=struct_data, map=map_data))
     session.commit()
 
     result = session.query(Entry).one()
@@ -214,19 +215,20 @@ def test_nested_types(engine: Engine, session: Session) -> None:
 def test_double_nested_types(engine: Engine, session: Session) -> None:
     """Test for https://github.com/Mause/duckdb_engine/issues/1138"""
     importorskip("duckdb", "0.5.0")  # nested types require at least duckdb 0.5.0
-    base = declarative_base()
 
-    class Entry(base):
+    class Base(DeclarativeBase): ...
+
+    class Entry(Base):
         __tablename__ = "test_struct"
 
         id = Column(Integer, primary_key=True, default=0)
         outer = Column(Struct({"inner": Struct({"val": Integer})}))
 
-    base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
 
     outer = {"inner": {"val": 42}}
 
-    session.add(Entry(outer=outer))  # type: ignore[call-arg]
+    session.add(Entry(outer=outer))
     session.commit()
 
     result = session.query(Entry).one()
