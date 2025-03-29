@@ -6,7 +6,7 @@ from uuid import uuid4
 
 from packaging.version import Version
 from pytest import importorskip, mark
-from snapshottest.module import SnapshotTest
+from pytest_snapshot.plugin import Snapshot
 from sqlalchemy import (
     Column,
     Integer,
@@ -234,10 +234,10 @@ def test_double_nested_types(engine: Engine, session: Session) -> None:
     assert result.outer == outer
 
 
-def test_interval(engine: Engine, snapshot: SnapshotTest) -> None:
+def test_interval(engine: Engine, snapshot: Snapshot) -> None:
     test_table = Table("test_table", MetaData(), Column("duration", Interval))
-
-    assert "duration INTERVAL" in str(schema.CreateTable(test_table).compile(engine))
+    create_sql = str(schema.CreateTable(test_table).compile(engine)).strip()
+    snapshot.assert_match(create_sql, "schema.sql")
 
 
 def test_div_is_floordiv(engine: Engine) -> None:
