@@ -32,6 +32,7 @@ def tests(session: nox.Session, duckdb: str, sqlalchemy: str) -> None:
 
 @nox.session(py=["3.8"])
 def nightly(session: nox.Session) -> None:
+    session.skip("DuckDB nightly installs are broken right now")
     tests_core(session, "master", "1.4")
 
 
