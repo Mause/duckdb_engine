@@ -1,21 +1,23 @@
-[tool.poetry]
+[project]
 name = "duckdb_engine"
-version = "0.15.1"
+version = "0.16.0"
 description = "SQLAlchemy driver for duckdb"
-authors = ["Elliana <me@mause.me>"]
-license = "MIT"
+authors = [
+    {name = "Elliana May", email = "me@mause.me"},
+]
+license = {text = "MIT"}
+requires-python = ">=3.9,<4"
 readme = "README.md"
-repository = "https://github.com/Mause/duckdb_engine"
+dependencies = [
+    "duckdb>=0.5.0",
+    "sqlalchemy>=1.3.22",
+    "packaging>=21",
+]
 
-[tool.poetry.urls]
+[project.urls]
 "Bug Tracker" = "https://github.com/Mause/duckdb_engine/issues"
-"Changelog" = "https://github.com/Mause/duckdb_engine/releases"
-
-[tool.poetry.dependencies]
-python = ">=3.8,<4"
-duckdb = ">=0.5.0"
-sqlalchemy = ">=1.3.22"
-packaging = ">=21"
+Changelog = "https://github.com/Mause/duckdb_engine/releases"
+repository = "https://github.com/Mause/duckdb_engine"
 
 [tool.poetry.group.dev.dependencies]
 numpy = "*"
@@ -27,8 +29,8 @@ pandas = "^1"
 jupysql = "^0.10.0"
 sqlalchemy = {version="^1.3.19", extras=['mypy']}
 pytest-cov = {extras = ["coverage"], version = "^5.0.0"}
-snapshottest = "^0.6.0"
 pytest-remotedata = "^0.4.0"
+pytest-snapshot = ">=0.9.0,<1"
 toml = "^0.10.2"
 fsspec = "^2025.2.0"
 
@@ -36,7 +38,7 @@ fsspec = "^2025.2.0"
 pdbpp = "^0.10.3"
 pre-commit = { version = "^4.0.0", markers = "python_version >= '3.9'" }
 
-[tool.poetry.plugins."sqlalchemy.dialects"]
+[project.entry-points."sqlalchemy.dialects"]
 duckdb = "duckdb_engine:Dialect"
 
 [tool.pytest.ini_options]
