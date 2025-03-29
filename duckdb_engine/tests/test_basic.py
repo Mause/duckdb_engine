@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Generic, Optional, TypeVar, cast
 
 import duckdb
+import fsspec
 import sqlalchemy
 from hypothesis import assume, given, settings
 from hypothesis.strategies import text as text_strat
@@ -690,3 +691,18 @@ def test_reserved_keywords(engine: Engine) -> None:
     stmt = select(column("qualify"))
 
     assert str(stmt.compile(engine)) == 'SELECT "qualify"'
+
+
+def test_register_filesystem() -> None:
+    memory_fs = fsspec.filesystem("memory")
+    file_fs = fsspec.filesystem("file")
+    engine = create_engine(
+        "duckdb:///",
+        connect_args={
+            "register_filesystems": [memory_fs, file_fs],
+        },
+    )
+
+    with engine.connect() as conn:
+        duckdb_conn = getattr(conn.connection.dbapi_connection, "_ConnectionWrapper__c")
+        assert duckdb.list_filesystems(connection=duckdb_conn) == ["memory", "file"]

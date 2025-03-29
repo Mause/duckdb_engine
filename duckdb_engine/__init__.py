@@ -39,7 +39,7 @@ from ._supports import has_comment_support
 from .config import apply_config, get_core_config
 from .datatypes import ISCHEMA_NAMES, register_extension_types
 
-__version__ = "0.16.0"
+__version__ = "0.17.0"
 sqlalchemy_version = sqlalchemy.__version__
 duckdb_version: str = duckdb.__version__
 supports_attach: bool = duckdb_version >= "0.7.0"
@@ -296,10 +296,15 @@ class Dialect(PGDialect_psycopg2):
                 user_agent = f"{user_agent} {config['custom_user_agent']}"
             config["custom_user_agent"] = user_agent
 
+        filesystems = cparams.pop("register_filesystems", [])
+
         conn = duckdb.connect(*cargs, **cparams)
 
         for extension in preload_extensions:
             conn.execute(f"LOAD {extension}")
+
+        for filesystem in filesystems:
+            conn.register_filesystem(filesystem)
 
         apply_config(self, conn, ext)
 
