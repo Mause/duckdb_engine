@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.17.0](https://github.com/Mause/duckdb_engine/compare/v0.16.0...v0.17.0) (2025-03-29)
+
+
+### Features
+
+* register filesystems ([9f7c796](https://github.com/Mause/duckdb_engine/commit/9f7c79675345ddad0a3691a40c104fb8229eabfc))
+
+
+### Bug Fixes
+
+* lock ([21d9238](https://github.com/Mause/duckdb_engine/commit/21d92387ea86b216e37bae41eb6259bc7dbcc051))
+
 ## [0.16.0](https://github.com/Mause/duckdb_engine/compare/v0.15.1...v0.16.0) (2025-03-29)
 
 
