@@ -32,7 +32,8 @@ jobs:
       - name: List nox envs
         run: nox -l
       - run: nox --pythons '${{ matrix.python }}'
-      - run: poetry build
+      - run: uvx poetry build
+      - run: uvx poetry check
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
