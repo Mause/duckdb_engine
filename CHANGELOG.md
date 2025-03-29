@@ -7,11 +7,6 @@
 
 * register filesystems ([9f7c796](https://github.com/Mause/duckdb_engine/commit/9f7c79675345ddad0a3691a40c104fb8229eabfc))
 
-
-### Bug Fixes
-
-* lock ([21d9238](https://github.com/Mause/duckdb_engine/commit/21d92387ea86b216e37bae41eb6259bc7dbcc051))
-
 ## [0.16.0](https://github.com/Mause/duckdb_engine/compare/v0.15.1...v0.16.0) (2025-03-29)
 
 
@@ -22,11 +17,6 @@
 ### Bug Fixes
 
 * drop python 3.8 ([1acd720](https://github.com/Mause/duckdb_engine/commit/1acd720ca91d1438405f848c80425d5cbc715762))
-
-
-### Miscellaneous Chores
-
-* release 0.16.0 ([7161129](https://github.com/Mause/duckdb_engine/commit/7161129f6559f353e8a25219af6f723f79832aa6))
 
 ## [0.15.1](https://github.com/Mause/duckdb_engine/compare/v0.15.0...v0.15.1) (2025-03-29)
 
