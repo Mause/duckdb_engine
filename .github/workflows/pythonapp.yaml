@@ -12,6 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: wntrblm/nox@main
+      - run: pip install github_action_utils
       - id: set-matrix
         shell: bash
         run: echo session=$(nox --json -l | jq -c '[.[].session]') | tee --append $GITHUB_OUTPUT
@@ -28,6 +29,7 @@ jobs:
       - name: Remove cached duckdb extensions
         run: rm -rf ~/.duckdb
       - uses: actions/checkout@v3
+      - run: pip install github_action_utils
       - uses: wntrblm/nox@main
       - run: nox -s "${{ matrix.session }}"
       - name: Publish Unit Test Results
