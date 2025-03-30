@@ -34,7 +34,7 @@ jobs:
       - uses: wntrblm/nox@main
       - run: |
           /home/runner/work/_temp/nox-venv/bin/python3 -m ensurepip
-          /home/runner/work/_temp/nox-venv/bin/python3 -m pip install github_action_utils
+          /home/runner/work/_temp/nox-venv/bin/python3 -m pip install github_action_utils uv -U
       - run: nox -s "${{ matrix.session }}"
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
