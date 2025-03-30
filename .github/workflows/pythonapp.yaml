@@ -25,8 +25,9 @@ jobs:
       - name: List nox envs
         run: nox -l
       - run: nox --pythons '${{ matrix.python }}'
-      - run: uvx poetry build
-      - run: uvx poetry check --strict
+      - run: uv build
+      - name: Check that the lockfile is consistent with pyproject.toml
+        run: uv lock --check
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
