@@ -6,7 +6,7 @@ authors = [
     {name = "Elliana May", email = "me@mause.me"},
 ]
 license = "MIT"
-licence-files = ["LICENCE"]
+license-files = ["LICENSE.txt"]
 requires-python = ">=3.9,<4"
 readme = "README.md"
 dependencies = [
