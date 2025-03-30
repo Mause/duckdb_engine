@@ -31,8 +31,10 @@ jobs:
       - name: Remove cached duckdb extensions
         run: rm -rf ~/.duckdb
       - uses: actions/checkout@v3
-      - run: pip install github_action_utils
       - uses: wntrblm/nox@main
+      - run: |
+          /home/runner/work/_temp/nox-venv/bin/python3 -m ensurepip
+          /home/runner/work/_temp/nox-venv/bin/python3 -m pip install github_action_utils
       - run: nox -s "${{ matrix.session }}"
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
