@@ -12,7 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: wntrblm/nox@main
-      - run: /home/runner/work/_temp/nox-venv/bin/python3 -m pip install github_action_utils
+      - run: |
+          ls /home/runner/work/_temp/nox-venv/bin
+          /home/runner/work/_temp/nox-venv/bin/uv pip install github_action_utils
       - id: set-matrix
         shell: bash
         run: echo session=$(nox --json -l | jq -c '[.[].session]') | tee --append $GITHUB_OUTPUT
