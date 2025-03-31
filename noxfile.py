@@ -30,7 +30,7 @@ def tests(session: nox.Session, duckdb: str, sqlalchemy: str) -> None:
     tests_core(session, duckdb, sqlalchemy)
 
 
-@nox.session(py=["3.8"])
+@nox.session(py=["3.9"])
 def nightly(session: nox.Session) -> None:
     session.skip("DuckDB nightly installs are broken right now")
     tests_core(session, "master", "1.4")
@@ -66,7 +66,7 @@ def poetry(session: nox.Session) -> None:
     session.run("poetry", "install", "--with", "dev", "--verbose", silent=False)
 
 
-@nox.session(py=["3.8"])
+@nox.session(py=["3.9"])
 def mypy(session: nox.Session) -> None:
     poetry(session)
     session.run("mypy", "duckdb_engine/")
