@@ -15,6 +15,7 @@ jobs:
       - run: |
           /home/runner/work/_temp/nox-venv/bin/python3 -m ensurepip
           /home/runner/work/_temp/nox-venv/bin/python3 -m pip install github_action_utils
+      - run: nox --json -l
       - id: set-matrix
         shell: bash
         run: echo session=$(nox --json -l | jq -c '[.[].session]') | tee --append $GITHUB_OUTPUT
