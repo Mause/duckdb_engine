@@ -53,8 +53,6 @@ def tests_core(session: nox.Session, duckdb: str, sqlalchemy: str) -> None:
             session.install(f"duckdb=={duckdb}")
     with group(f"{session.name} Test"):
         session.run(
-            "uv",
-            "run",
             "pytest",
             "--junitxml=results.xml",
             "--cov",
@@ -70,11 +68,18 @@ def tests_core(session: nox.Session, duckdb: str, sqlalchemy: str) -> None:
 
 
 def uv_sync(session: nox.Session) -> None:
-    session.run("uv", "sync", "--verbose", silent=False)
+    session.run(
+        "uv",
+        "sync",
+        "--verbose",
+        "--active",
+        silent=False,
+        env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location},
+    )
 
 
 @nox.session(py=["3.9"])
 def mypy(session: nox.Session) -> None:
     session.skip("We need to fix the mypy issues before running it")
     uv_sync(session)
-    session.run("uv", "run", "mypy", "duckdb_engine/")
+    session.run("mypy", "duckdb_engine/")
