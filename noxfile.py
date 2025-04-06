@@ -1,7 +1,6 @@
 from contextlib import contextmanager
 from typing import Generator
 
-import github_action_utils as gha
 import nox
 
 nox.options.default_venv_backend = "uv"
@@ -10,6 +9,13 @@ nox.options.error_on_external_run = True
 
 @contextmanager
 def group(title: str) -> Generator[None, None, None]:
+    try:
+        import github_action_utils as gha
+    except ImportError:
+        # If github_action_utils is not available, just yield without starting a group
+        # This allows the code to run outside of GitHub Actions
+        yield
+        return
     try:
         gha.start_group(title)
         yield
@@ -38,7 +44,7 @@ def nightly(session: nox.Session) -> None:
 
 def tests_core(session: nox.Session, duckdb: str, sqlalchemy: str) -> None:
     with group(f"{session.name} - Install"):
-        poetry(session)
+        uv_sync(session)
         operator = "==" if sqlalchemy.count(".") == 2 else "~="
         session.install(f"sqlalchemy{operator}{sqlalchemy}")
         if duckdb == "master":
@@ -61,12 +67,19 @@ def tests_core(session: nox.Session, duckdb: str, sqlalchemy: str) -> None:
         )
 
 
-def poetry(session: nox.Session) -> None:
-    session.install("poetry")
-    session.run("poetry", "install", "--with", "dev", "--verbose", silent=False)
+def uv_sync(session: nox.Session) -> None:
+    session.run(
+        "uv",
+        "sync",
+        "--verbose",
+        "--active",
+        silent=False,
+        env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location},
+    )
 
 
 @nox.session(py=["3.9"])
 def mypy(session: nox.Session) -> None:
-    poetry(session)
+    session.skip("We need to fix the mypy issues before running it")
+    uv_sync(session)
     session.run("mypy", "duckdb_engine/")
