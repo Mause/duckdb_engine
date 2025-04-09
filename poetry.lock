@@ -389,14 +389,14 @@ docs = ["Sphinx"]
 
 [[package]]
 name = "hypothesis"
-version = "6.130.8"
+version = "6.130.12"
 description = "A library for property-based testing"
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "hypothesis-6.130.8-py3-none-any.whl", hash = "sha256:8ddafde382fb96163c2a51c5a7c540d2642b2802a596347c13ac8fbc9de50d70"},
-    {file = "hypothesis-6.130.8.tar.gz", hash = "sha256:1b719943011375b1d66f01f858181c3c3ae49324cd7d7b359229cbf95a7785ce"},
+    {file = "hypothesis-6.130.12-py3-none-any.whl", hash = "sha256:287d4c815868bc1a75c649cc0791556ab48aedb9a7dfa7fb9d3af4bd3f4c1c3d"},
+    {file = "hypothesis-6.130.12.tar.gz", hash = "sha256:db4a0cfab0f903d3500e9808b15d2a8a66d822258058bc53011b1216b4b8ec1d"},
 ]
 
 [package.dependencies]
