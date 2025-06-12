@@ -29,7 +29,7 @@ hypothesis = "^6.75.2"
 pandas = "^1"
 jupysql = "^0.10.0"
 sqlalchemy = {version="^1.3.19", extras=['mypy']}
-pytest-cov = {extras = ["coverage"], version = "^5.0.0"}
+pytest-cov = {extras = ["coverage"], version = "^6.2.1"}
 pytest-remotedata = "^0.4.0"
 pytest-snapshot = ">=0.9.0,<1"
 toml = "^0.10.2"
