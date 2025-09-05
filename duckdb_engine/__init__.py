@@ -297,8 +297,19 @@ class Dialect(PGDialect_psycopg2):
             config["custom_user_agent"] = user_agent
 
         filesystems = cparams.pop("register_filesystems", [])
-
-        conn = duckdb.connect(*cargs, **cparams)
+        database = cparams.pop("database", None)
+        # ducklake handling
+        if database.startswith("ducklake:") and supports_attach:
+            alias_ducklake = cparams.pop("alias", "ducklake")
+            data_path = cparams.pop("data_path", None)
+            attach_sql = f"""
+            ATTACH '{database}' AS {alias_ducklake} {f"(DATA_PATH '{data_path}')" if data_path is not None else "" }
+            """
+            conn = duckdb.connect(*cargs, **cparams)
+            conn.execute(attach_sql)
+            conn.execute(f"USE {alias_ducklake}")
+        else:
+            conn = duckdb.connect(database, *cargs, **cparams)
 
         for extension in preload_extensions:
             conn.execute(f"LOAD {extension}")
