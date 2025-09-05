@@ -310,7 +310,7 @@ class Dialect(PGDialect_psycopg2):
             if read_only and data_path is not None:
                 attach_sql += f" (DATA_PATH '{data_path}', READ_ONLY)"
             elif read_only:
-                attach_sql += f" (READ_ONLY)"   
+                attach_sql += " (READ_ONLY)"
             elif data_path is not None:
                 attach_sql += f" (DATA_PATH '{data_path}')"
 
