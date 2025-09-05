@@ -48,13 +48,9 @@ def test_ducklake_attach_basic(ducklake_engine: Engine, temp_dir: Path):
         assert current_db.scalar() == "test_ducklake"
 
 
-<<<<<<< HEAD
 def test_ducklake_query_table(ducklake_engine: Engine)->None:
 
 
-=======
-def test_ducklake_query_table(ducklake_engine: Engine, temp_dir: Path):
->>>>>>> a9876c550c3070158618c3633b33d11a6fdc57e9
     with ducklake_engine.connect() as conn:
         conn.execute(
             text("""
@@ -113,12 +109,8 @@ def test_ducklake_query_schema(ducklake_engine: Engine) -> None:
         assert "description" in column_names
 
 
-<<<<<<< HEAD
 def test_ducklake_query_view(ducklake_engine: Engine) -> None:
 
-=======
-def test_ducklake_query_view(ducklake_engine: Engine, temp_dir: Path):
->>>>>>> a9876c550c3070158618c3633b33d11a6fdc57e9
     with ducklake_engine.connect() as conn:
         conn.execute(text("CREATE SCHEMA test_schema"))
         conn.execute(text("use test_schema"))
