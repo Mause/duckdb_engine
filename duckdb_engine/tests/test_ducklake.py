@@ -1,6 +1,6 @@
 import tempfile
 from pathlib import Path
-from typing import Generator
+from typing import Generator, cast
 
 import pytest
 import sqlalchemy
@@ -35,7 +35,7 @@ def ducklake_session(ducklake_engine: Engine) -> Session:
     return sessionmaker(bind=ducklake_engine)()
 
 
-def test_ducklake_attach_basic(ducklake_engine: Engine, temp_dir: Path):
+def test_ducklake_attach_basic(ducklake_engine: Engine, temp_dir: Path) -> None:
     with ducklake_engine.connect() as conn:
         conn.execute(text("INSTALL ducklake"))
         conn.execute(text("LOAD ducklake"))
@@ -77,7 +77,9 @@ def test_ducklake_query_table(ducklake_engine: Engine) -> None:
 
         result = conn.execute(text("SELECT AVG(value) FROM test_table"))
         avg_value = result.scalar()
-        assert abs(avg_value - 200.7) < 0.01
+        assert avg_value is not None
+        avg_value_f = cast(float, avg_value)
+        assert abs(avg_value_f - 200.7) < 0.01
 
 
 def test_ducklake_query_schema(ducklake_engine: Engine) -> None:
