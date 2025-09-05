@@ -302,9 +302,18 @@ class Dialect(PGDialect_psycopg2):
         if database.startswith("ducklake:") and supports_attach:
             alias_ducklake = cparams.pop("alias", "ducklake")
             data_path = cparams.pop("data_path", None)
+            read_only = cparams.pop("read_only", False)
+
             attach_sql = f"""
-            ATTACH '{database}' AS {alias_ducklake} {f"(DATA_PATH '{data_path}')" if data_path is not None else "" }
+            ATTACH '{database}' AS {alias_ducklake}
             """
+            if read_only and data_path is not None:
+                attach_sql += f" (DATA_PATH '{data_path}', READ_ONLY)"
+            elif read_only:
+                attach_sql += f" (READ_ONLY)"   
+            elif data_path is not None:
+                attach_sql += f" (DATA_PATH '{data_path}')"
+
             conn = duckdb.connect(*cargs, **cparams)
             conn.execute(attach_sql)
             conn.execute(f"USE {alias_ducklake}")

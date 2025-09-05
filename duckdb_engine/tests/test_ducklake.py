@@ -2,6 +2,8 @@ import tempfile
 from pathlib import Path
 from typing import Generator
 
+import sqlalchemy
+
 import pytest
 from sqlalchemy.dialects import registry  # type: ignore
 from sqlalchemy import create_engine, inspect, text
@@ -142,3 +144,57 @@ def test_ducklake_query_view(ducklake_engine: Engine, temp_dir: Path):
         inspector = inspect(ducklake_engine)
         view_names = inspector.get_view_names('test_schema')
         assert "category_summary" in view_names
+
+
+@pytest.fixture
+def readonly_ducklake_engine(temp_dir: Path) -> Engine:
+    data_path = temp_dir / "data"
+    data_path.mkdir()
+    registry.register("duckdb", "duckdb_engine", "Dialect")
+    catalog_path = temp_dir / "test_catalog.ducklake"
+    
+    # First create some test data with a writable connection
+    writable_engine = create_engine(f"duckdb:///ducklake:{catalog_path}", 
+                                   connect_args={"data_path": str(data_path), "alias": "test_readonly"})
+    with writable_engine.connect() as conn:
+        conn.execute(text("""
+            CREATE TABLE readonly_test (
+                id INTEGER, 
+                name VARCHAR
+            )
+        """))
+        conn.execute(text("INSERT INTO readonly_test VALUES (1, 'existing_data')"))
+    
+    # Return readonly engine
+    readonly_engine = create_engine(f"duckdb:///ducklake:{catalog_path}", 
+                                   connect_args={"data_path": str(data_path), 
+                                               "alias": "test_readonly", 
+                                               "read_only": True})
+    return readonly_engine
+
+
+def test_ducklake_readonly_prevents_writes(readonly_ducklake_engine: Engine):
+    with readonly_ducklake_engine.connect() as conn:
+        # Read operations should work
+        result = conn.execute(text("SELECT COUNT(*) FROM readonly_test"))
+        assert result.scalar() == 1
+        
+        result = conn.execute(text("SELECT name FROM readonly_test WHERE id = 1"))
+        assert result.scalar() == "existing_data"
+        
+        # Write operations should fail
+        # sqlalchemy.exc.ProgrammingError: (duckdb.duckdb.InvalidInputException) Invalid Input Error: Cannot execute statement of type "INSERT" on database "test_readonly" which is attached in read-only mode!
+        with pytest.raises(sqlalchemy.exc.ProgrammingError):
+            conn.execute(text("INSERT INTO readonly_test VALUES (2, 'new_data')"))
+        
+        with pytest.raises(sqlalchemy.exc.ProgrammingError):
+            conn.execute(text("DELETE FROM readonly_test WHERE id = 1"))
+        
+        with pytest.raises(sqlalchemy.exc.ProgrammingError):
+            conn.execute(text("UPDATE readonly_test SET name = 'updated' WHERE id = 1"))
+        
+        with pytest.raises(sqlalchemy.exc.ProgrammingError):
+            conn.execute(text("CREATE TABLE new_table (id INTEGER)"))
+        
+        with pytest.raises(sqlalchemy.exc.ProgrammingError):
+            conn.execute(text("DROP TABLE readonly_test"))
