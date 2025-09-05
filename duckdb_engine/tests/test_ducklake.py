@@ -48,7 +48,7 @@ def test_ducklake_attach_basic(ducklake_engine: Engine, temp_dir: Path):
         assert current_db.scalar() == "test_ducklake"
 
 
-def test_ducklake_query_table(ducklake_engine: Engine, temp_dir: Path):
+def test_ducklake_query_table(ducklake_engine: Engine)->None:
 
     
     with ducklake_engine.connect() as conn:
@@ -78,7 +78,7 @@ def test_ducklake_query_table(ducklake_engine: Engine, temp_dir: Path):
         assert abs(avg_value - 200.7) < 0.01
 
 
-def test_ducklake_query_schema(ducklake_engine: Engine, temp_dir: Path):
+def test_ducklake_query_schema(ducklake_engine: Engine) -> None:
     with ducklake_engine.connect() as conn:
         conn.execute(text("CREATE SCHEMA test_schema"))
         
@@ -103,7 +103,7 @@ def test_ducklake_query_schema(ducklake_engine: Engine, temp_dir: Path):
         assert "description" in column_names
 
 
-def test_ducklake_query_view(ducklake_engine: Engine, temp_dir: Path):
+def test_ducklake_query_view(ducklake_engine: Engine) -> None:
     
     with ducklake_engine.connect() as conn:
         conn.execute(text("CREATE SCHEMA test_schema"))
@@ -173,7 +173,7 @@ def readonly_ducklake_engine(temp_dir: Path) -> Engine:
     return readonly_engine
 
 
-def test_ducklake_readonly_prevents_writes(readonly_ducklake_engine: Engine):
+def test_ducklake_readonly_prevents_writes(readonly_ducklake_engine: Engine)-> None:
     with readonly_ducklake_engine.connect() as conn:
         # Read operations should work
         result = conn.execute(text("SELECT COUNT(*) FROM readonly_test"))
