@@ -304,7 +304,7 @@ class Dialect(PGDialect_psycopg2):
             # skip if already loaded in this connection
             row = conn.execute(
                 "SELECT loaded FROM duckdb_extensions() WHERE extension_name = ?",
-                [extension]
+                [extension],
             ).fetchone()
             if row and row[0]:  # True == already loaded
                 continue
