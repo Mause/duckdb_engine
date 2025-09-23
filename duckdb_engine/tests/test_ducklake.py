@@ -192,6 +192,7 @@ def readonly_ducklake_engine(temp_dir: Path) -> Engine:
     )
     return readonly_engine
 
+
 def test_postgres(temp_dir: Path) -> Engine:
     data_path = temp_dir / "data"
     data_path.mkdir()
@@ -199,7 +200,7 @@ def test_postgres(temp_dir: Path) -> Engine:
 
     # First create some test data with a writable connection
     ducklake_engine = create_engine(
-        f"duckdb:///ducklake:postgres:dbname=ducklake user=postgres password=FvTEBiSdLOlo host=15.235.225.242 port=5433",
+        "duckdb:///ducklake:postgres:dbname=ducklake user=postgres password=FvTEBiSdLOlo host=15.235.225.242 port=5433",
     )
     with ducklake_engine.connect() as conn:
         inspector = inspect(ducklake_engine)
