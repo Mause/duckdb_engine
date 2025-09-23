@@ -1,5 +1,6 @@
 import re
 import warnings
+from collections.abc import Hashable
 from functools import lru_cache
 from typing import (
     TYPE_CHECKING,
@@ -175,6 +176,26 @@ class CursorWrapper:
         else:
             return self.__c.fetchmany(size)
 
+    @property
+    def description(self) -> Optional[List[Tuple[Any, ...]]]:
+        description = self.__c.description
+        if description is None:
+            return None
+
+        sanitized: List[Tuple[Any, ...]] = []
+        for row in description:
+            if len(row) <= 1:
+                sanitized.append(tuple(row))
+                continue
+
+            type_code = row[1]
+            if isinstance(type_code, Hashable):
+                sanitized.append(tuple(row))
+            else:
+                sanitized.append((row[0], str(type_code), *row[2:]))
+
+        return sanitized
+
 
 class DuckDBEngineWarning(Warning):
     pass
@@ -283,6 +304,7 @@ class Dialect(PGDialect_psycopg2):
         return res
 
     def connect(self, *cargs: Any, **cparams: Any) -> "Connection":
+        print("duckdb version:", duckdb_version)
         core_keys = get_core_config()
         preload_extensions = cparams.pop("preload_extensions", [])
         config = dict(cparams.get("config", {}))
@@ -409,7 +431,7 @@ class Dialect(PGDialect_psycopg2):
         s = """
             SELECT database_name, schema_name AS nspname
             FROM duckdb_schemas()
-            WHERE schema_name NOT LIKE 'pg\_%' ESCAPE '\'
+            WHERE schema_name NOT LIKE 'pg\\_%' ESCAPE '\\'
             ORDER BY database_name, nspname
             """
         rs = connection.execute(text(s))
