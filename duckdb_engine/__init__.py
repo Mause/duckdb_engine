@@ -409,7 +409,7 @@ class Dialect(PGDialect_psycopg2):
         s = """
             SELECT database_name, schema_name AS nspname
             FROM duckdb_schemas()
-            WHERE schema_name NOT LIKE 'pg\\_%' ESCAPE '\\'
+            WHERE schema_name NOT LIKE 'pg\_%' ESCAPE '\'
             ORDER BY database_name, nspname
             """
         rs = connection.execute(text(s))

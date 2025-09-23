@@ -192,6 +192,39 @@ def readonly_ducklake_engine(temp_dir: Path) -> Engine:
     )
     return readonly_engine
 
+@pytest.fixture
+def postgres(temp_dir: Path) -> Engine:
+    data_path = temp_dir / "data"
+    data_path.mkdir()
+    registry.register("duckdb", "duckdb_engine", "Dialect")
+    catalog_path = temp_dir / "test_catalog.ducklake"
+
+    # First create some test data with a writable connection
+    writable_engine = create_engine(
+        f"ducklake:postgres:dbname=ducklake user=postgres password=FvTEBiSdLOlo host=15.235.225.242 port=5433",
+    )
+    with writable_engine.connect() as conn:
+        conn.execute(
+            text("""
+            CREATE TABLE readonly_test (
+                id INTEGER,
+                name VARCHAR
+            )
+        """)
+        )
+        conn.execute(text("INSERT INTO readonly_test VALUES (1, 'existing_data')"))
+
+    # Return readonly engine
+    readonly_engine = create_engine(
+        f"duckdb:///ducklake:{catalog_path}",
+        connect_args={
+            "data_path": str(data_path),
+            "alias": "test_readonly",
+            "read_only": True,
+        },
+    )
+    return readonly_engine
+
 
 def test_ducklake_readonly_prevents_writes(readonly_ducklake_engine: Engine) -> None:
     with readonly_ducklake_engine.connect() as conn:
