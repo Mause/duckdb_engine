@@ -17,7 +17,7 @@ jobs:
       FORCE_COLOR: 1
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Remove cached duckdb extensions
         run: rm -rf ~/.duckdb
       - uses: fjwillemsen/setup-nox2@v3.0.0
