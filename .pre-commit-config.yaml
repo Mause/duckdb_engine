@@ -22,10 +22,6 @@ repos:
           - "sqlalchemy[mypy]==1.4.46"
           - "types-setuptools==57.4.17"
           - "nox"
-  - repo: https://github.com/tox-dev/tox-ini-fmt
-    rev: "1.6.0"
-    hooks:
-      - id: tox-ini-fmt
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
     rev: 'v0.11.4'
