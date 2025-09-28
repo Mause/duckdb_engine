@@ -31,7 +31,7 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
-          junit_files: results.xml
+          files: results.xml
           comment_mode: off
           check_name:  "Test Results - ${{ join(matrix.*, ', ') }}"
       - uses: codecov/codecov-action@v5.5.1
