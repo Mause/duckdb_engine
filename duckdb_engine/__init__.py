@@ -521,6 +521,7 @@ class Dialect(PGDialect_psycopg2):
 
     def initialize(self, connection: "Connection") -> None:
         DefaultDialect.initialize(self, connection)
+        self.supports_native_enum = True
 
     def create_connect_args(self, url: URL) -> Tuple[tuple, dict]:
         opts = url.translate_connect_args(database="database")
