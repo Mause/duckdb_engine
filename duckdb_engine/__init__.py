@@ -1,5 +1,6 @@
 import re
 import warnings
+from collections.abc import Hashable
 from functools import lru_cache
 from typing import (
     TYPE_CHECKING,
@@ -175,6 +176,26 @@ class CursorWrapper:
         else:
             return self.__c.fetchmany(size)
 
+    @property
+    def description(self) -> Optional[List[Tuple[Any, ...]]]:
+        description = self.__c.description
+        if description is None:
+            return None
+
+        sanitized: List[Tuple[Any, ...]] = []
+        for row in description:
+            if len(row) <= 1:
+                sanitized.append(tuple(row))
+                continue
+
+            type_code = row[1]
+            if isinstance(type_code, Hashable):
+                sanitized.append(tuple(row))
+            else:
+                sanitized.append((row[0], str(type_code), *row[2:]))
+
+        return sanitized
+
 
 class DuckDBEngineWarning(Warning):
     pass
@@ -283,6 +304,7 @@ class Dialect(PGDialect_psycopg2):
         return res
 
     def connect(self, *cargs: Any, **cparams: Any) -> "Connection":
+        print("duckdb version:", duckdb_version)
         core_keys = get_core_config()
         preload_extensions = cparams.pop("preload_extensions", [])
         config = dict(cparams.get("config", {}))
@@ -297,8 +319,28 @@ class Dialect(PGDialect_psycopg2):
             config["custom_user_agent"] = user_agent
 
         filesystems = cparams.pop("register_filesystems", [])
+        database = cparams.pop("database", None)
+        # ducklake handling
+        if database.startswith("ducklake:") and supports_attach:
+            alias_ducklake = cparams.pop("alias", "ducklake")
+            data_path = cparams.pop("data_path", None)
+            read_only = cparams.pop("read_only", False)
 
-        conn = duckdb.connect(*cargs, **cparams)
+            attach_sql = f"""
+            ATTACH '{database}' AS {alias_ducklake}
+            """
+            if read_only and data_path is not None:
+                attach_sql += f" (DATA_PATH '{data_path}', READ_ONLY)"
+            elif read_only:
+                attach_sql += " (READ_ONLY)"
+            elif data_path is not None:
+                attach_sql += f" (DATA_PATH '{data_path}')"
+
+            conn = duckdb.connect(*cargs, **cparams)
+            conn.execute(attach_sql)
+            conn.execute(f"USE {alias_ducklake}")
+        else:
+            conn = duckdb.connect(database, *cargs, **cparams)
 
         for extension in preload_extensions:
             conn.execute(f"LOAD {extension}")
