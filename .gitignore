@@ -14,3 +14,7 @@ coverage.xml
 .vscode
 results.xml
 venv
+
+# AI assistant files
+CLAUDE.md
+.serena/
