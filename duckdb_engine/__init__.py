@@ -19,6 +19,7 @@ import sqlalchemy
 from sqlalchemy import pool, select, sql, text, util
 from sqlalchemy import types as sqltypes
 from sqlalchemy.schema import Sequence
+from sqlalchemy.engine import default
 from sqlalchemy.engine.default import DefaultDialect
 from sqlalchemy.engine.interfaces import Dialect as RootDialect
 from sqlalchemy.engine.reflection import cache, Inspector
@@ -75,10 +76,9 @@ class DuckDBInspector(Inspector):
             WHERE schema_name != 'pg_catalog'
             ORDER BY database_name, schema_name
         """
-        with self.bind.connect() as conn:
-            rs = conn.execute(text(query))
-            qs = self.dialect.identifier_preparer.quote_schema
-            return [qs(".".join(row)) for row in rs]
+        rs = self._execute(text(query))
+        qs = self.dialect.identifier_preparer.quote_schema
+        return [qs(".".join(row)) for row in rs]
 
     def get_table_names(self, schema: Optional[str] = None, **kw: Any) -> List[str]:
         """Return list of table names using duckdb_tables()"""
@@ -91,13 +91,11 @@ class DuckDBInspector(Inspector):
             """
             if schema:
                 query += " AND table_schema = :schema"
-                with self.bind.connect() as conn:
-                    rs = conn.execute(text(query), {"schema": schema})
-                    return [table for (table,) in rs]
+                rs = self._execute(text(query), {"schema": schema})
+                return [table for (table,) in rs]
             else:
-                with self.bind.connect() as conn:
-                    rs = conn.execute(text(query))
-                    return [table for (table,) in rs]
+                rs = self._execute(text(query))
+                return [table for (table,) in rs]
 
         query = """
             SELECT table_name
@@ -115,9 +113,8 @@ class DuckDBInspector(Inspector):
                 query += " AND database_name = :database_name"
                 params["database_name"] = database_name
 
-        with self.bind.connect() as conn:
-            rs = conn.execute(text(query), params)
-            return [table for (table,) in rs]
+        rs = self._execute(text(query), params)
+        return [table for (table,) in rs]
 
     def get_view_names(self, schema: Optional[str] = None, **kw: Any) -> List[str]:
         """Return list of view names using duckdb_views()"""
@@ -130,13 +127,11 @@ class DuckDBInspector(Inspector):
             """
             if schema:
                 query += " AND table_schema = :schema"
-                with self.bind.connect() as conn:
-                    rs = conn.execute(text(query), {"schema": schema})
-                    return [view for (view,) in rs]
+                rs = self._execute(text(query), {"schema": schema})
+                return [view for (view,) in rs]
             else:
-                with self.bind.connect() as conn:
-                    rs = conn.execute(text(query))
-                    return [view for (view,) in rs]
+                rs = self._execute(text(query))
+                return [view for (view,) in rs]
 
         query = """
             SELECT view_name
@@ -154,9 +149,17 @@ class DuckDBInspector(Inspector):
                 query += " AND database_name = :database_name"
                 params["database_name"] = database_name
 
-        with self.bind.connect() as conn:
-            rs = conn.execute(text(query), params)
-            return [view for (view,) in rs]
+        rs = self._execute(text(query), params)
+        return [view for (view,) in rs]
+
+    def _execute(self, query, params=None):
+        """Execute a query handling both Engine and Connection bind types"""
+        from sqlalchemy.engine import Engine
+        if isinstance(self.bind, Engine):
+            with self.bind.connect() as conn:
+                return conn.execute(query, params or {})
+        else:
+            return self.bind.execute(query, params or {})
 
 
 class ConnectionWrapper:
@@ -329,6 +332,18 @@ class DuckDBIdentifierPreparer(IdentifierPreparer):
         return self.format_schema(schema)
 
 
+class DuckDBBLOB(sqltypes.BLOB):
+    """DuckDB-specific BLOB type that doesn't require Binary attribute"""
+    
+    def bind_processor(self, dialect):
+        """Process bound parameters for BLOB columns"""
+        # DuckDB handles bytes directly without needing a Binary wrapper
+        return lambda value: value if value is not None else None
+    
+    def result_processor(self, dialect, coltype):
+        """Process result values for BLOB columns"""
+        return lambda value: value if value is not None else None
+
 class DuckDBTypeCompiler(compiler.GenericTypeCompiler):
     """DuckDB type compiler"""
 
@@ -359,10 +374,62 @@ class DuckDBTypeCompiler(compiler.GenericTypeCompiler):
     def visit_JSON(self, type_: sqltypes.JSON, **kw: Any) -> str:
         return "JSON"
 
+    def visit_BLOB(self, type_: sqltypes.BLOB, **kw: Any) -> str:
+        return "BLOB"
+
+    def visit_datetime(self, type_: sqltypes.DateTime, **kw: Any) -> str:
+        return "TIMESTAMP"
+    
+    def visit_DATETIME(self, type_: sqltypes.DATETIME, **kw: Any) -> str:
+        return "TIMESTAMP"
+
+
+class DuckDBExecutionContext(default.DefaultExecutionContext):
+    """DuckDB execution context with sequence support"""
+    
+    def fire_sequence(self, seq, type_):
+        """Execute a sequence to get the next value"""
+        # Use SELECT nextval() to get the next sequence value
+        result = self._execute_scalar(
+            f"SELECT nextval('{seq.name}')", 
+            None
+        )
+        return result
 
 class DuckDBCompiler(compiler.SQLCompiler):
     """DuckDB SQL compiler"""
-    pass
+    
+    def visit_try_cast(self, element, **kw):
+        """Compile TryCast to DuckDB's TRY_CAST syntax"""
+        return f"TRY_CAST({self.process(element.clause, **kw)} AS {self.process(element.type, **kw)})"
+
+    def visit_datetime(self, type_, **kw):
+        """Compile DateTime type references"""
+        return self.dialect.type_compiler.visit_datetime(type_, **kw)
+
+    def visit_sequence(self, sequence, **kw):
+        """Compile sequence references to nextval() calls"""
+        return f"nextval('{sequence.name}')"
+
+    def visit_function(self, func, **kw):
+        """Compile SQL functions with DuckDB-specific handling"""
+        # Handle date_part function specifically
+        if hasattr(func, 'name') and func.name.lower() == 'date_part':
+            # DuckDB uses date_part(part, date) syntax
+            if len(func.clauses) == 2:
+                part = self.process(func.clauses.clauses[0], **kw)
+                date_expr = self.process(func.clauses.clauses[1], **kw)
+                return f"date_part({part}, {date_expr})"
+        
+        # Handle extract function - convert to date_part
+        if hasattr(func, 'name') and func.name.lower() == 'extract':
+            if len(func.clauses) == 2:
+                part = self.process(func.clauses.clauses[0], **kw)
+                date_expr = self.process(func.clauses.clauses[1], **kw)
+                return f"date_part({part}, {date_expr})"
+        
+        # For all other functions, use default SQLAlchemy compilation
+        return super().visit_function(func, **kw)
 
 
 class DuckDBDDLCompiler(compiler.DDLCompiler):
@@ -403,11 +470,18 @@ class DuckDBInsert(Insert):
     """DuckDB INSERT statement with ON CONFLICT support"""
     inherit_cache = True
 
+    @property
+    def excluded(self):
+        """Return the EXCLUDED pseudo-table for use in ON CONFLICT DO UPDATE"""
+        from sqlalchemy import table, column
+        # Create a pseudo-table representing the EXCLUDED values
+        cols = [column(c.key) for c in self.table.columns]
+        excluded_table = table("excluded", *cols)
+        return excluded_table
+
     def on_conflict_do_nothing(self, constraint=None):
         """Add ON CONFLICT DO NOTHING clause"""
-        self._post_values_clause = sql.ClauseElement._construct_raw_text(
-            "ON CONFLICT DO NOTHING"
-        )
+        self._post_values_clause = text("ON CONFLICT DO NOTHING")
         return self
 
     def on_conflict_do_update(
@@ -422,19 +496,39 @@ class DuckDBInsert(Insert):
         if set_ is None:
             raise ValueError("set_ dictionary is required for ON CONFLICT DO UPDATE")
 
+        # Build conflict target
+        conflict_target = ""
+        if index_elements:
+            # Convert column objects to column names
+            column_names = []
+            for elem in index_elements:
+                if hasattr(elem, 'name'):
+                    column_names.append(elem.name)
+                elif hasattr(elem, 'key'):
+                    column_names.append(elem.key)
+                else:
+                    column_names.append(str(elem))
+            conflict_target = f"({', '.join(column_names)})"
+
         # Build SET clause
         set_clauses = []
         for key, value in set_.items():
-            if hasattr(value, '__clause_element__'):
-                set_clauses.append(f"{key} = {value}")
+            if hasattr(value, '_compiler_dispatch'):
+                # This is a column expression - for now, we'll handle excluded references manually
+                if hasattr(value, 'table') and hasattr(value.table, 'name') and value.table.name == 'excluded':
+                    set_clauses.append(f"{key} = EXCLUDED.{value.name}")
+                else:
+                    # Other expressions would need compilation
+                    set_clauses.append(f"{key} = EXCLUDED.{key}")
             else:
+                # Direct value or string reference
                 set_clauses.append(f"{key} = EXCLUDED.{key}")
 
-        conflict_clause = f"ON CONFLICT DO UPDATE SET {', '.join(set_clauses)}"
+        conflict_clause = f"ON CONFLICT {conflict_target} DO UPDATE SET {', '.join(set_clauses)}"
         if where is not None:
             conflict_clause += f" WHERE {where}"
 
-        self._post_values_clause = sql.ClauseElement._construct_raw_text(conflict_clause)
+        self._post_values_clause = text(conflict_clause)
         return self
 
 # Alias for backward compatibility
@@ -470,17 +564,26 @@ class Dialect(DefaultDialect):
     type_compiler = DuckDBTypeCompiler
     statement_compiler = DuckDBCompiler
     ddl_compiler = DuckDBDDLCompiler
+    execution_ctx_cls = DuckDBExecutionContext
 
     # Type mappings
     colspecs = {
         sqltypes.Numeric: sqltypes.Numeric,
         sqltypes.JSON: sqltypes.JSON,
+        sqltypes.BLOB: DuckDBBLOB,
     }
 
     ischema_names = ISCHEMA_NAMES.copy()
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
+        # Extract JSON serialization parameters before calling super()
+        self._json_serializer = kwargs.pop('json_serializer', None)
+        self._json_deserializer = kwargs.pop('json_deserializer', None)
+
         super().__init__(*args, **kwargs)
+        # Add Binary attribute to duckdb module for BLOB compatibility
+        if not hasattr(duckdb, 'Binary'):
+            duckdb.Binary = lambda x: x  # Simple identity function
 
     def type_descriptor(self, typeobj: Type[sqltypes.TypeEngine]) -> Any:
         """Get type descriptor for given type"""
@@ -491,6 +594,20 @@ class Dialect(DefaultDialect):
             return DuckDBNullType()
 
         return typeobj
+
+    def _json_serializer_fn(self, value):
+        """Default JSON serializer if none provided"""
+        if self._json_serializer is not None:
+            return self._json_serializer(value)
+        import json
+        return json.dumps(value)
+    
+    def _json_deserializer_fn(self, value):
+        """Default JSON deserializer if none provided"""
+        if self._json_deserializer is not None:
+            return self._json_deserializer(value)
+        import json
+        return json.loads(value)
 
 
     def connect(self, *cargs: Any, **cparams: Any) -> "Connection":
@@ -601,10 +718,75 @@ class Dialect(DefaultDialect):
 
     def fire_sequence(self, seq, type_):
         """Execute a sequence to get the next value"""
-        # Since we properly set up DEFAULT nextval() in DDL,
-        # this shouldn't be called for INSERT operations.
-        # But if SQLAlchemy does call it, we can get the next value
-        return None  # Let SQLAlchemy omit the column from INSERT
+        # This method shouldn't be called with our custom execution context
+        # But if it is, we need to handle it properly
+        raise NotImplementedError("Sequence execution should be handled by DuckDBExecutionContext")
+
+    def get_view_names(self, connection, schema: Optional[str] = None, **kw: Any) -> List[str]:
+        """Return list of view names using duckdb_views()"""
+        if not supports_attach:
+            # Fallback for older DuckDB versions
+            query = """
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_type = 'VIEW'
+            """
+            if schema:
+                query += " AND table_schema = :schema"
+                rs = connection.execute(text(query), {"schema": schema})
+                return [view for (view,) in rs]
+            else:
+                query += " AND table_schema = 'main'"  # Only return main schema views by default
+                rs = connection.execute(text(query))
+                return [view for (view,) in rs]
+
+        query = """
+            SELECT view_name
+            FROM duckdb_views()
+            WHERE internal = false
+        """
+        params = {}
+
+        if schema:
+            database_name, schema_name = self.identifier_preparer._separate(schema)
+            if schema_name:
+                query += " AND schema_name = :schema_name"
+                params["schema_name"] = schema_name
+            if database_name:
+                query += " AND database_name = :database_name"
+                params["database_name"] = database_name
+        else:
+            # Default to main schema only
+            query += " AND schema_name = 'main' AND database_name = 'memory'"
+
+        rs = connection.execute(text(query), params)
+        return [view for (view,) in rs]
+
+    def get_table_comment(self, connection, table_name: str, schema: Optional[str] = None, **kw: Any) -> Dict[str, Optional[str]]:
+        """Return table comment"""
+        # DuckDB doesn't have built-in table comments in older versions
+        # But we can check if comment support is available
+        if not self.supports_comments:
+            return {"text": None}
+        
+        # For newer DuckDB versions with comment support
+        try:
+            query = """
+                SELECT comment 
+                FROM information_schema.tables 
+                WHERE table_name = :table_name
+            """
+            params = {"table_name": table_name}
+            
+            if schema:
+                query += " AND table_schema = :schema"
+                params["schema"] = schema
+            
+            result = connection.execute(text(query), params).scalar()
+            return {"text": result}
+        except Exception:
+            # Fallback if comment support isn't available
+            return {"text": None}
 
     def get_columns(
         self,
@@ -971,8 +1153,12 @@ def visit_duckdb_insert(element, compiler, **kw):
     # Use standard INSERT compilation and add our post-values clause
     text = compiler.visit_insert(element, **kw)
 
-    if hasattr(element, '_post_values_clause') and element._post_values_clause:
-        text += " " + str(element._post_values_clause)
+    # Only add the post-values clause if it exists and hasn't been added yet
+    if (hasattr(element, '_post_values_clause') and 
+        element._post_values_clause is not None and
+        "ON CONFLICT" not in text):  # Avoid duplication
+        post_clause = compiler.process(element._post_values_clause, literal_binds=True)
+        text += " " + post_clause
 
     return text
 
