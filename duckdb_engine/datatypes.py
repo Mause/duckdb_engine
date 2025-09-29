@@ -13,11 +13,10 @@ from typing import Any, Callable, Dict, Optional, Type
 import duckdb
 from packaging.version import Version
 from sqlalchemy import exc
-from sqlalchemy.sql import compiler
-from sqlalchemy.sql.compiler import IdentifierPreparer
 from sqlalchemy.engine import Dialect
 from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.sql import sqltypes, type_api
+from sqlalchemy.sql import compiler, sqltypes, type_api
+from sqlalchemy.sql.compiler import IdentifierPreparer
 from sqlalchemy.sql.type_api import TypeEngine
 from sqlalchemy.types import BigInteger, Integer, SmallInteger, String
 
@@ -41,6 +40,7 @@ class UInt32(Integer):
 
 class UInt16(Integer):
     "AKA USMALLINT"
+
     cache_ok = True
 
 
@@ -50,6 +50,7 @@ class UInt8(Integer):
 
 class UTinyInteger(Integer):
     "AKA UInt1"
+
     cache_ok = True
     name = "UTinyInt"
     # UTINYINT	-	0	255
@@ -57,6 +58,7 @@ class UTinyInteger(Integer):
 
 class TinyInteger(Integer):
     "AKA Int1"
+
     cache_ok = True
     name = "TinyInt"
     # TINYINT	INT1	-128	127
@@ -100,7 +102,9 @@ if IS_GT_1:
         cache_ok = True
 
 
-def compile_uint(element: Integer, compiler: compiler.GenericTypeCompiler, **kw: Any) -> str:
+def compile_uint(
+    element: Integer, compiler: compiler.GenericTypeCompiler, **kw: Any
+) -> str:
     """Compile unsigned integer types for DuckDB"""
     return getattr(element, "name", type(element).__name__)
 

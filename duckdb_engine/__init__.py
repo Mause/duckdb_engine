@@ -18,18 +18,18 @@ import duckdb
 import sqlalchemy
 from sqlalchemy import pool, select, sql, text, util
 from sqlalchemy import types as sqltypes
-from sqlalchemy.schema import Sequence
 from sqlalchemy.engine import default
 from sqlalchemy.engine.default import DefaultDialect
 from sqlalchemy.engine.interfaces import Dialect as RootDialect
-from sqlalchemy.engine.reflection import cache, Inspector
+from sqlalchemy.engine.reflection import Inspector, cache
 from sqlalchemy.engine.url import URL
 from sqlalchemy.exc import NoSuchTableError
 from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.schema import Sequence
 from sqlalchemy.sql import bindparam, compiler
-from sqlalchemy.sql.selectable import Select
-from sqlalchemy.sql.dml import Insert
 from sqlalchemy.sql.compiler import IdentifierPreparer
+from sqlalchemy.sql.dml import Insert
+from sqlalchemy.sql.selectable import Select
 
 from ._supports import has_comment_support
 from .config import apply_config, get_core_config
@@ -59,12 +59,9 @@ __all__ = [
 ]
 
 
-
-
-
-
 class ConnectionWrapper:
     """Wrapper for DuckDB connection to provide SQLAlchemy interface"""
+
     __c: duckdb.DuckDBPyConnection
     notices: List[str]
     autocommit = None  # DuckDB doesn't support setting autocommit
@@ -87,6 +84,7 @@ class ConnectionWrapper:
 
 class CursorWrapper:
     """Wrapper for DuckDB cursor to provide SQLAlchemy interface"""
+
     __c: duckdb.DuckDBPyConnection
     __connection_wrapper: "ConnectionWrapper"
 
@@ -146,9 +144,9 @@ class CursorWrapper:
     @property
     def description(self):
         """Override description to normalize DuckDBPyType objects to hashable strings"""
-        if not hasattr(self.__c, 'description') or self.__c.description is None:
+        if not hasattr(self.__c, "description") or self.__c.description is None:
             return None
-        
+
         # Normalize DuckDBPyType to string for hashability
         normalized = []
         for col in self.__c.description:
@@ -174,6 +172,7 @@ class CursorWrapper:
 
 class DuckDBEngineWarning(Warning):
     """Warning raised by DuckDB engine"""
+
     pass
 
 
@@ -235,15 +234,16 @@ class DuckDBIdentifierPreparer(IdentifierPreparer):
 
 class DuckDBBLOB(sqltypes.BLOB):
     """DuckDB-specific BLOB type that doesn't require Binary attribute"""
-    
+
     def bind_processor(self, dialect):
         """Process bound parameters for BLOB columns"""
         # DuckDB handles bytes directly without needing a Binary wrapper
         return lambda value: value if value is not None else None
-    
+
     def result_processor(self, dialect, coltype):
         """Process result values for BLOB columns"""
         return lambda value: value if value is not None else None
+
 
 class DuckDBTypeCompiler(compiler.GenericTypeCompiler):
     """DuckDB type compiler"""
@@ -280,26 +280,24 @@ class DuckDBTypeCompiler(compiler.GenericTypeCompiler):
 
     def visit_datetime(self, type_: sqltypes.DateTime, **kw: Any) -> str:
         return "TIMESTAMP"
-    
+
     def visit_DATETIME(self, type_: sqltypes.DATETIME, **kw: Any) -> str:
         return "TIMESTAMP"
 
 
 class DuckDBExecutionContext(default.DefaultExecutionContext):
     """DuckDB execution context with sequence support"""
-    
+
     def fire_sequence(self, seq, type_):
         """Execute a sequence to get the next value"""
         # Use SELECT nextval() to get the next sequence value
-        result = self._execute_scalar(
-            f"SELECT nextval('{seq.name}')", 
-            None
-        )
+        result = self._execute_scalar(f"SELECT nextval('{seq.name}')", None)
         return result
+
 
 class DuckDBCompiler(compiler.SQLCompiler):
     """DuckDB SQL compiler"""
-    
+
     def visit_try_cast(self, element, **kw):
         """Compile TryCast to DuckDB's TRY_CAST syntax"""
         return f"TRY_CAST({self.process(element.clause, **kw)} AS {self.process(element.type, **kw)})"
@@ -315,31 +313,31 @@ class DuckDBCompiler(compiler.SQLCompiler):
     def visit_function(self, func, **kw):
         """Compile SQL functions with DuckDB-specific handling"""
         # Handle date_part function specifically
-        if hasattr(func, 'name') and func.name.lower() == 'date_part':
+        if hasattr(func, "name") and func.name.lower() == "date_part":
             # DuckDB uses date_part(part, date) syntax
             if len(func.clauses) == 2:
                 # For date_part, inline string literals to avoid DuckDB GROUP BY issues
                 part_clause = func.clauses.clauses[0]
-                if hasattr(part_clause, 'value') and isinstance(part_clause.value, str):
+                if hasattr(part_clause, "value") and isinstance(part_clause.value, str):
                     # Inline the string literal instead of using parameters
                     part = f"'{part_clause.value}'"
                 else:
                     part = self.process(func.clauses.clauses[0], **kw)
                 date_expr = self.process(func.clauses.clauses[1], **kw)
                 return f"date_part({part}, {date_expr})"
-        
+
         # Handle extract function - convert to date_part
-        if hasattr(func, 'name') and func.name.lower() == 'extract':
+        if hasattr(func, "name") and func.name.lower() == "extract":
             if len(func.clauses) == 2:
                 part_clause = func.clauses.clauses[0]
-                if hasattr(part_clause, 'value') and isinstance(part_clause.value, str):
+                if hasattr(part_clause, "value") and isinstance(part_clause.value, str):
                     # Inline the string literal instead of using parameters
                     part = f"'{part_clause.value}'"
                 else:
                     part = self.process(func.clauses.clauses[0], **kw)
                 date_expr = self.process(func.clauses.clauses[1], **kw)
                 return f"date_part({part}, {date_expr})"
-        
+
         # For all other functions, use default SQLAlchemy compilation
         return super().visit_function(func, **kw)
 
@@ -351,14 +349,18 @@ class DuckDBDDLCompiler(compiler.DDLCompiler):
         """Override to handle DuckDB-specific column specs"""
         spec = super().get_column_specification(column, **kwargs)
         return spec
-    
+
     def get_column_default_string(self, column):
         """Override to handle sequence defaults for DuckDB"""
         if column.default and isinstance(column.default, Sequence):
             # Handle Sequence objects attached to column.default
             seq_name = column.default.name
             return f"nextval('{seq_name}')"
-        elif column.server_default and hasattr(column.server_default, 'arg') and isinstance(column.server_default.arg, Sequence):
+        elif (
+            column.server_default
+            and hasattr(column.server_default, "arg")
+            and isinstance(column.server_default.arg, Sequence)
+        ):
             # Handle Sequence objects attached to column.server_default
             seq_name = column.server_default.arg.name
             return f"nextval('{seq_name}')"
@@ -367,6 +369,7 @@ class DuckDBDDLCompiler(compiler.DDLCompiler):
 
 class DuckDBNullType(sqltypes.NullType):
     """DuckDB-specific null type"""
+
     cache_ok = True
 
     def result_processor(
@@ -380,12 +383,14 @@ class DuckDBNullType(sqltypes.NullType):
 
 class DuckDBInsert(Insert):
     """DuckDB INSERT statement with ON CONFLICT support"""
+
     inherit_cache = True
 
     @property
     def excluded(self):
         """Return the EXCLUDED pseudo-table for use in ON CONFLICT DO UPDATE"""
-        from sqlalchemy import table, column
+        from sqlalchemy import column, table
+
         # Create a pseudo-table representing the EXCLUDED values
         cols = [column(c.key) for c in self.table.columns]
         excluded_table = table("excluded", *cols)
@@ -414,9 +419,9 @@ class DuckDBInsert(Insert):
             # Convert column objects to column names
             column_names = []
             for elem in index_elements:
-                if hasattr(elem, 'name'):
+                if hasattr(elem, "name"):
                     column_names.append(elem.name)
-                elif hasattr(elem, 'key'):
+                elif hasattr(elem, "key"):
                     column_names.append(elem.key)
                 else:
                     column_names.append(str(elem))
@@ -425,9 +430,13 @@ class DuckDBInsert(Insert):
         # Build SET clause
         set_clauses = []
         for key, value in set_.items():
-            if hasattr(value, '_compiler_dispatch'):
+            if hasattr(value, "_compiler_dispatch"):
                 # This is a column expression - for now, we'll handle excluded references manually
-                if hasattr(value, 'table') and hasattr(value.table, 'name') and value.table.name == 'excluded':
+                if (
+                    hasattr(value, "table")
+                    and hasattr(value.table, "name")
+                    and value.table.name == "excluded"
+                ):
                     set_clauses.append(f"{key} = EXCLUDED.{value.name}")
                 else:
                     # Other expressions would need compilation
@@ -436,12 +445,15 @@ class DuckDBInsert(Insert):
                 # Direct value or string reference
                 set_clauses.append(f"{key} = EXCLUDED.{key}")
 
-        conflict_clause = f"ON CONFLICT {conflict_target} DO UPDATE SET {', '.join(set_clauses)}"
+        conflict_clause = (
+            f"ON CONFLICT {conflict_target} DO UPDATE SET {', '.join(set_clauses)}"
+        )
         if where is not None:
             conflict_clause += f" WHERE {where}"
 
         self._post_values_clause = text(conflict_clause)
         return self
+
 
 # Alias for backward compatibility
 insert = DuckDBInsert
@@ -449,6 +461,7 @@ insert = DuckDBInsert
 
 class Dialect(DefaultDialect):
     """DuckDB SQLAlchemy dialect"""
+
     name = "duckdb"
     driver = "duckdb_engine"
 
@@ -488,12 +501,12 @@ class Dialect(DefaultDialect):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         # Extract JSON serialization parameters before calling super()
-        self._json_serializer = kwargs.pop('json_serializer', None)
-        self._json_deserializer = kwargs.pop('json_deserializer', None)
+        self._json_serializer = kwargs.pop("json_serializer", None)
+        self._json_deserializer = kwargs.pop("json_deserializer", None)
 
         super().__init__(*args, **kwargs)
         # Add Binary attribute to duckdb module for BLOB compatibility
-        if not hasattr(duckdb, 'Binary'):
+        if not hasattr(duckdb, "Binary"):
             duckdb.Binary = lambda x: x  # Simple identity function
 
     def type_descriptor(self, typeobj: Type[sqltypes.TypeEngine]) -> Any:
@@ -511,15 +524,16 @@ class Dialect(DefaultDialect):
         if self._json_serializer is not None:
             return self._json_serializer(value)
         import json
+
         return json.dumps(value)
-    
+
     def _json_deserializer_fn(self, value):
         """Default JSON deserializer if none provided"""
         if self._json_deserializer is not None:
             return self._json_deserializer(value)
         import json
-        return json.loads(value)
 
+        return json.loads(value)
 
     def connect(self, *cargs: Any, **cparams: Any) -> "Connection":
         """Create DuckDB connection with DuckDB-specific parameters"""
@@ -617,13 +631,13 @@ class Dialect(DefaultDialect):
         query = """
             SELECT COUNT(*) FROM duckdb_sequences() WHERE sequence_name = :seq_name
         """
-        
+
         params = {"seq_name": sequence_name}
         if schema:
             # DuckDB sequences include schema info in the sequence name or separate field
             # For now, just check by name - this could be improved
             pass
-            
+
         result = connection.execute(text(query), params)
         return bool(result.scalar())
 
@@ -631,9 +645,13 @@ class Dialect(DefaultDialect):
         """Execute a sequence to get the next value"""
         # This method shouldn't be called with our custom execution context
         # But if it is, we need to handle it properly
-        raise NotImplementedError("Sequence execution should be handled by DuckDBExecutionContext")
+        raise NotImplementedError(
+            "Sequence execution should be handled by DuckDBExecutionContext"
+        )
 
-    def get_view_names(self, connection, schema: Optional[str] = None, **kw: Any) -> List[str]:
+    def get_view_names(
+        self, connection, schema: Optional[str] = None, **kw: Any
+    ) -> List[str]:
         """Return list of view names using duckdb_views()"""
         if not supports_attach:
             # Fallback for older DuckDB versions
@@ -688,7 +706,9 @@ class Dialect(DefaultDialect):
         rs = connection.execute(text(query))
         return [self.identifier_preparer.quote_schema(".".join(row)) for row in rs]
 
-    def get_table_names(self, connection, schema: Optional[str] = None, **kw: Any) -> List[str]:
+    def get_table_names(
+        self, connection, schema: Optional[str] = None, **kw: Any
+    ) -> List[str]:
         """Return list of table names using duckdb_tables()"""
         if not supports_attach:
             # Fallback for older DuckDB versions
@@ -728,46 +748,48 @@ class Dialect(DefaultDialect):
         rs = connection.execute(text(query), params)
         return [table for (table,) in rs]
 
-    def get_table_comment(self, connection, table_name: str, schema: Optional[str] = None, **kw: Any) -> Dict[str, Optional[str]]:
+    def get_table_comment(
+        self, connection, table_name: str, schema: Optional[str] = None, **kw: Any
+    ) -> Dict[str, Optional[str]]:
         """Return table comment"""
         # DuckDB doesn't have built-in table comments in older versions
         # But we can check if comment support is available
         if not self.supports_comments:
             return {"text": None}
-        
+
         # For newer DuckDB versions with comment support
         try:
             # Use duckdb_tables() function which has proper comment support
             query = """
-                SELECT comment 
-                FROM duckdb_tables() 
+                SELECT comment
+                FROM duckdb_tables()
                 WHERE table_name = :table_name
             """
             params = {"table_name": table_name}
-            
+
             if schema:
                 query += " AND schema_name = :schema"
                 params["schema"] = schema
             else:
                 # Default to main schema if not specified
                 query += " AND schema_name = 'main'"
-            
+
             result = connection.execute(text(query), params).scalar()
             return {"text": result}
         except Exception:
             # Fallback: try information_schema.tables with TABLE_COMMENT column
             try:
                 query = """
-                    SELECT TABLE_COMMENT 
-                    FROM information_schema.tables 
+                    SELECT TABLE_COMMENT
+                    FROM information_schema.tables
                     WHERE table_name = :table_name
                 """
                 params = {"table_name": table_name}
-                
+
                 if schema:
                     query += " AND table_schema = :schema"
                     params["schema"] = schema
-                
+
                 result = connection.execute(text(query), params).scalar()
                 return {"text": result}
             except Exception:
@@ -782,12 +804,12 @@ class Dialect(DefaultDialect):
         **kw: Any,
     ):
         """Return information about columns in table_name"""
-        
+
         # If comment support is available, use duckdb_columns() for richer information
         if self.supports_comments:
             try:
                 query = """
-                    SELECT 
+                    SELECT
                         column_name,
                         data_type,
                         is_nullable,
@@ -797,9 +819,11 @@ class Dialect(DefaultDialect):
                     WHERE table_name = :table_name
                 """
                 params = {"table_name": table_name}
-                
+
                 if schema:
-                    database_name, schema_name = self.identifier_preparer._separate(schema)
+                    database_name, schema_name = self.identifier_preparer._separate(
+                        schema
+                    )
                     if schema_name:
                         query += " AND schema_name = :schema_name"
                         params["schema_name"] = schema_name
@@ -809,34 +833,36 @@ class Dialect(DefaultDialect):
                 else:
                     # When no schema is specified, search all schemas for the table
                     pass
-                
+
                 query += " ORDER BY column_index"
-                
+
                 result = connection.execute(text(query), params)
                 columns = []
-                
+
                 for row in result:
                     col_name, data_type, is_nullable, column_default, comment = row
-                    
+
                     # Convert DuckDB types to SQLAlchemy types
                     type_obj = self._map_duckdb_type_to_sqlalchemy(data_type)
-                    
-                    columns.append({
-                        "name": col_name,
-                        "type": type_obj,
-                        "nullable": is_nullable,
-                        "default": column_default,
-                        "comment": comment,
-                    })
-                    
+
+                    columns.append(
+                        {
+                            "name": col_name,
+                            "type": type_obj,
+                            "nullable": is_nullable,
+                            "default": column_default,
+                            "comment": comment,
+                        }
+                    )
+
                 return columns
             except Exception:
                 # Fall back to information_schema if duckdb_columns() fails
                 pass
-        
+
         # Fallback: use information_schema.columns (no comment support)
         query = """
-            SELECT 
+            SELECT
                 column_name,
                 data_type,
                 is_nullable,
@@ -845,7 +871,7 @@ class Dialect(DefaultDialect):
             WHERE table_name = :table_name
         """
         params = {"table_name": table_name}
-        
+
         if schema:
             database_name, schema_name = self.identifier_preparer._separate(schema)
             if schema_name:
@@ -855,38 +881,40 @@ class Dialect(DefaultDialect):
         else:
             # When no schema is specified, search all schemas for the table
             pass
-        
+
         query += " ORDER BY ordinal_position"
-        
+
         result = connection.execute(text(query), params)
         columns = []
-        
+
         for row in result:
             col_name, data_type, is_nullable, column_default = row
-            
+
             # Convert DuckDB types to SQLAlchemy types
             type_obj = self._map_duckdb_type_to_sqlalchemy(data_type)
-            
-            columns.append({
-                "name": col_name,
-                "type": type_obj,
-                "nullable": is_nullable.upper() == "YES",
-                "default": column_default,
-            })
-            
+
+            columns.append(
+                {
+                    "name": col_name,
+                    "type": type_obj,
+                    "nullable": is_nullable.upper() == "YES",
+                    "default": column_default,
+                }
+            )
+
         return columns
 
     def _map_duckdb_type_to_sqlalchemy(self, data_type: str):
         """Map DuckDB data type to SQLAlchemy type"""
         # Handle complex types that should be mapped to NULLTYPE
         if (
-            "[" in data_type or  # Arrays like INTEGER[] or INTEGER[3]
-            "STRUCT(" in data_type or  # Structs like STRUCT(a INTEGER, b VARCHAR)
-            "MAP(" in data_type or  # Maps like MAP(VARCHAR, VARCHAR)
-            "UNION(" in data_type  # Unions
+            "[" in data_type  # Arrays like INTEGER[] or INTEGER[3]
+            or "STRUCT(" in data_type  # Structs like STRUCT(a INTEGER, b VARCHAR)
+            or "MAP(" in data_type  # Maps like MAP(VARCHAR, VARCHAR)
+            or "UNION(" in data_type  # Unions
         ):
             return sqltypes.NULLTYPE
-        
+
         # For basic types, use the existing mapping
         return self.ischema_names.get(data_type.upper(), sqltypes.String)()
 
@@ -899,25 +927,25 @@ class Dialect(DefaultDialect):
     ):
         """Return information about foreign keys in table_name"""
         query = """
-            SELECT 
+            SELECT
                 constraint_index,
                 constraint_text,
                 constraint_column_names,
                 referenced_table,
                 referenced_column_names
-            FROM duckdb_constraints() 
+            FROM duckdb_constraints()
             WHERE constraint_type = 'FOREIGN KEY'
                 AND table_name = :table_name
         """
         params = {"table_name": table_name}
-        
+
         if schema:
             query += " AND schema_name = :schema"
             params["schema"] = schema
-            
+
         result = connection.execute(text(query), params)
         foreign_keys = []
-        
+
         # Group by constraint_index to handle multi-column foreign keys
         fk_dict = {}
         for row in result:
@@ -926,16 +954,21 @@ class Dialect(DefaultDialect):
             constrained_cols = row.constraint_column_names or []
             referenced_table = row.referenced_table
             referenced_cols = row.referenced_column_names or []
-            
+
             # Extract constraint name from constraint_text if available
             constraint_name = None
             if constraint_text:
                 # Try to extract name from "CONSTRAINT name FOREIGN KEY..."
                 import re
-                match = re.search(r'CONSTRAINT\s+(\w+)\s+FOREIGN\s+KEY', constraint_text, re.IGNORECASE)
+
+                match = re.search(
+                    r"CONSTRAINT\s+(\w+)\s+FOREIGN\s+KEY",
+                    constraint_text,
+                    re.IGNORECASE,
+                )
                 if match:
                     constraint_name = match.group(1)
-                    
+
             if constraint_idx not in fk_dict:
                 fk_dict[constraint_idx] = {
                     "name": constraint_name,
@@ -944,7 +977,7 @@ class Dialect(DefaultDialect):
                     "referred_table": referenced_table,
                     "referred_columns": referenced_cols,
                 }
-            
+
         foreign_keys = list(fk_dict.values())
         return foreign_keys
 
@@ -957,51 +990,60 @@ class Dialect(DefaultDialect):
     ):
         """Return information about check constraints in table_name"""
         query = """
-            SELECT 
+            SELECT
                 constraint_index,
                 constraint_text,
                 constraint_column_names
-            FROM duckdb_constraints() 
+            FROM duckdb_constraints()
             WHERE constraint_type = 'CHECK'
                 AND table_name = :table_name
         """
         params = {"table_name": table_name}
-        
+
         if schema:
             query += " AND schema_name = :schema"
             params["schema"] = schema
-            
+
         result = connection.execute(text(query), params)
         check_constraints = []
-        
+
         for row in result:
             constraint_text = row.constraint_text
             constraint_cols = row.constraint_column_names or []
-            
+
             # Extract constraint name and SQL text from constraint_text
             constraint_name = None
             sqltext = constraint_text
-            
+
             if constraint_text:
                 import re
+
                 # Try to extract name from "CONSTRAINT name CHECK (condition)"
-                match = re.search(r'CONSTRAINT\s+(\w+)\s+CHECK\s*\((.*)\)', constraint_text, re.IGNORECASE | re.DOTALL)
+                match = re.search(
+                    r"CONSTRAINT\s+(\w+)\s+CHECK\s*\((.*)\)",
+                    constraint_text,
+                    re.IGNORECASE | re.DOTALL,
+                )
                 if match:
                     constraint_name = match.group(1)
                     sqltext = match.group(2).strip()
                 else:
                     # Try to extract just the CHECK condition
-                    match = re.search(r'CHECK\s*\((.*)\)', constraint_text, re.IGNORECASE | re.DOTALL)
+                    match = re.search(
+                        r"CHECK\s*\((.*)\)", constraint_text, re.IGNORECASE | re.DOTALL
+                    )
                     if match:
                         sqltext = match.group(1).strip()
-                        
-            check_constraints.append({
-                "name": constraint_name,
-                "sqltext": sqltext,
-                "dialect_options": {},
-                "comment": None,
-            })
-            
+
+            check_constraints.append(
+                {
+                    "name": constraint_name,
+                    "sqltext": sqltext,
+                    "dialect_options": {},
+                    "comment": None,
+                }
+            )
+
         return check_constraints
 
     def get_unique_constraints(
@@ -1013,44 +1055,49 @@ class Dialect(DefaultDialect):
     ):
         """Return information about unique constraints in table_name"""
         query = """
-            SELECT 
+            SELECT
                 constraint_index,
                 constraint_text,
                 constraint_column_names
-            FROM duckdb_constraints() 
+            FROM duckdb_constraints()
             WHERE constraint_type = 'UNIQUE'
                 AND table_name = :table_name
         """
         params = {"table_name": table_name}
-        
+
         if schema:
             query += " AND schema_name = :schema"
             params["schema"] = schema
-            
+
         result = connection.execute(text(query), params)
         unique_constraints = []
-        
+
         for row in result:
             constraint_text = row.constraint_text
             constraint_cols = row.constraint_column_names or []
-            
+
             # Extract constraint name from constraint_text
             constraint_name = None
             if constraint_text:
                 import re
+
                 # Try to extract name from "CONSTRAINT name UNIQUE (cols)"
-                match = re.search(r'CONSTRAINT\s+(\w+)\s+UNIQUE', constraint_text, re.IGNORECASE)
+                match = re.search(
+                    r"CONSTRAINT\s+(\w+)\s+UNIQUE", constraint_text, re.IGNORECASE
+                )
                 if match:
                     constraint_name = match.group(1)
-                    
-            unique_constraints.append({
-                "name": constraint_name,
-                "column_names": constraint_cols,
-                "duplicates_index": False,
-                "dialect_options": {},
-                "comment": None,
-            })
-            
+
+            unique_constraints.append(
+                {
+                    "name": constraint_name,
+                    "column_names": constraint_cols,
+                    "duplicates_index": False,
+                    "dialect_options": {},
+                    "comment": None,
+                }
+            )
+
         return unique_constraints
 
     def get_pk_constraint(
@@ -1062,43 +1109,48 @@ class Dialect(DefaultDialect):
     ):
         """Return information about primary key constraint in table_name"""
         query = """
-            SELECT 
+            SELECT
                 constraint_index,
                 constraint_text,
                 constraint_column_names
-            FROM duckdb_constraints() 
+            FROM duckdb_constraints()
             WHERE constraint_type = 'PRIMARY KEY'
                 AND table_name = :table_name
         """
         params = {"table_name": table_name}
-        
+
         if schema:
             query += " AND schema_name = :schema"
             params["schema"] = schema
-            
+
         result = connection.execute(text(query), params)
-        
+
         # There should be at most one primary key constraint per table
         for row in result:
             constraint_text = row.constraint_text
             constraint_cols = row.constraint_column_names or []
-            
+
             # Extract constraint name from constraint_text
             constraint_name = None
             if constraint_text:
                 import re
+
                 # Try to extract name from "CONSTRAINT name PRIMARY KEY (cols)"
-                match = re.search(r'CONSTRAINT\s+(\w+)\s+PRIMARY\s+KEY', constraint_text, re.IGNORECASE)
+                match = re.search(
+                    r"CONSTRAINT\s+(\w+)\s+PRIMARY\s+KEY",
+                    constraint_text,
+                    re.IGNORECASE,
+                )
                 if match:
                     constraint_name = match.group(1)
-                    
+
             return {
                 "constrained_columns": constraint_cols,
                 "name": constraint_name,
                 "dialect_options": {},
                 "comment": None,
             }
-            
+
         # Return empty constraint if no primary key found
         return {
             "constrained_columns": [],
@@ -1199,7 +1251,11 @@ class Dialect(DefaultDialect):
         return cls.dbapi()
 
     def do_executemany(
-        self, cursor: Any, statement: Any, parameters: Any, context: Optional[Any] = None
+        self,
+        cursor: Any,
+        statement: Any,
+        parameters: Any,
+        context: Optional[Any] = None,
     ) -> None:
         """Execute many statements"""
         cursor.executemany(statement, parameters)
@@ -1213,9 +1269,11 @@ def visit_duckdb_insert(element, compiler, **kw):
     text = compiler.visit_insert(element, **kw)
 
     # Only add the post-values clause if it exists and hasn't been added yet
-    if (hasattr(element, '_post_values_clause') and 
-        element._post_values_clause is not None and
-        "ON CONFLICT" not in text):  # Avoid duplication
+    if (
+        hasattr(element, "_post_values_clause")
+        and element._post_values_clause is not None
+        and "ON CONFLICT" not in text
+    ):  # Avoid duplication
         post_clause = compiler.process(element._post_values_clause, literal_binds=True)
         text += " " + post_clause
 
@@ -1225,6 +1283,7 @@ def visit_duckdb_insert(element, compiler, **kw):
 # Try cast support for DuckDB
 class TryCast(sql.ColumnElement):
     """TRY_CAST expression for DuckDB"""
+
     type = sqltypes.String()
     cache_ok = True
 
