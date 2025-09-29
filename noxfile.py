@@ -38,7 +38,7 @@ def nightly(session: nox.Session) -> None:
 
 def tests_core(session: nox.Session, duckdb: str, sqlalchemy: str) -> None:
     with group(f"{session.name} - Install"):
-        poetry(session)
+        install_with_uv(session)
         operator = "==" if sqlalchemy.count(".") == 2 else "~="
         session.install(f"sqlalchemy{operator}{sqlalchemy}")
         if duckdb == "master":
@@ -61,12 +61,12 @@ def tests_core(session: nox.Session, duckdb: str, sqlalchemy: str) -> None:
         )
 
 
-def poetry(session: nox.Session) -> None:
-    session.install("poetry")
-    session.run("poetry", "install", "--with", "dev", "--verbose", silent=False)
+def install_with_uv(session: nox.Session) -> None:
+    """Install dependencies using UV"""
+    session.run("uv", "sync", "--frozen")
 
 
 @nox.session(py=["3.9"])
 def mypy(session: nox.Session) -> None:
-    poetry(session)
+    install_with_uv(session)
     session.run("mypy", "duckdb_engine/")

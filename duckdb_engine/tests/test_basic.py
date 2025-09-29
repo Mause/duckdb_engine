@@ -177,13 +177,15 @@ def test_get_tables(inspector: Inspector) -> None:
 )
 def test_get_schema_names(inspector: Inspector, session: Session) -> None:
     # Using multi-line strings because of all the single and double quotes flying around...
-    cmds = [
-        """CREATE SCHEMA "quack quack" """,
-        """CREATE SCHEMA "daffy duck"."you're "" despicable" """,
-    ]
-    for cmd in cmds:
-        session.execute(text(cmd))
-        session.commit()
+    # Create schemas using the inspector's connection so they're visible to the inspector
+    with inspector.bind.connect() as conn:
+        cmds = [
+            """CREATE SCHEMA "quack quack" """,
+            """CREATE SCHEMA "daffy duck"."you're "" despicable" """,
+        ]
+        for cmd in cmds:
+            conn.execute(text(cmd))
+            conn.commit()
 
     # Deliberately excluding pg_catalog schema (to align with Postgres)
     names = set(inspector.get_schema_names())
@@ -282,7 +284,8 @@ def test_preload_extension() -> None:
 @fixture
 def inspector(engine: Engine, session: Session) -> Inspector:
     cmds = [
-        """CREATE TABLE test (id INTEGER);""" """ATTACH ':memory:' AS "daffy duck" """,
+        """CREATE TABLE test (id INTEGER);""",
+        """ATTACH ':memory:' AS "daffy duck" """,
         """CREATE SCHEMA "daffy duck"."quack quack" """,
         """CREATE TABLE "daffy duck"."quack quack"."t1" (i INTEGER, j INTEGER);""",
     ]
@@ -293,6 +296,7 @@ def inspector(engine: Engine, session: Session) -> Inspector:
     meta = MetaData()
     Table("test", meta)
 
+    # Create inspector using the engine
     return inspect(engine)
 
 
