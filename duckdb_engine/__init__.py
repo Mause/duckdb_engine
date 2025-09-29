@@ -18,6 +18,7 @@ import duckdb
 import sqlalchemy
 from sqlalchemy import pool, select, sql, text, util
 from sqlalchemy import types as sqltypes
+from sqlalchemy.schema import Sequence
 from sqlalchemy.engine.default import DefaultDialect
 from sqlalchemy.engine.interfaces import Dialect as RootDialect
 from sqlalchemy.engine.reflection import cache, Inspector
@@ -71,13 +72,13 @@ class DuckDBInspector(Inspector):
         query = """
             SELECT database_name, schema_name
             FROM duckdb_schemas()
-            WHERE schema_name NOT LIKE 'pg\\_%' ESCAPE '\\'
+            WHERE schema_name != 'pg_catalog'
             ORDER BY database_name, schema_name
         """
-        rs = self.bind.execute(text(query))
-
-        qs = self.dialect.identifier_preparer.quote_schema
-        return [qs(".".join(row)) for row in rs]
+        with self.bind.connect() as conn:
+            rs = conn.execute(text(query))
+            qs = self.dialect.identifier_preparer.quote_schema
+            return [qs(".".join(row)) for row in rs]
 
     def get_table_names(self, schema: Optional[str] = None, **kw: Any) -> List[str]:
         """Return list of table names using duckdb_tables()"""
@@ -90,15 +91,18 @@ class DuckDBInspector(Inspector):
             """
             if schema:
                 query += " AND table_schema = :schema"
-                rs = self.bind.execute(text(query), {"schema": schema})
+                with self.bind.connect() as conn:
+                    rs = conn.execute(text(query), {"schema": schema})
+                    return [table for (table,) in rs]
             else:
-                rs = self.bind.execute(text(query))
-            return [table for (table,) in rs]
+                with self.bind.connect() as conn:
+                    rs = conn.execute(text(query))
+                    return [table for (table,) in rs]
 
         query = """
             SELECT table_name
             FROM duckdb_tables()
-            WHERE schema_name NOT LIKE 'pg\\_%' ESCAPE '\\'
+            WHERE internal = false
         """
         params = {}
 
@@ -111,8 +115,9 @@ class DuckDBInspector(Inspector):
                 query += " AND database_name = :database_name"
                 params["database_name"] = database_name
 
-        rs = self.bind.execute(text(query), params)
-        return [table for (table,) in rs]
+        with self.bind.connect() as conn:
+            rs = conn.execute(text(query), params)
+            return [table for (table,) in rs]
 
     def get_view_names(self, schema: Optional[str] = None, **kw: Any) -> List[str]:
         """Return list of view names using duckdb_views()"""
@@ -125,15 +130,18 @@ class DuckDBInspector(Inspector):
             """
             if schema:
                 query += " AND table_schema = :schema"
-                rs = self.bind.execute(text(query), {"schema": schema})
+                with self.bind.connect() as conn:
+                    rs = conn.execute(text(query), {"schema": schema})
+                    return [view for (view,) in rs]
             else:
-                rs = self.bind.execute(text(query))
-            return [view for (view,) in rs]
+                with self.bind.connect() as conn:
+                    rs = conn.execute(text(query))
+                    return [view for (view,) in rs]
 
         query = """
             SELECT view_name
             FROM duckdb_views()
-            WHERE schema_name NOT LIKE 'pg\\_%' ESCAPE '\\'
+            WHERE internal = false
         """
         params = {}
 
@@ -146,8 +154,9 @@ class DuckDBInspector(Inspector):
                 query += " AND database_name = :database_name"
                 params["database_name"] = database_name
 
-        rs = self.bind.execute(text(query), params)
-        return [view for (view,) in rs]
+        with self.bind.connect() as conn:
+            rs = conn.execute(text(query), params)
+            return [view for (view,) in rs]
 
 
 class ConnectionWrapper:
@@ -363,6 +372,18 @@ class DuckDBDDLCompiler(compiler.DDLCompiler):
         """Override to handle DuckDB-specific column specs"""
         spec = super().get_column_specification(column, **kwargs)
         return spec
+    
+    def get_column_default_string(self, column):
+        """Override to handle sequence defaults for DuckDB"""
+        if column.default and isinstance(column.default, Sequence):
+            # Handle Sequence objects attached to column.default
+            seq_name = column.default.name
+            return f"nextval('{seq_name}')"
+        elif column.server_default and hasattr(column.server_default, 'arg') and isinstance(column.server_default.arg, Sequence):
+            # Handle Sequence objects attached to column.server_default
+            seq_name = column.server_default.arg.name
+            return f"nextval('{seq_name}')"
+        return super().get_column_default_string(column)
 
 
 class DuckDBNullType(sqltypes.NullType):
@@ -437,8 +458,8 @@ class Dialect(DefaultDialect):
     supports_empty_insert = False
     supports_multivalues_insert = True
 
-    # DuckDB doesn't support traditional sequences
-    supports_sequences = False
+    # DuckDB supports sequences
+    supports_sequences = True
 
     # DuckDB uses / for division, not integer division like PostgreSQL
     div_is_floordiv = False
@@ -556,6 +577,294 @@ class Dialect(DefaultDialect):
             return True
         except NoSuchTableError:
             return False
+
+    def has_sequence(
+        self,
+        connection,
+        sequence_name: str,
+        schema: Optional[str] = None,
+        **kw: Any,
+    ) -> bool:
+        """Check if a sequence exists in DuckDB"""
+        query = """
+            SELECT COUNT(*) FROM duckdb_sequences() WHERE sequence_name = :seq_name
+        """
+        
+        params = {"seq_name": sequence_name}
+        if schema:
+            # DuckDB sequences include schema info in the sequence name or separate field
+            # For now, just check by name - this could be improved
+            pass
+            
+        result = connection.execute(text(query), params)
+        return bool(result.scalar())
+
+    def fire_sequence(self, seq, type_):
+        """Execute a sequence to get the next value"""
+        # Since we properly set up DEFAULT nextval() in DDL,
+        # this shouldn't be called for INSERT operations.
+        # But if SQLAlchemy does call it, we can get the next value
+        return None  # Let SQLAlchemy omit the column from INSERT
+
+    def get_columns(
+        self,
+        connection,
+        table_name: str,
+        schema: Optional[str] = None,
+        **kw: Any,
+    ):
+        """Return information about columns in table_name"""
+        query = """
+            SELECT 
+                column_name,
+                data_type,
+                is_nullable,
+                column_default
+            FROM information_schema.columns
+            WHERE table_name = :table_name
+        """
+        params = {"table_name": table_name}
+        
+        if schema:
+            query += " AND table_schema = :schema"
+            params["schema"] = schema
+        
+        query += " ORDER BY ordinal_position"
+        
+        result = connection.execute(text(query), params)
+        columns = []
+        
+        for row in result:
+            col_name, data_type, is_nullable, column_default = row
+            
+            # Convert DuckDB types to SQLAlchemy types
+            type_obj = self.ischema_names.get(data_type.upper(), sqltypes.String)()
+            
+            columns.append({
+                "name": col_name,
+                "type": type_obj,
+                "nullable": is_nullable.upper() == "YES",
+                "default": column_default,
+            })
+            
+        return columns
+
+    def get_foreign_keys(
+        self,
+        connection,
+        table_name: str,
+        schema: Optional[str] = None,
+        **kw: Any,
+    ):
+        """Return information about foreign keys in table_name"""
+        query = """
+            SELECT 
+                constraint_index,
+                constraint_text,
+                constraint_column_names,
+                referenced_table,
+                referenced_column_names
+            FROM duckdb_constraints() 
+            WHERE constraint_type = 'FOREIGN KEY'
+                AND table_name = :table_name
+        """
+        params = {"table_name": table_name}
+        
+        if schema:
+            query += " AND schema_name = :schema"
+            params["schema"] = schema
+            
+        result = connection.execute(text(query), params)
+        foreign_keys = []
+        
+        # Group by constraint_index to handle multi-column foreign keys
+        fk_dict = {}
+        for row in result:
+            constraint_idx = row.constraint_index
+            constraint_text = row.constraint_text
+            constrained_cols = row.constraint_column_names or []
+            referenced_table = row.referenced_table
+            referenced_cols = row.referenced_column_names or []
+            
+            # Extract constraint name from constraint_text if available
+            constraint_name = None
+            if constraint_text:
+                # Try to extract name from "CONSTRAINT name FOREIGN KEY..."
+                import re
+                match = re.search(r'CONSTRAINT\s+(\w+)\s+FOREIGN\s+KEY', constraint_text, re.IGNORECASE)
+                if match:
+                    constraint_name = match.group(1)
+                    
+            if constraint_idx not in fk_dict:
+                fk_dict[constraint_idx] = {
+                    "name": constraint_name,
+                    "constrained_columns": constrained_cols,
+                    "referred_schema": schema,
+                    "referred_table": referenced_table,
+                    "referred_columns": referenced_cols,
+                }
+            
+        foreign_keys = list(fk_dict.values())
+        return foreign_keys
+
+    def get_check_constraints(
+        self,
+        connection,
+        table_name: str,
+        schema: Optional[str] = None,
+        **kw: Any,
+    ):
+        """Return information about check constraints in table_name"""
+        query = """
+            SELECT 
+                constraint_index,
+                constraint_text,
+                constraint_column_names
+            FROM duckdb_constraints() 
+            WHERE constraint_type = 'CHECK'
+                AND table_name = :table_name
+        """
+        params = {"table_name": table_name}
+        
+        if schema:
+            query += " AND schema_name = :schema"
+            params["schema"] = schema
+            
+        result = connection.execute(text(query), params)
+        check_constraints = []
+        
+        for row in result:
+            constraint_text = row.constraint_text
+            constraint_cols = row.constraint_column_names or []
+            
+            # Extract constraint name and SQL text from constraint_text
+            constraint_name = None
+            sqltext = constraint_text
+            
+            if constraint_text:
+                import re
+                # Try to extract name from "CONSTRAINT name CHECK (condition)"
+                match = re.search(r'CONSTRAINT\s+(\w+)\s+CHECK\s*\((.*)\)', constraint_text, re.IGNORECASE | re.DOTALL)
+                if match:
+                    constraint_name = match.group(1)
+                    sqltext = match.group(2).strip()
+                else:
+                    # Try to extract just the CHECK condition
+                    match = re.search(r'CHECK\s*\((.*)\)', constraint_text, re.IGNORECASE | re.DOTALL)
+                    if match:
+                        sqltext = match.group(1).strip()
+                        
+            check_constraints.append({
+                "name": constraint_name,
+                "sqltext": sqltext,
+                "dialect_options": {},
+                "comment": None,
+            })
+            
+        return check_constraints
+
+    def get_unique_constraints(
+        self,
+        connection,
+        table_name: str,
+        schema: Optional[str] = None,
+        **kw: Any,
+    ):
+        """Return information about unique constraints in table_name"""
+        query = """
+            SELECT 
+                constraint_index,
+                constraint_text,
+                constraint_column_names
+            FROM duckdb_constraints() 
+            WHERE constraint_type = 'UNIQUE'
+                AND table_name = :table_name
+        """
+        params = {"table_name": table_name}
+        
+        if schema:
+            query += " AND schema_name = :schema"
+            params["schema"] = schema
+            
+        result = connection.execute(text(query), params)
+        unique_constraints = []
+        
+        for row in result:
+            constraint_text = row.constraint_text
+            constraint_cols = row.constraint_column_names or []
+            
+            # Extract constraint name from constraint_text
+            constraint_name = None
+            if constraint_text:
+                import re
+                # Try to extract name from "CONSTRAINT name UNIQUE (cols)"
+                match = re.search(r'CONSTRAINT\s+(\w+)\s+UNIQUE', constraint_text, re.IGNORECASE)
+                if match:
+                    constraint_name = match.group(1)
+                    
+            unique_constraints.append({
+                "name": constraint_name,
+                "column_names": constraint_cols,
+                "duplicates_index": False,
+                "dialect_options": {},
+                "comment": None,
+            })
+            
+        return unique_constraints
+
+    def get_pk_constraint(
+        self,
+        connection,
+        table_name: str,
+        schema: Optional[str] = None,
+        **kw: Any,
+    ):
+        """Return information about primary key constraint in table_name"""
+        query = """
+            SELECT 
+                constraint_index,
+                constraint_text,
+                constraint_column_names
+            FROM duckdb_constraints() 
+            WHERE constraint_type = 'PRIMARY KEY'
+                AND table_name = :table_name
+        """
+        params = {"table_name": table_name}
+        
+        if schema:
+            query += " AND schema_name = :schema"
+            params["schema"] = schema
+            
+        result = connection.execute(text(query), params)
+        
+        # There should be at most one primary key constraint per table
+        for row in result:
+            constraint_text = row.constraint_text
+            constraint_cols = row.constraint_column_names or []
+            
+            # Extract constraint name from constraint_text
+            constraint_name = None
+            if constraint_text:
+                import re
+                # Try to extract name from "CONSTRAINT name PRIMARY KEY (cols)"
+                match = re.search(r'CONSTRAINT\s+(\w+)\s+PRIMARY\s+KEY', constraint_text, re.IGNORECASE)
+                if match:
+                    constraint_name = match.group(1)
+                    
+            return {
+                "constrained_columns": constraint_cols,
+                "name": constraint_name,
+                "dialect_options": {},
+                "comment": None,
+            }
+            
+        # Return empty constraint if no primary key found
+        return {
+            "constrained_columns": [],
+            "name": None,
+            "dialect_options": {},
+            "comment": None,
+        }
 
     def get_table_oid(
         self,
