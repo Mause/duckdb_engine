@@ -1,9 +1,12 @@
 import decimal
+import enum
 import json
 import warnings
+from pathlib import Path
 from typing import Any, Dict, Type
 from uuid import uuid4
 
+import sqlalchemy as sa
 from packaging.version import Version
 from pytest import importorskip, mark
 from pytest_snapshot.plugin import Snapshot
@@ -248,3 +251,26 @@ def test_div_is_floordiv(engine: Engine) -> None:
     stmt = test_table.c.value / test_table.c.eur2usd_rate
 
     assert str(stmt.compile(engine)) == "test_table.value / test_table.eur2usd_rate"
+
+
+def test_enum(
+    engine: Engine, session: Session, tmp_path: Path, snapshot: SnapshotTest
+) -> None:
+    base = declarative_base()
+
+    class Severity(enum.Enum):
+        LOW = enum.auto()
+        MEDIUM = enum.auto()
+        HIGH = enum.auto()
+
+    class Bug(base):
+        __tablename__ = "bugs"
+
+        severity = sa.Column(sa.Enum(Severity), primary_key=True)
+
+    base.metadata.create_all(bind=engine)
+    session.execute(sa.text(f"EXPORT DATABASE '{tmp_path}'"))
+    ddl_sql = (tmp_path / "schema.sql").read_text()
+    # n_enum_defs = ddl_sql.count("'LOW', 'MEDIUM', 'HIGH'")
+    # assert n_enum_defs == 1, ddl_sql
+    snapshot.assert_match(ddl_sql)
