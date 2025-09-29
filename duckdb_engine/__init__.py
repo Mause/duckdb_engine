@@ -61,106 +61,6 @@ __all__ = [
 
 
 
-class DuckDBInspector(Inspector):
-    """DuckDB-specific inspector using native duckdb_* functions"""
-
-    def get_schema_names(self, **kw: Any) -> List[str]:
-        """Return list of schema names using duckdb_schemas()"""
-        if not supports_attach:
-            # Fallback for older DuckDB versions
-            return ["main"]
-
-        query = """
-            SELECT database_name, schema_name
-            FROM duckdb_schemas()
-            WHERE schema_name != 'pg_catalog'
-            ORDER BY database_name, schema_name
-        """
-        rs = self._execute(text(query))
-        qs = self.dialect.identifier_preparer.quote_schema
-        return [qs(".".join(row)) for row in rs]
-
-    def get_table_names(self, schema: Optional[str] = None, **kw: Any) -> List[str]:
-        """Return list of table names using duckdb_tables()"""
-        if not supports_attach:
-            # Fallback for older DuckDB versions
-            query = """
-                SELECT table_name
-                FROM information_schema.tables
-                WHERE table_type = 'BASE TABLE'
-            """
-            if schema:
-                query += " AND table_schema = :schema"
-                rs = self._execute(text(query), {"schema": schema})
-                return [table for (table,) in rs]
-            else:
-                rs = self._execute(text(query))
-                return [table for (table,) in rs]
-
-        query = """
-            SELECT table_name
-            FROM duckdb_tables()
-            WHERE internal = false
-        """
-        params = {}
-
-        if schema:
-            database_name, schema_name = self.dialect.identifier_preparer._separate(schema)
-            if schema_name:
-                query += " AND schema_name = :schema_name"
-                params["schema_name"] = schema_name
-            if database_name:
-                query += " AND database_name = :database_name"
-                params["database_name"] = database_name
-
-        rs = self._execute(text(query), params)
-        return [table for (table,) in rs]
-
-    def get_view_names(self, schema: Optional[str] = None, **kw: Any) -> List[str]:
-        """Return list of view names using duckdb_views()"""
-        if not supports_attach:
-            # Fallback for older DuckDB versions
-            query = """
-                SELECT table_name
-                FROM information_schema.tables
-                WHERE table_type = 'VIEW'
-            """
-            if schema:
-                query += " AND table_schema = :schema"
-                rs = self._execute(text(query), {"schema": schema})
-                return [view for (view,) in rs]
-            else:
-                rs = self._execute(text(query))
-                return [view for (view,) in rs]
-
-        query = """
-            SELECT view_name
-            FROM duckdb_views()
-            WHERE internal = false
-        """
-        params = {}
-
-        if schema:
-            database_name, schema_name = self.dialect.identifier_preparer._separate(schema)
-            if schema_name:
-                query += " AND schema_name = :schema_name"
-                params["schema_name"] = schema_name
-            if database_name:
-                query += " AND database_name = :database_name"
-                params["database_name"] = database_name
-
-        rs = self._execute(text(query), params)
-        return [view for (view,) in rs]
-
-    def _execute(self, query, params=None):
-        """Execute a query handling both Engine and Connection bind types"""
-        from sqlalchemy.engine import Engine
-        
-        if isinstance(self.bind, Engine):
-            with self.bind.connect() as conn:
-                return conn.execute(query, params or {})
-        else:
-            return self.bind.execute(query, params or {})
 
 
 class ConnectionWrapper:
@@ -571,7 +471,6 @@ class Dialect(DefaultDialect):
     div_is_floordiv = False
 
     # Set up components
-    inspector = DuckDBInspector
     preparer = DuckDBIdentifierPreparer
     type_compiler = DuckDBTypeCompiler
     statement_compiler = DuckDBCompiler
@@ -774,6 +673,61 @@ class Dialect(DefaultDialect):
         rs = connection.execute(text(query), params)
         return [view for (view,) in rs]
 
+    def get_schema_names(self, connection, **kw: Any) -> List[str]:
+        """Return list of schema names using duckdb_schemas()"""
+        if not supports_attach:
+            # Fallback for older DuckDB versions
+            return ["main"]
+
+        query = """
+            SELECT database_name, schema_name
+            FROM duckdb_schemas()
+            WHERE schema_name != 'pg_catalog'
+            ORDER BY database_name, schema_name
+        """
+        rs = connection.execute(text(query))
+        return [self.identifier_preparer.quote_schema(".".join(row)) for row in rs]
+
+    def get_table_names(self, connection, schema: Optional[str] = None, **kw: Any) -> List[str]:
+        """Return list of table names using duckdb_tables()"""
+        if not supports_attach:
+            # Fallback for older DuckDB versions
+            query = """
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_type = 'BASE TABLE'
+            """
+            if schema:
+                query += " AND table_schema = :schema"
+                rs = connection.execute(text(query), {"schema": schema})
+                return [table for (table,) in rs]
+            else:
+                query += " AND table_schema = 'main'"  # Only return main schema tables by default
+                rs = connection.execute(text(query))
+                return [table for (table,) in rs]
+
+        query = """
+            SELECT table_name
+            FROM duckdb_tables()
+            WHERE internal = false
+        """
+        params = {}
+
+        if schema:
+            database_name, schema_name = self.identifier_preparer._separate(schema)
+            if schema_name:
+                query += " AND schema_name = :schema_name"
+                params["schema_name"] = schema_name
+            if database_name:
+                query += " AND database_name = :database_name"
+                params["database_name"] = database_name
+        else:
+            # For default case, don't restrict by schema/database to get all tables
+            pass
+
+        rs = connection.execute(text(query), params)
+        return [table for (table,) in rs]
+
     def get_table_comment(self, connection, table_name: str, schema: Optional[str] = None, **kw: Any) -> Dict[str, Optional[str]]:
         """Return table comment"""
         # DuckDB doesn't have built-in table comments in older versions
@@ -845,11 +799,16 @@ class Dialect(DefaultDialect):
                 params = {"table_name": table_name}
                 
                 if schema:
-                    query += " AND schema_name = :schema"
-                    params["schema"] = schema
+                    database_name, schema_name = self.identifier_preparer._separate(schema)
+                    if schema_name:
+                        query += " AND schema_name = :schema_name"
+                        params["schema_name"] = schema_name
+                    if database_name:
+                        query += " AND database_name = :database_name"
+                        params["database_name"] = database_name
                 else:
-                    # Default to main schema if not specified
-                    query += " AND schema_name = 'main'"
+                    # When no schema is specified, search all schemas for the table
+                    pass
                 
                 query += " ORDER BY column_index"
                 
@@ -888,8 +847,14 @@ class Dialect(DefaultDialect):
         params = {"table_name": table_name}
         
         if schema:
-            query += " AND table_schema = :schema"
-            params["schema"] = schema
+            database_name, schema_name = self.identifier_preparer._separate(schema)
+            if schema_name:
+                query += " AND table_schema = :schema_name"
+                params["schema_name"] = schema_name
+            # Note: information_schema doesn't have database_name, so we ignore it here
+        else:
+            # When no schema is specified, search all schemas for the table
+            pass
         
         query += " ORDER BY ordinal_position"
         
