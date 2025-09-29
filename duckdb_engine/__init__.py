@@ -42,9 +42,9 @@ supports_attach: bool = duckdb_version >= "0.7.0"
 supports_user_agent: bool = duckdb_version >= "0.9.2"
 
 if TYPE_CHECKING:
-    from sqlalchemy.base import Connection
-    from sqlalchemy.engine.interfaces import _IndexDict
-    from sqlalchemy.sql.type_api import _ResultProcessor
+    from sqlalchemy.engine import Connection
+    from sqlalchemy.engine.interfaces import ReflectedIndex as _IndexDict
+    from sqlalchemy.sql.type_api import _ResultProcessorType as _ResultProcessor
 
 register_extension_types()
 
@@ -155,6 +155,7 @@ class DuckDBInspector(Inspector):
     def _execute(self, query, params=None):
         """Execute a query handling both Engine and Connection bind types"""
         from sqlalchemy.engine import Engine
+        
         if isinstance(self.bind, Engine):
             with self.bind.connect() as conn:
                 return conn.execute(query, params or {})
@@ -417,14 +418,25 @@ class DuckDBCompiler(compiler.SQLCompiler):
         if hasattr(func, 'name') and func.name.lower() == 'date_part':
             # DuckDB uses date_part(part, date) syntax
             if len(func.clauses) == 2:
-                part = self.process(func.clauses.clauses[0], **kw)
+                # For date_part, inline string literals to avoid DuckDB GROUP BY issues
+                part_clause = func.clauses.clauses[0]
+                if hasattr(part_clause, 'value') and isinstance(part_clause.value, str):
+                    # Inline the string literal instead of using parameters
+                    part = f"'{part_clause.value}'"
+                else:
+                    part = self.process(func.clauses.clauses[0], **kw)
                 date_expr = self.process(func.clauses.clauses[1], **kw)
                 return f"date_part({part}, {date_expr})"
         
         # Handle extract function - convert to date_part
         if hasattr(func, 'name') and func.name.lower() == 'extract':
             if len(func.clauses) == 2:
-                part = self.process(func.clauses.clauses[0], **kw)
+                part_clause = func.clauses.clauses[0]
+                if hasattr(part_clause, 'value') and isinstance(part_clause.value, str):
+                    # Inline the string literal instead of using parameters
+                    part = f"'{part_clause.value}'"
+                else:
+                    part = self.process(func.clauses.clauses[0], **kw)
                 date_expr = self.process(func.clauses.clauses[1], **kw)
                 return f"date_part({part}, {date_expr})"
         
@@ -771,22 +783,42 @@ class Dialect(DefaultDialect):
         
         # For newer DuckDB versions with comment support
         try:
+            # Use duckdb_tables() function which has proper comment support
             query = """
                 SELECT comment 
-                FROM information_schema.tables 
+                FROM duckdb_tables() 
                 WHERE table_name = :table_name
             """
             params = {"table_name": table_name}
             
             if schema:
-                query += " AND table_schema = :schema"
+                query += " AND schema_name = :schema"
                 params["schema"] = schema
+            else:
+                # Default to main schema if not specified
+                query += " AND schema_name = 'main'"
             
             result = connection.execute(text(query), params).scalar()
             return {"text": result}
         except Exception:
-            # Fallback if comment support isn't available
-            return {"text": None}
+            # Fallback: try information_schema.tables with TABLE_COMMENT column
+            try:
+                query = """
+                    SELECT TABLE_COMMENT 
+                    FROM information_schema.tables 
+                    WHERE table_name = :table_name
+                """
+                params = {"table_name": table_name}
+                
+                if schema:
+                    query += " AND table_schema = :schema"
+                    params["schema"] = schema
+                
+                result = connection.execute(text(query), params).scalar()
+                return {"text": result}
+            except Exception:
+                # Final fallback if comment support isn't available
+                return {"text": None}
 
     def get_columns(
         self,
@@ -796,6 +828,54 @@ class Dialect(DefaultDialect):
         **kw: Any,
     ):
         """Return information about columns in table_name"""
+        
+        # If comment support is available, use duckdb_columns() for richer information
+        if self.supports_comments:
+            try:
+                query = """
+                    SELECT 
+                        column_name,
+                        data_type,
+                        is_nullable,
+                        column_default,
+                        comment
+                    FROM duckdb_columns()
+                    WHERE table_name = :table_name
+                """
+                params = {"table_name": table_name}
+                
+                if schema:
+                    query += " AND schema_name = :schema"
+                    params["schema"] = schema
+                else:
+                    # Default to main schema if not specified
+                    query += " AND schema_name = 'main'"
+                
+                query += " ORDER BY column_index"
+                
+                result = connection.execute(text(query), params)
+                columns = []
+                
+                for row in result:
+                    col_name, data_type, is_nullable, column_default, comment = row
+                    
+                    # Convert DuckDB types to SQLAlchemy types
+                    type_obj = self._map_duckdb_type_to_sqlalchemy(data_type)
+                    
+                    columns.append({
+                        "name": col_name,
+                        "type": type_obj,
+                        "nullable": is_nullable,
+                        "default": column_default,
+                        "comment": comment,
+                    })
+                    
+                return columns
+            except Exception:
+                # Fall back to information_schema if duckdb_columns() fails
+                pass
+        
+        # Fallback: use information_schema.columns (no comment support)
         query = """
             SELECT 
                 column_name,
@@ -820,7 +900,7 @@ class Dialect(DefaultDialect):
             col_name, data_type, is_nullable, column_default = row
             
             # Convert DuckDB types to SQLAlchemy types
-            type_obj = self.ischema_names.get(data_type.upper(), sqltypes.String)()
+            type_obj = self._map_duckdb_type_to_sqlalchemy(data_type)
             
             columns.append({
                 "name": col_name,
@@ -830,6 +910,20 @@ class Dialect(DefaultDialect):
             })
             
         return columns
+
+    def _map_duckdb_type_to_sqlalchemy(self, data_type: str):
+        """Map DuckDB data type to SQLAlchemy type"""
+        # Handle complex types that should be mapped to NULLTYPE
+        if (
+            "[" in data_type or  # Arrays like INTEGER[] or INTEGER[3]
+            "STRUCT(" in data_type or  # Structs like STRUCT(a INTEGER, b VARCHAR)
+            "MAP(" in data_type or  # Maps like MAP(VARCHAR, VARCHAR)
+            "UNION(" in data_type  # Unions
+        ):
+            return sqltypes.NULLTYPE
+        
+        # For basic types, use the existing mapping
+        return self.ischema_names.get(data_type.upper(), sqltypes.String)()
 
     def get_foreign_keys(
         self,

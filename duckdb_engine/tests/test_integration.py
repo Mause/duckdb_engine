@@ -3,7 +3,7 @@ import pandas as pd
 from pytest import mark, raises
 from sqlalchemy import __version__, text
 from sqlalchemy.engine import create_engine
-from sqlalchemy.engine.base import Connection
+from sqlalchemy.engine import Connection
 from sqlalchemy.exc import ProgrammingError
 
 df = pd.DataFrame([{"a": 1}])

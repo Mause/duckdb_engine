@@ -6,7 +6,7 @@ from pytest import fixture, raises
 from sqlalchemy import create_engine
 from sqlalchemy.dialects import registry  # type: ignore
 from sqlalchemy.engine import Dialect, Engine
-from sqlalchemy.engine.base import Connection
+from sqlalchemy.engine import Connection
 from sqlalchemy.orm import Session, sessionmaker
 from typing_extensions import ParamSpec
 
