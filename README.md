@@ -1,36 +1,78 @@
 # duckdb_engine
 
-[![Supported Python Versions](https://img.shields.io/pypi/pyversions/duckdb-engine)](https://pypi.org/project/duckdb-engine/) [![PyPI version](https://badge.fury.io/py/duckdb-engine.svg)](https://badge.fury.io/py/duckdb-engine) [![PyPI Downloads](https://img.shields.io/pypi/dm/duckdb-engine.svg)](https://pypi.org/project/duckdb-engine/) [![codecov](https://codecov.io/gh/Mause/duckdb_engine/graph/badge.svg)](https://codecov.io/gh/Mause/duckdb_engine)
+Native SQLAlchemy driver for [DuckDB](https://duckdb.org/)
 
-Basic SQLAlchemy driver for [DuckDB](https://duckdb.org/)
+## About This Fork
+
+This is an fork of [Mause's original duckdb_engine](https://github.com/Mause/duckdb_engine). Many thanks to Mause for creating and continuing to maintain the original SQLAlchemy driver for DuckDB.
+
+### Key Improvements in This Fork
+
+- **Native DuckDB Inspector**: Replaced PostgreSQL-based inspector with a native DuckDB implementation for better compatibility and performance
+- **Enhanced DuckDB Compatibility**: Improved support for DuckDB-specific features and native comment support
+- **Unified Query Execution**: Cleaner, more maintainable inspector query execution system
+- **Improved Sequence Support**: Better handling of sequences in schema introspection
+- **Reduced Dependencies**: Removed reliance on PostgreSQL dialect for inspection operations
 
 <!--ts-->
 - [duckdb\_engine](#duckdb_engine)
+  - [About This Fork](#about-this-fork)
   - [Installation](#installation)
   - [Usage](#usage)
   - [Usage in IPython/Jupyter](#usage-in-ipythonjupyter)
   - [Configuration](#configuration)
   - [How to register a pandas DataFrame](#how-to-register-a-pandas-dataframe)
   - [Things to keep in mind](#things-to-keep-in-mind)
+    - [Native DuckDB Inspector](#native-duckdb-inspector)
+    - [General Compatibility Notes](#general-compatibility-notes)
     - [Auto-incrementing ID columns](#auto-incrementing-id-columns)
     - [Pandas `read_sql()` chunksize](#pandas-read_sql-chunksize)
     - [Unsigned integer support](#unsigned-integer-support)
   - [Alembic Integration](#alembic-integration)
   - [Preloading extensions (experimental)](#preloading-extensions-experimental)
   - [Registering Filesystems](#registering-filesystems)
-  - [The name](#the-name)
-
-<!-- Created by https://github.com/ekalinin/github-markdown-toc -->
-<!-- Added by: me, at: Wed 20 Sep 2023 12:44:27 AWST -->
-
-<!--te-->
 
 ## Installation
+
+Since this is a fork and not the official PyPI package, install directly from GitHub:
+
 ```sh
-$ pip install duckdb-engine
+# Install from GitHub
+$ pip install git+https://github.com/gfrmin/duckdb_engine.git
+
+# Or for development
+$ git clone https://github.com/gfrmin/duckdb_engine.git
+$ cd duckdb_engine
+$ uv sync
 ```
 
-DuckDB Engine also has a conda feedstock available, the instructions for the use of which are available in it's [repository](https://github.com/conda-forge/duckdb-engine-feedstock).
+**Note**: This fork is not available on PyPI or conda-forge. Use the GitHub installation method above.
+
+### Development Setup
+
+For development with this fork:
+
+```sh
+# Clone the repository
+$ git clone https://github.com/gfrmin/duckdb_engine.git
+$ cd duckdb_engine
+
+# Install dependencies using uv
+$ uv sync
+
+# Run tests
+$ uv run pytest
+
+# Run with coverage
+$ uv run pytest --cov
+
+# Type checking
+$ uv run mypy duckdb_engine/
+
+# Formatting and linting
+$ uv run ruff check --fix .
+$ uv run ruff format .
+```
 
 ## Usage
 
@@ -38,29 +80,26 @@ Once you've installed this package, you should be able to just use it, as SQLAlc
 
 ```python
 from sqlalchemy import Column, Integer, Sequence, String, create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm.session import Session
+from sqlalchemy.orm import DeclarativeBase, Session
 
-Base = declarative_base()
+class Base(DeclarativeBase):
+    pass
 
-
-class FakeModel(Base):  # type: ignore
+class FakeModel(Base):
     __tablename__ = "fake"
 
     id = Column(Integer, Sequence("fakemodel_id_sequence"), primary_key=True)
     name = Column(String)
 
-
 eng = create_engine("duckdb:///:memory:")
 Base.metadata.create_all(eng)
-session = Session(bind=eng)
 
-session.add(FakeModel(name="Frank"))
-session.commit()
+with Session(eng) as session:
+    session.add(FakeModel(name="Frank"))
+    session.commit()
 
-frank = session.query(FakeModel).one()
-
-assert frank.name == "Frank"
+    frank = session.query(FakeModel).one()
+    assert frank.name == "Frank"
 ```
 
 ## Usage in IPython/Jupyter
@@ -88,19 +127,34 @@ The supported configuration parameters are listed in the [DuckDB docs](https://d
 ## How to register a pandas DataFrame
 
 ```python
+from sqlalchemy import create_engine, text
+import pandas as pd
+
 conn = create_engine("duckdb:///:memory:").connect()
 
-# with SQLAlchemy 1.3
-conn.execute("register", ("dataframe_name", pd.DataFrame(...)))
+# with SQLAlchemy 2.0+
+conn.execute(text("register(:name, :df)"), {"name": "test_df", "df": pd.DataFrame(...)})
 
-# with SQLAlchemy 1.4+
-conn.execute(text("register(:name, :df)"), {"name": "test_df", "df": df})
-
-conn.execute("select * from dataframe_name")
+conn.execute(text("select * from test_df"))
 ```
 
+**Requirements**: This fork requires Python 3.9+ and SQLAlchemy 2.0.43.
+
 ## Things to keep in mind
-Duckdb's SQL parser is based on the PostgreSQL parser, but not all features in PostgreSQL are supported in duckdb. Because the `duckdb_engine` dialect is derived from the `postgresql` dialect, `SQLAlchemy` may try to use PostgreSQL-only features. Below are some caveats to look out for.
+
+### Native DuckDB Inspector
+
+This fork includes a **native DuckDB inspector** that provides better schema introspection than the original PostgreSQL-based approach. Key improvements include:
+
+- **Better Type Mapping**: Native DuckDB type detection and mapping to SQLAlchemy types
+- **Improved Performance**: Direct DuckDB system queries instead of PostgreSQL compatibility layer
+- **Enhanced Sequence Support**: Native sequence introspection and management
+- **Comment Support**: Full support for table and column comments
+- **DuckDB-Specific Features**: Better support for DuckDB extensions and unique features
+
+### General Compatibility Notes
+
+While DuckDB's SQL parser is based on PostgreSQL, this fork reduces reliance on PostgreSQL-specific features through native DuckDB implementations. Below are some remaining considerations:
 
 ### Auto-incrementing ID columns
 When defining an Integer column as a primary key, `SQLAlchemy` uses the `SERIAL` datatype for PostgreSQL. Duckdb does not yet support this datatype because it's a non-standard PostgreSQL legacy type, so a workaround is to use the `SQLAlchemy.Sequence()` object to auto-increment the key. For more information on sequences, you can find the [`SQLAlchemy Sequence` documentation here](https://docs.sqlalchemy.org/en/14/core/defaults.html#associating-a-sequence-as-the-server-side-default).
@@ -199,6 +253,3 @@ create_engine(
 )
 ```
 
-## The name
-
-Yes, I'm aware this package should be named `duckdb-driver` or something, I wasn't thinking when I named it and it's too hard to change the name now
