@@ -13,7 +13,8 @@ from typing import Any, Callable, Dict, Optional, Type
 import duckdb
 from packaging.version import Version
 from sqlalchemy import exc
-from sqlalchemy.dialects.postgresql.base import PGIdentifierPreparer, PGTypeCompiler
+from sqlalchemy.sql import compiler
+from sqlalchemy.sql.compiler import IdentifierPreparer
 from sqlalchemy.engine import Dialect
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql import sqltypes, type_api
@@ -31,36 +32,38 @@ IS_GT_1 = Version(duckdb_version) > Version("1.0.0")
 
 
 class UInt64(Integer):
-    pass
+    cache_ok = True
 
 
 class UInt32(Integer):
-    pass
+    cache_ok = True
 
 
 class UInt16(Integer):
     "AKA USMALLINT"
+    cache_ok = True
 
 
 class UInt8(Integer):
-    pass
+    cache_ok = True
 
 
 class UTinyInteger(Integer):
     "AKA UInt1"
-
+    cache_ok = True
     name = "UTinyInt"
     # UTINYINT	-	0	255
 
 
 class TinyInteger(Integer):
     "AKA Int1"
-
+    cache_ok = True
     name = "TinyInt"
     # TINYINT	INT1	-128	127
 
 
 class USmallInteger(Integer):
+    cache_ok = True
     name = "usmallint"
     "AKA UInt2"
     # USMALLINT	-	0	65535
@@ -69,32 +72,36 @@ class USmallInteger(Integer):
 
 
 class UBigInteger(Integer):
+    cache_ok = True
     name = "UBigInt"
     min = 0
     max = 18446744073709551615
 
 
 class HugeInteger(Integer):
+    cache_ok = True
     name = "HugeInt"
     # HUGEINT	 	-170141183460469231731687303715884105727*	170141183460469231731687303715884105727
 
 
 class UHugeInteger(Integer):
+    cache_ok = True
     name = "UHugeInt"
 
 
 class UInteger(Integer):
     # UINTEGER	-	0	4294967295
-    pass
+    cache_ok = True
 
 
 if IS_GT_1:
 
     class VarInt(Integer):
-        pass
+        cache_ok = True
 
 
-def compile_uint(element: Integer, compiler: PGTypeCompiler, **kw: Any) -> str:
+def compile_uint(element: Integer, compiler: compiler.GenericTypeCompiler, **kw: Any) -> str:
+    """Compile unsigned integer types for DuckDB"""
     return getattr(element, "name", type(element).__name__)
 
 
@@ -127,6 +134,7 @@ class Struct(TypeEngine):
     """
 
     __visit_name__ = "struct"
+    cache_ok = True
 
     def __init__(self, fields: Optional[Dict[str, TV]] = None):
         self.fields = fields
@@ -148,6 +156,7 @@ class Map(TypeEngine):
     """
 
     __visit_name__ = "map"
+    cache_ok = True
     key_type: TV
     value_type: TV
 
@@ -189,6 +198,7 @@ class Union(TypeEngine):
     """
 
     __visit_name__ = "union"
+    cache_ok = True
     fields: Dict[str, TV]
 
     def __init__(self, fields: Dict[str, TV]):
@@ -216,6 +226,23 @@ ISCHEMA_NAMES = {
     "enum": sqltypes.Enum,
     "bool": sqltypes.BOOLEAN,
     "varchar": String,
+    "text": sqltypes.TEXT,
+    "json": sqltypes.JSON,
+    "uuid": sqltypes.Uuid,
+    "decimal": sqltypes.DECIMAL,
+    "numeric": sqltypes.NUMERIC,
+    "real": sqltypes.FLOAT,
+    "double": sqltypes.FLOAT,
+    "float": sqltypes.FLOAT,
+    "date": sqltypes.DATE,
+    "time": sqltypes.TIME,
+    "timestamp": sqltypes.TIMESTAMP,
+    "interval": sqltypes.Interval,
+    "blob": sqltypes.LargeBinary,
+    "bytea": sqltypes.LargeBinary,
+    "struct": Struct,
+    "map": Map,
+    "union": Union,
 }
 if IS_GT_1:
     ISCHEMA_NAMES["varint"] = VarInt
@@ -229,29 +256,32 @@ def register_extension_types() -> None:
 @compiles(Struct, "duckdb")  # type: ignore[misc]
 def visit_struct(
     instance: Struct,
-    compiler: PGTypeCompiler,
-    identifier_preparer: PGIdentifierPreparer,
+    compiler: compiler.GenericTypeCompiler,
+    identifier_preparer: IdentifierPreparer,
     **kw: Any,
 ) -> str:
+    """Compile STRUCT type for DuckDB"""
     return "STRUCT" + struct_or_union(instance, compiler, identifier_preparer, **kw)
 
 
 @compiles(Union, "duckdb")  # type: ignore[misc]
 def visit_union(
     instance: Union,
-    compiler: PGTypeCompiler,
-    identifier_preparer: PGIdentifierPreparer,
+    compiler: compiler.GenericTypeCompiler,
+    identifier_preparer: IdentifierPreparer,
     **kw: Any,
 ) -> str:
+    """Compile UNION type for DuckDB"""
     return "UNION" + struct_or_union(instance, compiler, identifier_preparer, **kw)
 
 
 def struct_or_union(
     instance: typing.Union[Union, Struct],
-    compiler: PGTypeCompiler,
-    identifier_preparer: PGIdentifierPreparer,
+    compiler: compiler.GenericTypeCompiler,
+    identifier_preparer: IdentifierPreparer,
     **kw: Any,
 ) -> str:
+    """Generate the field specification for STRUCT or UNION types"""
     fields = instance.fields
     if fields is None:
         raise exc.CompileError(f"DuckDB {repr(instance)} type requires fields")
@@ -270,14 +300,16 @@ def struct_or_union(
 
 def process_type(
     value: typing.Union[TypeEngine, Type[TypeEngine]],
-    compiler: PGTypeCompiler,
+    compiler: compiler.GenericTypeCompiler,
     **kw: Any,
 ) -> str:
+    """Process a type through the compiler"""
     return compiler.process(type_api.to_instance(value), **kw)
 
 
 @compiles(Map, "duckdb")  # type: ignore[misc]
-def visit_map(instance: Map, compiler: PGTypeCompiler, **kw: Any) -> str:
+def visit_map(instance: Map, compiler: compiler.GenericTypeCompiler, **kw: Any) -> str:
+    """Compile MAP type for DuckDB"""
     return "MAP({}, {})".format(
         process_type(instance.key_type, compiler, **kw),
         process_type(instance.value_type, compiler, **kw),

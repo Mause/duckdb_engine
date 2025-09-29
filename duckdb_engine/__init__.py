@@ -18,22 +18,16 @@ import duckdb
 import sqlalchemy
 from sqlalchemy import pool, select, sql, text, util
 from sqlalchemy import types as sqltypes
-from sqlalchemy.dialects.postgresql import UUID, insert
-from sqlalchemy.dialects.postgresql.base import (
-    PGDialect,
-    PGIdentifierPreparer,
-    PGInspector,
-    PGTypeCompiler,
-)
-from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
 from sqlalchemy.engine.default import DefaultDialect
 from sqlalchemy.engine.interfaces import Dialect as RootDialect
-from sqlalchemy.engine.reflection import cache
+from sqlalchemy.engine.reflection import cache, Inspector
 from sqlalchemy.engine.url import URL
 from sqlalchemy.exc import NoSuchTableError
 from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.sql import bindparam
+from sqlalchemy.sql import bindparam, compiler
 from sqlalchemy.sql.selectable import Select
+from sqlalchemy.sql.dml import Insert
+from sqlalchemy.sql.compiler import IdentifierPreparer
 
 from ._supports import has_comment_support
 from .config import apply_config, get_core_config
@@ -57,41 +51,110 @@ __all__ = [
     "Dialect",
     "ConnectionWrapper",
     "CursorWrapper",
-    "DBAPI",
     "DuckDBEngineWarning",
-    "insert",  # reexport of sqlalchemy.dialects.postgresql.insert
+    "DuckDBInsert",
+    "insert",
 ]
 
 
-class DBAPI:
-    paramstyle = "numeric_dollar" if sqlalchemy_version >= "2.0.0" else "qmark"
-    apilevel = duckdb.apilevel
-    threadsafety = duckdb.threadsafety
-
-    # this is being fixed upstream to add a proper exception hierarchy
-    Error = getattr(duckdb, "Error", RuntimeError)
-    TransactionException = getattr(duckdb, "TransactionException", Error)
-    ParserException = getattr(duckdb, "ParserException", Error)
-
-    @staticmethod
-    def Binary(x: Any) -> Any:
-        return x
 
 
-class DuckDBInspector(PGInspector):
-    def get_check_constraints(
-        self, table_name: str, schema: Optional[str] = None, **kw: Any
-    ) -> List[Dict[str, Any]]:
-        try:
-            return super().get_check_constraints(table_name, schema, **kw)
-        except Exception as e:
-            raise NotImplementedError() from e
+class DuckDBInspector(Inspector):
+    """DuckDB-specific inspector using native duckdb_* functions"""
+
+    def get_schema_names(self, **kw: Any) -> List[str]:
+        """Return list of schema names using duckdb_schemas()"""
+        if not supports_attach:
+            # Fallback for older DuckDB versions
+            return ["main"]
+
+        query = """
+            SELECT database_name, schema_name
+            FROM duckdb_schemas()
+            WHERE schema_name NOT LIKE 'pg\\_%' ESCAPE '\\'
+            ORDER BY database_name, schema_name
+        """
+        rs = self.bind.execute(text(query))
+
+        qs = self.dialect.identifier_preparer.quote_schema
+        return [qs(".".join(row)) for row in rs]
+
+    def get_table_names(self, schema: Optional[str] = None, **kw: Any) -> List[str]:
+        """Return list of table names using duckdb_tables()"""
+        if not supports_attach:
+            # Fallback for older DuckDB versions
+            query = """
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_type = 'BASE TABLE'
+            """
+            if schema:
+                query += " AND table_schema = :schema"
+                rs = self.bind.execute(text(query), {"schema": schema})
+            else:
+                rs = self.bind.execute(text(query))
+            return [table for (table,) in rs]
+
+        query = """
+            SELECT table_name
+            FROM duckdb_tables()
+            WHERE schema_name NOT LIKE 'pg\\_%' ESCAPE '\\'
+        """
+        params = {}
+
+        if schema:
+            database_name, schema_name = self.dialect.identifier_preparer._separate(schema)
+            if schema_name:
+                query += " AND schema_name = :schema_name"
+                params["schema_name"] = schema_name
+            if database_name:
+                query += " AND database_name = :database_name"
+                params["database_name"] = database_name
+
+        rs = self.bind.execute(text(query), params)
+        return [table for (table,) in rs]
+
+    def get_view_names(self, schema: Optional[str] = None, **kw: Any) -> List[str]:
+        """Return list of view names using duckdb_views()"""
+        if not supports_attach:
+            # Fallback for older DuckDB versions
+            query = """
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_type = 'VIEW'
+            """
+            if schema:
+                query += " AND table_schema = :schema"
+                rs = self.bind.execute(text(query), {"schema": schema})
+            else:
+                rs = self.bind.execute(text(query))
+            return [view for (view,) in rs]
+
+        query = """
+            SELECT view_name
+            FROM duckdb_views()
+            WHERE schema_name NOT LIKE 'pg\\_%' ESCAPE '\\'
+        """
+        params = {}
+
+        if schema:
+            database_name, schema_name = self.dialect.identifier_preparer._separate(schema)
+            if schema_name:
+                query += " AND schema_name = :schema_name"
+                params["schema_name"] = schema_name
+            if database_name:
+                query += " AND database_name = :database_name"
+                params["database_name"] = database_name
+
+        rs = self.bind.execute(text(query), params)
+        return [view for (view,) in rs]
 
 
 class ConnectionWrapper:
+    """Wrapper for DuckDB connection to provide SQLAlchemy interface"""
     __c: duckdb.DuckDBPyConnection
     notices: List[str]
-    autocommit = None  # duckdb doesn't support setting autocommit
+    autocommit = None  # DuckDB doesn't support setting autocommit
     closed = False
 
     def __init__(self, c: duckdb.DuckDBPyConnection) -> None:
@@ -110,6 +173,7 @@ class ConnectionWrapper:
 
 
 class CursorWrapper:
+    """Wrapper for DuckDB cursor to provide SQLAlchemy interface"""
     __c: duckdb.DuckDBPyConnection
     __connection_wrapper: "ConnectionWrapper"
 
@@ -134,7 +198,7 @@ class CursorWrapper:
         context: Optional[Any] = None,
     ) -> None:
         try:
-            if statement.lower() == "commit":  # this is largely for ipython-sql
+            if statement.lower() == "commit":  # for ipython-sql compatibility
                 self.__c.commit()
             elif statement.lower() in (
                 "register",
@@ -164,7 +228,26 @@ class CursorWrapper:
         return self.__connection_wrapper
 
     def close(self) -> None:
-        pass  # closing cursors is not supported in duckdb
+        pass  # DuckDB doesn't support cursor closing
+
+    @property
+    def description(self):
+        """Override description to normalize DuckDBPyType objects to hashable strings"""
+        if not hasattr(self.__c, 'description') or self.__c.description is None:
+            return None
+        
+        # Normalize DuckDBPyType to string for hashability
+        normalized = []
+        for col in self.__c.description:
+            name, typ = col[0], col[1]
+            # Convert unhashable DuckDBPyType to string
+            try:
+                hash(typ)
+                normalized.append(col)
+            except TypeError:
+                # Replace unhashable type with string representation
+                normalized.append((name, str(typ)) + col[2:])
+        return tuple(normalized)
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self.__c, name)
@@ -177,20 +260,25 @@ class CursorWrapper:
 
 
 class DuckDBEngineWarning(Warning):
+    """Warning raised by DuckDB engine"""
     pass
 
 
 def index_warning() -> None:
+    """Warn about missing index reflection support"""
     warnings.warn(
         "duckdb-engine doesn't yet support reflection on indices",
         DuckDBEngineWarning,
     )
 
 
-class DuckDBIdentifierPreparer(PGIdentifierPreparer):
+class DuckDBIdentifierPreparer(IdentifierPreparer):
+    """DuckDB identifier preparer with database.schema support"""
+
     def __init__(self, dialect: "Dialect", **kwargs: Any) -> None:
         super().__init__(dialect, **kwargs)
 
+        # Add DuckDB reserved words
         self.reserved_words.update(
             {
                 keyword_name
@@ -204,10 +292,9 @@ class DuckDBIdentifierPreparer(PGIdentifierPreparer):
 
     def _separate(self, name: Optional[str]) -> Tuple[Optional[Any], Optional[str]]:
         """
-        Get database name and schema name from schema if it contains a database name
-            Format:
-              <db_name>.<schema_name>
-              db_name and schema_name are double quoted if contains spaces or double quotes
+        Separate database name and schema name from qualified name.
+        Format: <db_name>.<schema_name>
+        Names are quoted if they contain spaces or special characters.
         """
         database_name, schema_name = None, name
         if name is not None and "." in name:
@@ -233,7 +320,55 @@ class DuckDBIdentifierPreparer(PGIdentifierPreparer):
         return self.format_schema(schema)
 
 
+class DuckDBTypeCompiler(compiler.GenericTypeCompiler):
+    """DuckDB type compiler"""
+
+    def visit_INTEGER(self, type_: sqltypes.INTEGER, **kw: Any) -> str:
+        # DuckDB auto-increments INTEGER PRIMARY KEY
+        return "INTEGER"
+
+    def visit_BIGINT(self, type_: sqltypes.BIGINT, **kw: Any) -> str:
+        # DuckDB auto-increments BIGINT PRIMARY KEY
+        return "BIGINT"
+
+    def visit_BOOLEAN(self, type_: sqltypes.BOOLEAN, **kw: Any) -> str:
+        return "BOOLEAN"
+
+    def visit_TEXT(self, type_: sqltypes.TEXT, **kw: Any) -> str:
+        return "TEXT"
+
+    def visit_FLOAT(self, type_: sqltypes.FLOAT, **kw: Any) -> str:
+        return "DOUBLE"
+
+    def visit_NUMERIC(self, type_: sqltypes.NUMERIC, **kw: Any) -> str:
+        if type_.precision is not None and type_.scale is not None:
+            return f"DECIMAL({type_.precision}, {type_.scale})"
+        elif type_.precision is not None:
+            return f"DECIMAL({type_.precision})"
+        return "DECIMAL"
+
+    def visit_JSON(self, type_: sqltypes.JSON, **kw: Any) -> str:
+        return "JSON"
+
+
+class DuckDBCompiler(compiler.SQLCompiler):
+    """DuckDB SQL compiler"""
+    pass
+
+
+class DuckDBDDLCompiler(compiler.DDLCompiler):
+    """DuckDB DDL compiler"""
+
+    def get_column_specification(self, column, **kwargs):
+        """Override to handle DuckDB-specific column specs"""
+        spec = super().get_column_specification(column, **kwargs)
+        return spec
+
+
 class DuckDBNullType(sqltypes.NullType):
+    """DuckDB-specific null type"""
+    cache_ok = True
+
     def result_processor(
         self, dialect: RootDialect, coltype: sqltypes.TypeEngine
     ) -> Optional["_ResultProcessor"]:
@@ -243,46 +378,102 @@ class DuckDBNullType(sqltypes.NullType):
             return super().result_processor(dialect, coltype)
 
 
-class Dialect(PGDialect_psycopg2):
+class DuckDBInsert(Insert):
+    """DuckDB INSERT statement with ON CONFLICT support"""
+    inherit_cache = True
+
+    def on_conflict_do_nothing(self, constraint=None):
+        """Add ON CONFLICT DO NOTHING clause"""
+        self._post_values_clause = sql.ClauseElement._construct_raw_text(
+            "ON CONFLICT DO NOTHING"
+        )
+        return self
+
+    def on_conflict_do_update(
+        self,
+        constraint=None,
+        index_elements=None,
+        index_where=None,
+        set_=None,
+        where=None,
+    ):
+        """Add ON CONFLICT DO UPDATE clause"""
+        if set_ is None:
+            raise ValueError("set_ dictionary is required for ON CONFLICT DO UPDATE")
+
+        # Build SET clause
+        set_clauses = []
+        for key, value in set_.items():
+            if hasattr(value, '__clause_element__'):
+                set_clauses.append(f"{key} = {value}")
+            else:
+                set_clauses.append(f"{key} = EXCLUDED.{key}")
+
+        conflict_clause = f"ON CONFLICT DO UPDATE SET {', '.join(set_clauses)}"
+        if where is not None:
+            conflict_clause += f" WHERE {where}"
+
+        self._post_values_clause = sql.ClauseElement._construct_raw_text(conflict_clause)
+        return self
+
+# Alias for backward compatibility
+insert = DuckDBInsert
+
+
+class Dialect(DefaultDialect):
+    """DuckDB SQLAlchemy dialect"""
     name = "duckdb"
     driver = "duckdb_engine"
-    _has_events = False
+
+    # DuckDB capabilities
+    supports_alter = True
+    supports_unicode_binds = True
+    supports_sane_rowcount = False
     supports_statement_cache = False
     supports_comments = has_comment_support()
-    supports_sane_rowcount = False
     supports_server_side_cursors = False
-    div_is_floordiv = False  # TODO: tweak this to be based on DuckDB version
+    supports_schemas = True
+    supports_views = True
+    supports_empty_insert = False
+    supports_multivalues_insert = True
+
+    # DuckDB doesn't support traditional sequences
+    supports_sequences = False
+
+    # DuckDB uses / for division, not integer division like PostgreSQL
+    div_is_floordiv = False
+
+    # Set up components
     inspector = DuckDBInspector
-    colspecs = util.update_copy(
-        PGDialect.colspecs,
-        {
-            # the psycopg2 driver registers a _PGNumeric with custom logic for
-            # postgres type_codes (such as 701 for float) that duckdb doesn't have
-            sqltypes.Numeric: sqltypes.Numeric,
-            sqltypes.JSON: sqltypes.JSON,
-            UUID: UUID,
-        },
-    )
-    ischema_names = util.update_copy(
-        PGDialect.ischema_names,
-        ISCHEMA_NAMES,
-    )
     preparer = DuckDBIdentifierPreparer
-    identifier_preparer: DuckDBIdentifierPreparer
+    type_compiler = DuckDBTypeCompiler
+    statement_compiler = DuckDBCompiler
+    ddl_compiler = DuckDBDDLCompiler
+
+    # Type mappings
+    colspecs = {
+        sqltypes.Numeric: sqltypes.Numeric,
+        sqltypes.JSON: sqltypes.JSON,
+    }
+
+    ischema_names = ISCHEMA_NAMES.copy()
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        kwargs["use_native_hstore"] = False
         super().__init__(*args, **kwargs)
 
-    def type_descriptor(self, typeobj: Type[sqltypes.TypeEngine]) -> Any:  # type: ignore[override]
-        res = super().type_descriptor(typeobj)
+    def type_descriptor(self, typeobj: Type[sqltypes.TypeEngine]) -> Any:
+        """Get type descriptor for given type"""
+        if isinstance(typeobj, type):
+            typeobj = typeobj()
 
-        if isinstance(res, sqltypes.NullType):
+        if isinstance(typeobj, sqltypes.NullType):
             return DuckDBNullType()
 
-        return res
+        return typeobj
+
 
     def connect(self, *cargs: Any, **cparams: Any) -> "Connection":
+        """Create DuckDB connection with DuckDB-specific parameters"""
         core_keys = get_core_config()
         preload_extensions = cparams.pop("preload_extensions", [])
         config = dict(cparams.get("config", {}))
@@ -290,6 +481,7 @@ class Dialect(PGDialect_psycopg2):
         config.update(cparams.pop("url_config", {}))
 
         ext = {k: config.pop(k) for k in list(config) if k not in core_keys}
+
         if supports_user_agent:
             user_agent = f"duckdb_engine/{__version__}(sqlalchemy/{sqlalchemy_version})"
             if "custom_user_agent" in config:
@@ -311,29 +503,36 @@ class Dialect(PGDialect_psycopg2):
         return ConnectionWrapper(conn)
 
     def on_connect(self) -> None:
+        """Called once per connection"""
         pass
 
     @classmethod
     def get_pool_class(cls, url: URL) -> Type[pool.Pool]:
+        """Return appropriate connection pool class"""
         if url.database == ":memory:":
             return pool.SingletonThreadPool
         else:
             return pool.QueuePool
 
     @staticmethod
-    def dbapi(**kwargs: Any) -> Type[DBAPI]:
-        return DBAPI
+    def dbapi(**kwargs: Any) -> Any:
+        """Return the DBAPI module"""
+        return duckdb
 
     def _get_server_version_info(self, connection: "Connection") -> Tuple[int, int]:
-        return (8, 0)
+        """Return server version info"""
+        # DuckDB doesn't have traditional server versions like PostgreSQL
+        return (1, 0)
 
     def get_default_isolation_level(self, connection: "Connection") -> None:
-        raise NotImplementedError()
+        """DuckDB doesn't support isolation levels"""
+        return None
 
     def do_rollback(self, connection: "Connection") -> None:
+        """Handle rollback with DuckDB-specific error handling"""
         try:
-            super().do_rollback(connection)
-        except DBAPI.TransactionException as e:
+            connection.rollback()
+        except duckdb.TransactionException as e:
             if (
                 e.args[0]
                 != "TransactionContext Error: cannot rollback - no transaction is active"
@@ -341,150 +540,8 @@ class Dialect(PGDialect_psycopg2):
                 raise e
 
     def do_begin(self, connection: "Connection") -> None:
+        """Begin transaction"""
         connection.begin()
-
-    def get_view_names(
-        self,
-        connection: Any,
-        schema: Optional[Any] = None,
-        include: Optional[Any] = None,
-        **kw: Any,
-    ) -> Any:
-        s = """
-            SELECT table_name
-            FROM information_schema.tables
-            WHERE
-                table_type='VIEW'
-                AND table_schema = :schema_name
-            """
-        params = {}
-        database_name = None
-
-        if schema is not None:
-            database_name, schema = self.identifier_preparer._separate(schema)
-        else:
-            schema = "main"
-
-        params.update({"schema_name": schema})
-
-        if database_name is not None:
-            s += "AND table_catalog = :database_name\n"
-            params.update({"database_name": database_name})
-
-        rs = connection.execute(text(s), params)
-        return [view for (view,) in rs]
-
-    @cache  # type: ignore[call-arg]
-    def get_schema_names(self, connection: "Connection", **kw: "Any"):  # type: ignore[no-untyped-def]
-        """
-        Return unquoted database_name.schema_name unless either contains spaces or double quotes.
-        In that case, escape double quotes and then wrap in double quotes.
-        SQLAlchemy definition of a schema includes database name for databases like SQL Server (Ex: databasename.dbo)
-        (see https://docs.sqlalchemy.org/en/20/dialects/mssql.html#multipart-schema-names)
-        """
-
-        if not supports_attach:
-            return super().get_schema_names(connection, **kw)
-
-        s = """
-            SELECT database_name, schema_name AS nspname
-            FROM duckdb_schemas()
-            WHERE schema_name NOT LIKE 'pg\\_%' ESCAPE '\\'
-            ORDER BY database_name, nspname
-            """
-        rs = connection.execute(text(s))
-
-        qs = self.identifier_preparer.quote_schema
-        return [qs(".".join(nspname)) for nspname in rs]
-
-    def _build_query_where(
-        self,
-        table_name: Optional[str] = None,
-        schema_name: Optional[str] = None,
-        database_name: Optional[str] = None,
-    ) -> Tuple[str, Dict[str, str]]:
-        sql = ""
-        params = {}
-
-        # If no database name is provided, try to get it from the schema name
-        # specified as "<db name>.<schema name>"
-        # If only a schema name is found, database_name will return None
-        if database_name is None and schema_name is not None:
-            database_name, schema_name = self.identifier_preparer._separate(schema_name)
-
-        if table_name is not None:
-            sql += "AND table_name = :table_name\n"
-            params.update({"table_name": table_name})
-
-        if schema_name is not None:
-            sql += "AND schema_name = :schema_name\n"
-            params.update({"schema_name": schema_name})
-
-        if database_name is not None:
-            sql += "AND database_name = :database_name\n"
-            params.update({"database_name": database_name})
-
-        return sql, params
-
-    @cache  # type: ignore[call-arg]
-    def get_table_names(self, connection: "Connection", schema=None, **kw: "Any"):  # type: ignore[no-untyped-def]
-        """
-        Return unquoted database_name.schema_name unless either contains spaces or double quotes.
-        In that case, escape double quotes and then wrap in double quotes.
-        SQLAlchemy definition of a schema includes database name for databases like SQL Server (Ex: databasename.dbo)
-        (see https://docs.sqlalchemy.org/en/20/dialects/mssql.html#multipart-schema-names)
-        """
-
-        if not supports_attach:
-            return super().get_table_names(connection, schema, **kw)
-
-        s = """
-            SELECT database_name, schema_name, table_name
-            FROM duckdb_tables()
-            WHERE schema_name NOT LIKE 'pg\\_%' ESCAPE '\\'
-            """
-        sql, params = self._build_query_where(schema_name=schema)
-        s += sql
-        rs = connection.execute(text(s), params)
-
-        return [
-            table
-            for (
-                db,
-                sc,
-                table,
-            ) in rs
-        ]
-
-    @cache  # type: ignore[call-arg]
-    def get_table_oid(  # type: ignore[no-untyped-def]
-        self,
-        connection: "Connection",
-        table_name: str,
-        schema: "Optional[str]" = None,
-        **kw: "Any",
-    ):
-        """Fetch the oid for (database.)schema.table_name.
-        The schema name can be formatted either as database.schema or just the schema name.
-        In the latter scenario the schema associated with the default database is used.
-        """
-        s = """
-            SELECT oid, table_name
-            FROM (
-                SELECT table_oid AS oid, table_name,              database_name, schema_name FROM duckdb_tables()
-                UNION ALL BY NAME
-                SELECT view_oid AS oid , view_name AS table_name, database_name, schema_name FROM duckdb_views()
-            )
-            WHERE schema_name NOT LIKE 'pg\\_%' ESCAPE '\\'
-            """
-        sql, params = self._build_query_where(table_name=table_name, schema_name=schema)
-        s += sql
-
-        rs = connection.execute(text(s), params)
-        table_oid = rs.scalar()
-        if table_oid is None:
-            raise NoSuchTableError(table_name)
-        return table_oid
 
     def has_table(
         self,
@@ -493,10 +550,63 @@ class Dialect(PGDialect_psycopg2):
         schema: Optional[str] = None,
         **kw: Any,
     ) -> bool:
+        """Check if table exists"""
         try:
-            return self.get_table_oid(connection, table_name, schema) is not None
+            self.get_table_oid(connection, table_name, schema)
+            return True
         except NoSuchTableError:
             return False
+
+    def get_table_oid(
+        self,
+        connection: "Connection",
+        table_name: str,
+        schema: Optional[str] = None,
+        **kw: Any,
+    ) -> int:
+        """Get table OID"""
+        if not supports_attach:
+            # Simple check for older DuckDB versions
+            query = """
+                SELECT 1 FROM information_schema.tables
+                WHERE table_name = :table_name
+            """
+            params = {"table_name": table_name}
+            if schema:
+                query += " AND table_schema = :schema"
+                params["schema"] = schema
+
+            result = connection.execute(text(query), params).scalar()
+            if result is None:
+                raise NoSuchTableError(table_name)
+            return 1
+
+        query = """
+            SELECT table_oid, table_name
+            FROM (
+                SELECT table_oid, table_name, database_name, schema_name FROM duckdb_tables()
+                UNION ALL BY NAME
+                SELECT view_oid AS table_oid, view_name AS table_name, database_name, schema_name FROM duckdb_views()
+            )
+            WHERE schema_name NOT LIKE 'pg\\_%' ESCAPE '\\'
+            AND table_name = :table_name
+        """
+        params = {"table_name": table_name}
+
+        if schema:
+            database_name, schema_name = self.identifier_preparer._separate(schema)
+            if schema_name:
+                query += " AND schema_name = :schema_name"
+                params["schema_name"] = schema_name
+            if database_name:
+                query += " AND database_name = :database_name"
+                params["database_name"] = database_name
+
+        rs = connection.execute(text(query), params)
+        table_oid = rs.scalar()
+        if table_oid is None:
+            raise NoSuchTableError(table_name)
+        return table_oid
 
     def get_indexes(
         self,
@@ -505,10 +615,10 @@ class Dialect(PGDialect_psycopg2):
         schema: Optional[str] = None,
         **kw: Any,
     ) -> List["_IndexDict"]:
+        """DuckDB doesn't support indexes yet"""
         index_warning()
         return []
 
-    # the following methods are for SQLA2 compatibility
     def get_multi_indexes(
         self,
         connection: "Connection",
@@ -516,13 +626,16 @@ class Dialect(PGDialect_psycopg2):
         filter_names: Optional[Collection[str]] = None,
         **kw: Any,
     ) -> Iterable[Tuple]:
+        """DuckDB doesn't support indexes yet"""
         index_warning()
         return []
 
     def initialize(self, connection: "Connection") -> None:
-        DefaultDialect.initialize(self, connection)
+        """Initialize dialect"""
+        super().initialize(connection)
 
     def create_connect_args(self, url: URL) -> Tuple[tuple, dict]:
+        """Create connection arguments from URL"""
         opts = url.translate_connect_args(database="database")
         opts["url_config"] = dict(url.query)
         user = opts["url_config"].pop("user", None)
@@ -531,162 +644,42 @@ class Dialect(PGDialect_psycopg2):
         return (), opts
 
     @classmethod
-    def import_dbapi(cls: Type["Dialect"]) -> Type[DBAPI]:
+    def import_dbapi(cls: Type["Dialect"]) -> Any:
+        """Import DBAPI module"""
         return cls.dbapi()
 
     def do_executemany(
-        self, cursor: Any, statement: Any, parameters: Any, context: Optional[Any] = ...
+        self, cursor: Any, statement: Any, parameters: Any, context: Optional[Any] = None
     ) -> None:
-        return DefaultDialect.do_executemany(
-            self, cursor, statement, parameters, context
-        )
-
-    def _pg_class_filter_scope_schema(
-        self,
-        query: Select,
-        schema: str,
-        scope: Any,
-        pg_class_table: Any = None,
-    ) -> Any:
-        # Don't scope by schema for now
-        if hasattr(super(), "_pg_class_filter_scope_schema"):
-            query = getattr(super(), "_pg_class_filter_scope_schema")(
-                query, schema=None, scope=scope, pg_class_table=pg_class_table
-            )
-            if schema is not None:
-                # Now let's scope by schema, but make sure we're not adding in the database name prefix
-                # This will not work if a schema or table name is not unique!
-                _, schema_name = self.identifier_preparer._separate(schema)
-                query = query.where(
-                    text("pg_namespace.nspname = :schema_name").bindparams(
-                        schema_name=schema_name
-                    )
-                )
-            return query
-
-    # FIXME: this method is a hack around the fact that we use a single cursor for all queries inside a connection,
-    #   and this is required to fix get_multi_columns
-    def get_multi_columns(
-        self,
-        connection: "Connection",
-        schema: Optional[str] = None,
-        filter_names: Optional[Set[str]] = None,
-        scope: Optional[str] = None,
-        kind: Optional[Tuple[str, ...]] = None,
-        **kw: Any,
-    ) -> List:
-        """
-        Copyright 2005-2023 SQLAlchemy authors and contributors <see AUTHORS file>.
-
-        Permission is hereby granted, free of charge, to any person obtaining a copy of
-        this software and associated documentation files (the "Software"), to deal in
-        the Software without restriction, including without limitation the rights to
-        use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-        of the Software, and to permit persons to whom the Software is furnished to do
-        so, subject to the following conditions:
-
-        The above copyright notice and this permission notice shall be included in all
-        copies or substantial portions of the Software.
-
-        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-        SOFTWARE.
-        """
-
-        has_filter_names, params = self._prepare_filter_names(filter_names)  # type: ignore[attr-defined]
-        query = self._columns_query(schema, has_filter_names, scope, kind)  # type: ignore[attr-defined]
-        rows = list(connection.execute(query, params).mappings())
-
-        # dictionary with (name, ) if default search path or (schema, name)
-        # as keys
-        domains: Dict[tuple, dict] = {}
-        """
-        TODO: fix these pg_collation errors in SQLA2
-        domains = {
-            ((d["schema"], d["name"]) if not d["visible"] else (d["name"],)): d
-            for d in self._load_domains(  # type: ignore[attr-defined]
-                connection, schema="*", info_cache=kw.get("info_cache")
-            )
-        }
-        """
-
-        # dictionary with (name, ) if default search path or (schema, name)
-        # as keys
-        enums = dict(
-            (
-                ((rec["name"],), rec)
-                if rec["visible"]
-                else ((rec["schema"], rec["name"]), rec)
-            )
-            for rec in self._load_enums(  # type: ignore[attr-defined]
-                connection, schema="*", info_cache=kw.get("info_cache")
-            )
-        )
-
-        columns = self._get_columns_info(rows, domains, enums, schema)  # type: ignore[attr-defined]
-
-        return columns.items()
-
-    # fix for https://github.com/Mause/duckdb_engine/issues/1128
-    # (Overrides sqlalchemy method)
-    @lru_cache()
-    def _comment_query(  # type: ignore[no-untyped-def]
-        self, schema: str, has_filter_names: bool, scope: Any, kind: Any
-    ):
-        if sqlalchemy.__version__ >= "2.0.36":
-            from sqlalchemy.dialects.postgresql import (  # type: ignore[attr-defined]
-                pg_catalog,
-            )
-
-            if (
-                hasattr(super(), "_kind_to_relkinds")
-                and hasattr(super(), "_pg_class_filter_scope_schema")
-                and hasattr(super(), "_pg_class_relkind_condition")
-            ):
-                relkinds = getattr(super(), "_kind_to_relkinds")(kind)
-                query = (
-                    select(
-                        pg_catalog.pg_class.c.relname,
-                        pg_catalog.pg_description.c.description,
-                    )
-                    .select_from(pg_catalog.pg_class)
-                    .outerjoin(
-                        pg_catalog.pg_description,
-                        sql.and_(
-                            pg_catalog.pg_class.c.oid
-                            == pg_catalog.pg_description.c.objoid,
-                            pg_catalog.pg_description.c.objsubid == 0,
-                        ),
-                    )
-                    .where(getattr(super(), "_pg_class_relkind_condition")(relkinds))
-                )
-                query = self._pg_class_filter_scope_schema(query, schema, scope)
-                if has_filter_names:
-                    query = query.where(
-                        pg_catalog.pg_class.c.relname.in_(bindparam("filter_names"))
-                    )
-                return query
-        else:
-            if hasattr(super(), "_comment_query"):
-                return getattr(super(), "_comment_query")(
-                    schema, has_filter_names, scope, kind
-                )
+        """Execute many statements"""
+        cursor.executemany(statement, parameters)
 
 
-if sqlalchemy.__version__ >= "2.0.14":
-    from sqlalchemy import TryCast  # type: ignore[attr-defined]
+# Custom compilation for DuckDB INSERT
+@compiles(DuckDBInsert, "duckdb")
+def visit_duckdb_insert(element, compiler, **kw):
+    """Compile DuckDB INSERT with ON CONFLICT support"""
+    # Use standard INSERT compilation and add our post-values clause
+    text = compiler.visit_insert(element, **kw)
 
-    @compiles(TryCast, "duckdb")  # type: ignore[misc]
-    def visit_try_cast(
-        instance: TryCast,
-        compiler: PGTypeCompiler,
-        **kw: Any,
-    ) -> str:
-        return "TRY_CAST({} AS {})".format(
-            compiler.process(instance.clause, **kw),
-            compiler.process(instance.typeclause, **kw),
-        )
+    if hasattr(element, '_post_values_clause') and element._post_values_clause:
+        text += " " + str(element._post_values_clause)
+
+    return text
+
+
+# Try cast support for DuckDB
+class TryCast(sql.ColumnElement):
+    """TRY_CAST expression for DuckDB"""
+    type = sqltypes.String()
+    cache_ok = True
+
+    def __init__(self, expression, target_type):
+        self.expression = expression
+        self.target_type = target_type
+
+
+@compiles(TryCast, "duckdb")
+def visit_try_cast(element, compiler, **kw):
+    """Compile TRY_CAST for DuckDB"""
+    return f"TRY_CAST({compiler.process(element.expression, **kw)} AS {element.target_type})"
