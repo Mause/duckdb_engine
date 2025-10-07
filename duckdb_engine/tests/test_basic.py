@@ -116,6 +116,7 @@ class IntervalModel(Base):
 class _Row:
     def __init__(self, val: Any) -> None:
         self._val = val
+
     def fetchone(self) -> Any:
         return self._val
 
@@ -734,8 +735,15 @@ def test_skip_load_extension_if_already_loaded(monkeypatch: MonkeyPatch) -> None
         class Proxy:
             def __init__(self, inner_conn: Any) -> None:
                 self._inner = inner_conn
-            def execute(self, query: Any, params: Optional[Sequence[Any]] = None) -> Any:
-                nonlocal globally_registered, loaded_here, first_loads, second_load_attempts
+
+            def execute(
+                self, query: Any, params: Optional[Sequence[Any]] = None
+            ) -> Any:
+                nonlocal \
+                    globally_registered, \
+                    loaded_here, \
+                    first_loads, \
+                    second_load_attempts
                 q = str(query).strip().lower()
 
                 # Dialect probes per connection
@@ -765,11 +773,15 @@ def test_skip_load_extension_if_already_loaded(monkeypatch: MonkeyPatch) -> None
 
     monkeypatch.setattr(duckdb, "connect", fake_connect)
 
-    eng1 = create_engine("duckdb:///:memory:", connect_args={"preload_extensions": ["httpfs"]})
+    eng1 = create_engine(
+        "duckdb:///:memory:", connect_args={"preload_extensions": ["httpfs"]}
+    )
     with eng1.connect():
         pass
 
-    eng2 = create_engine("duckdb:///:memory:", connect_args={"preload_extensions": ["httpfs"]})
+    eng2 = create_engine(
+        "duckdb:///:memory:", connect_args={"preload_extensions": ["httpfs"]}
+    )
     with eng2.connect():
         pass
 
