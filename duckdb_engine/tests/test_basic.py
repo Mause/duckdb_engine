@@ -721,8 +721,11 @@ def test_skip_load_extension_if_already_loaded(monkeypatch):
     second_load_attempts = 0
 
     class _Row:
-        def __init__(self, val): self._val = val
-        def fetchone(self): return self._val
+        def __init__(self, val):
+            self._val = val
+
+        def fetchone(self):
+            return self._val
 
     def fake_connect(*args, **kwargs):
         inner = real_connect(*args, **kwargs)
@@ -730,7 +733,11 @@ def test_skip_load_extension_if_already_loaded(monkeypatch):
 
         class Proxy:
             def execute(self, query, params=None):
-                nonlocal globally_registered, loaded_here, first_loads, second_load_attempts
+                nonlocal \
+                    globally_registered, \
+                    loaded_here, \
+                    first_loads, \
+                    second_load_attempts
                 q = str(query).strip().lower()
 
                 # The dialect probes per connection
@@ -761,12 +768,16 @@ def test_skip_load_extension_if_already_loaded(monkeypatch):
     monkeypatch.setattr(duckdb, "connect", fake_connect)
 
     # Engine 1: first connection loads the extension
-    eng1 = create_engine("duckdb:///:memory:", connect_args={"preload_extensions": ["httpfs"]})
+    eng1 = create_engine(
+        "duckdb:///:memory:", connect_args={"preload_extensions": ["httpfs"]}
+    )
     with eng1.connect():
         pass
 
     # Engine 2: second connection sees 'already registered' and should still succeed (new code only)
-    eng2 = create_engine("duckdb:///:memory:", connect_args={"preload_extensions": ["httpfs"]})
+    eng2 = create_engine(
+        "duckdb:///:memory:", connect_args={"preload_extensions": ["httpfs"]}
+    )
     with eng2.connect():
         pass
 
