@@ -9,6 +9,7 @@ from typing import Any, Generic, Optional, TypeVar, cast
 import duckdb
 import fsspec
 import sqlalchemy
+from _pytest.monkeypatch import MonkeyPatch
 from hypothesis import assume, given, settings
 from hypothesis.strategies import text as text_strat
 from packaging.version import Version
@@ -110,6 +111,13 @@ class IntervalModel(Base):
     id = Column(Integer, Sequence("IntervalModel_id_sequence"), primary_key=True)
 
     field = Column(Interval)
+
+
+class _Row:
+    def __init__(self, val: Any) -> None:
+        self._val = val
+    def fetchone(self) -> Any:
+        return self._val
 
 
 @fixture
@@ -708,39 +716,29 @@ def test_register_filesystem() -> None:
         assert duckdb.list_filesystems(connection=duckdb_conn) == ["memory", "file"]
 
 
-def test_skip_load_extension_if_already_loaded(monkeypatch):
+def test_skip_load_extension_if_already_loaded(monkeypatch: MonkeyPatch) -> None:
     """
-    Preloading the same extension from two *separate* engines:
-    - First connection LOADs it successfully.
-    - Second connection attempts LOAD again; DB says 'already registered';
-      new connect() should swallow that benign error and still connect.
+    First engine LOADs successfully.
+    Second engine attempts LOAD again; DB says 'already registered'.
+    New connect() swallows that benign error; old connect() bubbles it.
     """
     real_connect = duckdb.connect
-    globally_registered = False  # simulate process-global registration
-    first_loads = 0
-    second_load_attempts = 0
+    globally_registered: bool = False  # simulate process-global registration
+    first_loads: int = 0
+    second_load_attempts: int = 0
 
-    class _Row:
-        def __init__(self, val):
-            self._val = val
-
-        def fetchone(self):
-            return self._val
-
-    def fake_connect(*args, **kwargs):
+    def fake_connect(*args: Any, **kwargs: Any) -> Any:
         inner = real_connect(*args, **kwargs)
-        loaded_here = False  # per-connection view
+        loaded_here: bool = False  # per-connection view
 
         class Proxy:
-            def execute(self, query, params=None):
-                nonlocal \
-                    globally_registered, \
-                    loaded_here, \
-                    first_loads, \
-                    second_load_attempts
+            def __init__(self, inner_conn: Any) -> None:
+                self._inner = inner_conn
+            def execute(self, query: Any, params: Optional[Sequence[Any]] = None) -> Any:
+                nonlocal globally_registered, loaded_here, first_loads, second_load_attempts
                 q = str(query).strip().lower()
 
-                # The dialect probes per connection
+                # Dialect probes per connection
                 if q.startswith("select loaded from duckdb_extensions"):
                     return _Row((loaded_here,))
 
@@ -751,36 +749,29 @@ def test_skip_load_extension_if_already_loaded(monkeypatch):
                         loaded_here = True
                         first_loads += 1
                         return _Row(None)
-                    # simulate a benign idempotent 'already registered' error
+                    # simulate tolerated idempotent error
                     second_load_attempts += 1
                     raise Exception("extension already registered")
 
-                return inner.execute(query, params)
+                return self._inner.execute(query, params)
 
-            def register_filesystem(self, fs):
-                return inner.register_filesystem(fs)
+            def register_filesystem(self, fs: Any) -> Any:
+                return self._inner.register_filesystem(fs)
 
-            def __getattr__(self, name):
-                return getattr(inner, name)
+            def __getattr__(self, name: str) -> Any:
+                return getattr(self._inner, name)
 
-        return Proxy()
+        return Proxy(inner)
 
     monkeypatch.setattr(duckdb, "connect", fake_connect)
 
-    # Engine 1: first connection loads the extension
-    eng1 = create_engine(
-        "duckdb:///:memory:", connect_args={"preload_extensions": ["httpfs"]}
-    )
+    eng1 = create_engine("duckdb:///:memory:", connect_args={"preload_extensions": ["httpfs"]})
     with eng1.connect():
         pass
 
-    # Engine 2: second connection sees 'already registered' and should still succeed (new code only)
-    eng2 = create_engine(
-        "duckdb:///:memory:", connect_args={"preload_extensions": ["httpfs"]}
-    )
+    eng2 = create_engine("duckdb:///:memory:", connect_args={"preload_extensions": ["httpfs"]})
     with eng2.connect():
         pass
 
-    # Sanity: exactly one real load, one idempotent retry
     assert first_loads == 1
     assert second_load_attempts == 1
