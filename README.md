@@ -108,22 +108,31 @@ When defining an Integer column as a primary key, `SQLAlchemy` uses the `SERIAL`
 The following example demonstrates how to create an auto-incrementing ID column for a simple table:
 
 ```python
->>> import sqlalchemy
->>> engine = sqlalchemy.create_engine('duckdb:////path/to/duck.db')
->>> metadata = sqlalchemy.MetaData(engine)
->>> user_id_seq = sqlalchemy.Sequence('user_id_seq')
->>> users_table = sqlalchemy.Table(
-...     'users',
-...     metadata,
-...     sqlalchemy.Column(
-...         'id',
-...         sqlalchemy.Integer,
-...         user_id_seq,
-...         server_default=user_id_seq.next_value(),
-...         primary_key=True,
-...     ),
-... )
->>> metadata.create_all(bind=engine)
+import sqlalchemy
+engine = sqlalchemy.create_engine('duckdb:////path/to/duck.db')
+metadata = sqlalchemy.MetaData()
+user_id_seq = sqlalchemy.Sequence('user_id_seq')
+users_table = sqlalchemy.Table(
+     'users',
+     metadata,
+     sqlalchemy.Column(
+         'id',
+         sqlalchemy.Integer,
+         user_id_seq,
+         server_default=user_id_seq.next_value(),
+         primary_key=True,
+     ),
+     sqlalchemy.Column(
+        'name',
+        sqlalchemy.String(30)
+     )
+ )
+metadata.create_all(bind=engine)
+with engine.begin() as conn:
+   conn.execute(sqlalchemy.text("insert into users(name) values(:name)"), [{"name":"Sam"},{"name":"Dave"}])
+with engine.connect() as conn:
+   for row in conn.execute(sqlalchemy.text("select * from users")):
+      print(row)
 ```
 
 ### Pandas `read_sql()` chunksize
