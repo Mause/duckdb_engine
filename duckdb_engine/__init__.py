@@ -44,6 +44,7 @@ sqlalchemy_version = sqlalchemy.__version__
 duckdb_version: str = duckdb.__version__
 supports_attach: bool = duckdb_version >= "0.7.0"
 supports_user_agent: bool = duckdb_version >= "0.9.2"
+returns_complex_description = duckdb_version >= "1.4.0"
 
 if TYPE_CHECKING:
     from sqlalchemy.base import Connection
@@ -165,6 +166,14 @@ class CursorWrapper:
 
     def close(self) -> None:
         pass  # closing cursors is not supported in duckdb
+
+    @property
+    def description(self) -> tuple:
+        descr = self.__c.description
+        if returns_complex_description and descr is not None:
+            return [(name, typ.id, *rest) for (name, typ, *rest) in descr]
+        else:
+            return descr
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self.__c, name)
