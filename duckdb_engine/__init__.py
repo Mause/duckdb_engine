@@ -301,7 +301,22 @@ class Dialect(PGDialect_psycopg2):
         conn = duckdb.connect(*cargs, **cparams)
 
         for extension in preload_extensions:
-            conn.execute(f"LOAD {extension}")
+            # skip if already loaded in this connection
+            row = conn.execute(
+                "SELECT loaded FROM duckdb_extensions() WHERE extension_name = ?",
+                [extension],
+            ).fetchone()
+            if row and row[0]:  # True == already loaded
+                continue
+
+            try:
+                conn.execute(f"LOAD {extension}")
+            except Exception as e:
+                # tolerate idempotent re-load race if it ever happens
+                if "already exists" in str(e) or "already registered" in str(e):
+                    pass
+                else:
+                    raise
 
         for filesystem in filesystems:
             conn.register_filesystem(filesystem)
