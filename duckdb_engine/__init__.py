@@ -168,7 +168,7 @@ class CursorWrapper:
         pass  # closing cursors is not supported in duckdb
 
     @property
-    def description(self):
+    def description(self) -> tuple:
         descr = self.__c.description
         if returns_complex_description and descr is not None:
             return [(name, typ.id, *rest) for (name, typ, *rest) in descr]
