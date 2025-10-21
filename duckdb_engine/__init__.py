@@ -330,6 +330,9 @@ class Dialect(PGDialect_psycopg2):
     def get_default_isolation_level(self, connection: "Connection") -> None:
         raise NotImplementedError()
 
+    def set_isolation_level(self, connection: "Connection", level: str) -> None:
+        raise NotImplementedError()
+
     def do_rollback(self, connection: "Connection") -> None:
         try:
             super().do_rollback(connection)
