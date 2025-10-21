@@ -1,3 +1,7 @@
+# /// script
+# dependencies = ["nox", "github_action_utils", "uv"]
+# ///
+
 from contextlib import contextmanager
 from typing import Generator
 
@@ -70,3 +74,7 @@ def poetry(session: nox.Session) -> None:
 def mypy(session: nox.Session) -> None:
     poetry(session)
     session.run("mypy", "duckdb_engine/")
+
+
+if __name__ == "__main__":
+    nox.main()

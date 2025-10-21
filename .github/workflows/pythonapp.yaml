@@ -5,28 +5,38 @@ permissions:
   checks: write
 
 jobs:
-  build_backend:
+  generate-jobs:
     runs-on: ubuntu-latest
-
+    outputs:
+      session: ${{ steps.set-matrix.outputs.session }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: wntrblm/nox@main
+      - run: |
+          /home/runner/work/_temp/nox-venv/bin/python3 -m ensurepip
+          /home/runner/work/_temp/nox-venv/bin/python3 -m pip install github_action_utils
+      - run: nox --json -l
+      - id: set-matrix
+        shell: bash
+        run: echo session=$(nox --json -l | jq -c '[.[].session]') | tee --append $GITHUB_OUTPUT
+  checks:
+    name: Session ${{ matrix.session }}
+    needs: [generate-jobs]
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        python: [3.9, "3.10"]
-
-    env:
-      FORCE_COLOR: 1
-
+        session: ${{ fromJson(needs.generate-jobs.outputs.session) }}
     steps:
       - uses: actions/checkout@v5
       - name: Remove cached duckdb extensions
         run: rm -rf ~/.duckdb
-      - uses: fjwillemsen/setup-nox2@v3.0.0
-      - run: python -m pip install github-action-utils uv -U
-      - name: List nox envs
-        run: nox -l
-      - run: nox --pythons '${{ matrix.python }}'
-      - run: uvx poetry build
-      - run: uvx poetry check --strict
+      - uses: actions/checkout@v3
+      - uses: wntrblm/nox@main
+      - run: |
+          /home/runner/work/_temp/nox-venv/bin/python3 -m ensurepip
+          /home/runner/work/_temp/nox-venv/bin/python3 -m pip install github_action_utils uv -U
+      - run: nox -s "${{ matrix.session }}"
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
@@ -44,3 +54,15 @@ jobs:
           env_vars: PYTHON # ,BLEEDING_EDGE  # set from matrix
           fail_ci_if_error: true
           verbose: true
+
+  build_backend:
+    runs-on: ubuntu-latest
+
+    env:
+      FORCE_COLOR: 1
+
+    steps:
+      - uses: actions/checkout@v4
+      - run: python -m pip install uv -U
+      - run: uvx poetry build
+      - run: uvx poetry check --strict
