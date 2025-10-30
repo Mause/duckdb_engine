@@ -33,7 +33,7 @@ pytest-cov = {extras = ["coverage"], version = "^5.0.0"}
 pytest-remotedata = "^0.4.0"
 pytest-snapshot = ">=0.9.0,<1"
 toml = "^0.10.2"
-fsspec = "^2025.2.0"
+fsspec = "^2025.10.0"
 
 [tool.poetry.group.devtools.dependencies]
 pdbpp = "^0.11.0"
