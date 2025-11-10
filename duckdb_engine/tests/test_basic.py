@@ -279,6 +279,20 @@ def test_preload_extension() -> None:
         )
 
 
+def test_pre_actions() -> None:
+    engine = create_engine(
+        "duckdb:///",
+        connect_args={
+            "pre_actions": ["INSTALL SPATIAL", "LOAD SPATIAL"],
+            "config": {"s3_region": "ap-southeast-2", "s3_use_ssl": True},
+        },
+    )
+
+    # check that we can use spatial functions
+    with engine.connect() as conn:
+        conn.execute(text("SELECT ST_Affine(ST_Point(1, 1),1, 0, 0, 1, 2, 3);"))
+
+
 @fixture
 def inspector(engine: Engine, session: Session) -> Inspector:
     cmds = [
