@@ -278,6 +278,7 @@ def test_preload_extension() -> None:
             text("SELECT * FROM read_parquet('https://domain/path/to/file.parquet');")
         )
 
+
 def test_pre_actions() -> None:
     engine = create_engine(
         "duckdb:///",
@@ -289,9 +290,7 @@ def test_pre_actions() -> None:
 
     # check that we get an error indicating that the extension was loaded
     with engine.connect() as conn:
-        conn.execute(
-            text("SELECT ST_Affine(ST_Point(1, 1),1, 0, 0, 1, 2, 3);")
-        )
+        conn.execute(text("SELECT ST_Affine(ST_Point(1, 1),1, 0, 0, 1, 2, 3);"))
 
 
 @fixture
