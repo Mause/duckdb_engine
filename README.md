@@ -18,6 +18,7 @@ Basic SQLAlchemy driver for [DuckDB](https://duckdb.org/)
   - [Alembic Integration](#alembic-integration)
   - [Preloading extensions (experimental)](#preloading-extensions-experimental)
   - [Registering Filesystems](#registering-filesystems)
+  - [Running actions right after connecting](#running-actions-right-after-connecting)
   - [The name](#the-name)
 
 <!-- Created by https://github.com/ekalinin/github-markdown-toc -->
@@ -176,7 +177,8 @@ create_engine(
         'preload_extensions': ['https'],
         'config': {
             's3_region': 'ap-southeast-1'
-        }
+        },
+        'pre_actions': ["ATTACH 'file.db' AS file_db';"]
     }
 )
 ```
@@ -199,6 +201,24 @@ create_engine(
 )
 ```
 
+## Running actions right after connecting
+You can run arbitrary SQL commands right after connecting by passing a list of SQL commands to the `pre_actions` parameter in `connect_args`
+
+```python
+from sqlalchemy import create_engine
+create_engine(
+    'duckdb:///:memory:',
+    connect_args={
+        'pre_actions': [
+            "ATTACH 'file.db' AS file_db';",
+            "SET some_config_option='some_value';"
+        ]
+    }
+)
+```
+
 ## The name
 
 Yes, I'm aware this package should be named `duckdb-driver` or something, I wasn't thinking when I named it and it's too hard to change the name now
+
+
