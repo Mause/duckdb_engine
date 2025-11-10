@@ -288,7 +288,7 @@ def test_pre_actions() -> None:
         },
     )
 
-    # check that we get an error indicating that the extension was loaded
+    # check that we can use spatial functions
     with engine.connect() as conn:
         conn.execute(text("SELECT ST_Affine(ST_Point(1, 1),1, 0, 0, 1, 2, 3);"))
 
