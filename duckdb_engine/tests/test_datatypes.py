@@ -28,7 +28,7 @@ from sqlalchemy.sql import sqltypes
 from sqlalchemy.types import FLOAT, JSON
 
 from .._supports import duckdb_version, has_uhugeint_support
-from ..datatypes import Map, Struct, types
+from ..datatypes import Array, List, Map, Struct, types
 
 
 @mark.parametrize("coltype", types)
@@ -196,19 +196,32 @@ def test_nested_types(engine: Engine, session: Session) -> None:
         struct = Column(Struct(fields={"name": String}))
         map = Column(Map(String, Integer))
         # union = Column(Union(fields={"name": String, "age": Integer}))
+        array = Column(Array(String, 3))
+        list = Column(List(String))
 
     base.metadata.create_all(bind=engine)
 
     struct_data = {"name": "Edgar"}
     map_data = {"one": 1, "two": 2}
+    array_data = ["one", "two", "three"]
+    list_data = ["one", "two", "three"]
 
-    session.add(Entry(struct=struct_data, map=map_data))  # type: ignore[call-arg]
+    session.add(
+        Entry(
+            struct=struct_data,  # type: ignore[call-arg]
+            map=map_data,
+            array=array_data,
+            list=list_data,
+        )
+    )
     session.commit()
 
     result = session.query(Entry).one()
 
     assert result.struct == struct_data
     assert result.map == map_data
+    assert result.array == array_data
+    assert result.list == list_data
 
 
 def test_double_nested_types(engine: Engine, session: Session) -> None:
