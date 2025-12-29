@@ -119,7 +119,7 @@ class Struct(TypeEngine):
 
     Table(
         'hello',
-        Column('name', Struct({'first': String, 'last': String})
+        Column('name', Struct({'first': String, 'last': String}))
     )
     ```
 
@@ -142,7 +142,7 @@ class Map(TypeEngine):
 
     Table(
         'hello',
-        Column('name', Map(String, String)
+        Column('name', Map(String, String))
     )
     ```
     """
@@ -183,7 +183,7 @@ class Union(TypeEngine):
 
     Table(
         'hello',
-        Column('name', Union({"name": String, "age": String})
+        Column('name', Union({"name": String, "age": String}))
     )
     ```
     """
@@ -205,7 +205,7 @@ class List(ARRAY):
 
     Table(
         'hello',
-        Column('name', List(String)
+        Column('name', List(String))
     )
     ```
     """
@@ -238,7 +238,7 @@ class Array(ARRAY):
 
     Table(
         'hello',
-        Column('name', Array(String, 3)
+        Column('name', Array(String, 3))
     )
     ```
     """
