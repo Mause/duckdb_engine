@@ -8,7 +8,7 @@ select * from duckdb_types where type_category = 'NUMERIC';
 """
 
 import typing
-from typing import Any, Callable, Dict, Optional, Type
+from typing import Any, Callable, Dict, Optional, Sequence, Type
 
 import duckdb
 from packaging.version import Version
@@ -18,7 +18,7 @@ from sqlalchemy.engine import Dialect
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql import sqltypes, type_api
 from sqlalchemy.sql.type_api import TypeEngine
-from sqlalchemy.types import BigInteger, Integer, SmallInteger, String
+from sqlalchemy.types import ARRAY, BigInteger, Integer, SmallInteger, String
 
 # INTEGER	INT4, INT, SIGNED	-2147483648	2147483647
 # SMALLINT	INT2, SHORT	-32768	32767
@@ -119,7 +119,7 @@ class Struct(TypeEngine):
 
     Table(
         'hello',
-        Column('name', Struct({'first': String, 'last': String})
+        Column('name', Struct({'first': String, 'last': String}))
     )
     ```
 
@@ -142,7 +142,7 @@ class Map(TypeEngine):
 
     Table(
         'hello',
-        Column('name', Map(String, String)
+        Column('name', Map(String, String))
     )
     ```
     """
@@ -183,7 +183,7 @@ class Union(TypeEngine):
 
     Table(
         'hello',
-        Column('name', Union({"name": String, "age": String})
+        Column('name', Union({"name": String, "age": String}))
     )
     ```
     """
@@ -193,6 +193,81 @@ class Union(TypeEngine):
 
     def __init__(self, fields: Dict[str, TV]):
         self.fields = fields
+
+
+class List(ARRAY):
+    """
+    Represents a LIST type in DuckDB
+
+    ```python
+    from duckdb_engine.datatypes import List
+    from sqlalchemy import Table, Column, String
+
+    Table(
+        'hello',
+        Column('name', List(String))
+    )
+    ```
+    """
+
+    __visit_name__ = "list"
+    item_type: TV
+
+    def __init__(
+        self,
+        item_type: TV,
+        as_tuple: bool = False,
+        dimensions: Optional[int] = None,
+        zero_indexes: bool = False,
+    ):
+        super().__init__(
+            item_type,
+            as_tuple=as_tuple,
+            dimensions=dimensions,
+            zero_indexes=zero_indexes,
+        )
+
+
+class Array(ARRAY):
+    """
+    Represents a ARRAY type in DuckDB
+
+    ```python
+    from duckdb_engine.datatypes import Array
+    from sqlalchemy import Table, Column, String
+
+    Table(
+        'hello',
+        Column('name', Array(String, 3))
+    )
+    ```
+    """
+
+    __visit_name__ = "array"
+    item_type: TV
+
+    def __init__(
+        self,
+        item_type: TV,
+        size: typing.Union[int, Sequence[int]],
+        as_tuple: bool = False,
+        dimensions: Optional[int] = None,
+        zero_indexes: bool = False,
+    ):
+        super().__init__(
+            item_type,
+            as_tuple=as_tuple,
+            dimensions=dimensions,
+            zero_indexes=zero_indexes,
+        )
+        if isinstance(size, int):
+            size = [size]
+        self.size = size
+        if self.dimensions is None and self.size:
+            self.dimensions = len(self.size)
+        if len(self.size) != self.dimensions:
+            msg = f"length of size must be equal to dimensions ({len(self.size)} != {self.dimensions})"
+            raise ValueError(msg)
 
 
 ISCHEMA_NAMES = {
@@ -281,4 +356,18 @@ def visit_map(instance: Map, compiler: PGTypeCompiler, **kw: Any) -> str:
     return "MAP({}, {})".format(
         process_type(instance.key_type, compiler, **kw),
         process_type(instance.value_type, compiler, **kw),
+    )
+
+
+@compiles(List, "duckdb")  # type: ignore[misc]
+def visit_list(instance: List, compiler: PGTypeCompiler, **kw: Any) -> str:
+    return process_type(instance.item_type, compiler, **kw) + "[]" * (
+        instance.dimensions or 1
+    )
+
+
+@compiles(Array, "duckdb")  # type: ignore[misc]
+def visit_array(instance: Array, compiler: PGTypeCompiler, **kw: Any) -> str:
+    return process_type(instance.item_type, compiler, **kw) + "".join(
+        f"[{n}]" for n in instance.size
     )
