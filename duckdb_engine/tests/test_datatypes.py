@@ -167,6 +167,26 @@ def test_double_in_sqla_v2(engine: Engine) -> None:
         con.execute(t.select())
 
 
+def test_double(engine: Engine, session: Session) -> None:
+    sqlalchemy = importorskip("sqlalchemy", "2.0.0")
+    base = declarative_base()
+
+    class Entry(base):
+        __tablename__ = "test_double"
+
+        id = Column(Integer, primary_key=True, default=0)
+        value = Column(sqlalchemy.DOUBLE, nullable=False)
+
+    base.metadata.create_all(bind=engine)
+
+    session.add(Entry(value=42.000001))  # type: ignore[call-arg]
+    session.commit()
+
+    result = session.query(Entry).one()
+
+    assert result.value == 42.000001
+
+
 def test_all_types_reflection(engine: Engine) -> None:
     importorskip("sqlalchemy", "1.4.0")
     importorskip("duckdb", "0.5.1")

@@ -11,6 +11,7 @@ import typing
 from typing import Any, Callable, Dict, Optional, Type
 
 import duckdb
+import sqlalchemy
 from packaging.version import Version
 from sqlalchemy import exc
 from sqlalchemy.dialects.postgresql.base import PGIdentifierPreparer, PGTypeCompiler
@@ -26,8 +27,10 @@ from sqlalchemy.types import BigInteger, Integer, SmallInteger, String
 (BigInteger, SmallInteger)  # pure reexport
 
 duckdb_version = duckdb.__version__
+sqlalchemy_version = sqlalchemy.__version__
 
 IS_GT_1 = Version(duckdb_version) > Version("1.0.0")
+IS_SQLA_GT_2 = Version(sqlalchemy_version) > Version("2.0.0")
 
 
 class UInt64(Integer):
@@ -206,7 +209,6 @@ ISCHEMA_NAMES = {
     "timetz": sqltypes.TIME,
     "timestamptz": sqltypes.TIMESTAMP,
     "float4": sqltypes.FLOAT,
-    "float8": sqltypes.FLOAT,
     "usmallint": USmallInteger,
     "uinteger": UInteger,
     "ubigint": UBigInteger,
@@ -219,6 +221,9 @@ ISCHEMA_NAMES = {
 }
 if IS_GT_1:
     ISCHEMA_NAMES["varint"] = VarInt
+if IS_SQLA_GT_2:
+    ISCHEMA_NAMES["float8"] = sqltypes.DOUBLE  # type: ignore[attr-defined]
+    ISCHEMA_NAMES["double"] = sqltypes.DOUBLE  # type: ignore[attr-defined]
 
 
 def register_extension_types() -> None:
