@@ -11,9 +11,9 @@ import typing
 from typing import Any, Callable, Dict, Optional, Type
 
 import duckdb
+import sqlalchemy
 from packaging.version import Version
 from sqlalchemy import exc
-import sqlalchemy
 from sqlalchemy.dialects.postgresql.base import PGIdentifierPreparer, PGTypeCompiler
 from sqlalchemy.engine import Dialect
 from sqlalchemy.ext.compiler import compiles

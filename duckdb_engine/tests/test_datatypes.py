@@ -166,6 +166,7 @@ def test_double_in_sqla_v2(engine: Engine) -> None:
     with engine.begin() as con:
         con.execute(t.select())
 
+
 def test_double(engine: Engine, session: Session) -> None:
     sqlalchemy = importorskip("sqlalchemy", "2.0.0")
     base = declarative_base()
