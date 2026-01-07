@@ -222,8 +222,8 @@ ISCHEMA_NAMES = {
 if IS_GT_1:
     ISCHEMA_NAMES["varint"] = VarInt
 if IS_SQLA_GT_2:
-    ISCHEMA_NAMES["float8"] = sqltypes.DOUBLE # type: ignore[attr-defined] 
-    ISCHEMA_NAMES["double"] = sqltypes.DOUBLE # type: ignore[attr-defined] 
+    ISCHEMA_NAMES["float8"] = sqltypes.DOUBLE  # type: ignore[attr-defined]
+    ISCHEMA_NAMES["double"] = sqltypes.DOUBLE  # type: ignore[attr-defined]
 
 
 def register_extension_types() -> None:
