@@ -168,8 +168,8 @@ class Map(TypeEngine):
         if IS_GT_1:
             return lambda value: value
         else:
-            return (
-                lambda value: dict(zip(value["key"], value["value"])) if value else {}
+            return lambda value: (
+                dict(zip(value["key"], value["value"])) if value else {}
             )
 
 
