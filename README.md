@@ -163,7 +163,7 @@ After loading this class with your program, Alembic will no longer raise an erro
 
 ## Preloading extensions (experimental)
 
-> DuckDB 0.9.0+ includes builtin support for autoinstalling and autoloading of extensions, see [the extension documentation](http://duckdb.org/docs/archive/0.9.0/extensions/overview#autoloadable-extensions) for more information.
+> DuckDB 0.9.0+ includes builtin support for autoinstalling and autoloading of extensions, see [the extension documentation](https://duckdb.org/docs/stable/extensions/overview#autoloading-extensions) for more information.
 
 Until the DuckDB python client allows you to natively preload extensions, I've added experimental support via a `connect_args` parameter
 
