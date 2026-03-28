@@ -25,8 +25,8 @@ from sqlalchemy.dialects.postgresql.base import (
     PGInspector,
     PGTypeCompiler,
 )
-from sqlalchemy.dialects.postgresql.types import REGCLASS, OID
 from sqlalchemy.dialects.postgresql.psycopg2 import PGDialect_psycopg2
+from sqlalchemy.dialects.postgresql.types import OID, REGCLASS
 from sqlalchemy.engine.default import DefaultDialect
 from sqlalchemy.engine.interfaces import Dialect as RootDialect
 from sqlalchemy.engine.reflection import cache
@@ -659,8 +659,7 @@ class Dialect(PGDialect_psycopg2):
                     pg_catalog.pg_attribute.c.atthasdef,
                     pg_catalog.pg_attrdef.c.adrelid
                     == pg_catalog.pg_attribute.c.attrelid,
-                    pg_catalog.pg_attrdef.c.adnum
-                    == pg_catalog.pg_attribute.c.attnum,
+                    pg_catalog.pg_attrdef.c.adnum == pg_catalog.pg_attribute.c.attnum,
                 )
                 .correlate(pg_catalog.pg_attribute)
                 .scalar_subquery(),
@@ -695,8 +694,7 @@ class Dialect(PGDialect_psycopg2):
             .outerjoin(
                 pg_catalog.pg_attribute,
                 sql.and_(
-                    pg_catalog.pg_class.c.oid
-                    == pg_catalog.pg_attribute.c.attrelid,
+                    pg_catalog.pg_class.c.oid == pg_catalog.pg_attribute.c.attrelid,
                     pg_catalog.pg_attribute.c.attnum > 0,
                     ~pg_catalog.pg_attribute.c.attisdropped,
                 ),
@@ -711,9 +709,7 @@ class Dialect(PGDialect_psycopg2):
                 ),
             )
             .where(self._pg_class_relkind_condition(relkinds))  # type: ignore[attr-defined]
-            .order_by(
-                pg_catalog.pg_class.c.relname, pg_catalog.pg_attribute.c.attnum
-            )
+            .order_by(pg_catalog.pg_class.c.relname, pg_catalog.pg_attribute.c.attnum)
         )
         query = self._pg_class_filter_scope_schema(query, schema, scope=scope)  # type: ignore[attr-defined]
         if has_filter_names:
