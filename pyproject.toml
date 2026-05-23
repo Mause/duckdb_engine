@@ -23,7 +23,7 @@ repository = "https://github.com/Mause/duckdb_engine"
 [tool.poetry.group.dev.dependencies]
 numpy = "*"
 pyarrow = "*"
-pytest = "^8.0.0"
+pytest = "^9.0.0"
 mypy = "^1.4"
 hypothesis = "^6.75.2"
 pandas = "^1"
