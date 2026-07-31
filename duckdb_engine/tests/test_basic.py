@@ -40,6 +40,7 @@ from sqlalchemy.orm import Session, relationship, sessionmaker
 
 from .. import Dialect, insert, supports_attach, supports_user_agent
 from .._supports import has_comment_support
+from ..config import get_core_config
 
 try:
     # sqlalchemy 2
@@ -706,3 +707,11 @@ def test_register_filesystem() -> None:
     with engine.connect() as conn:
         duckdb_conn = getattr(conn.connection.dbapi_connection, "_ConnectionWrapper__c")
         assert duckdb.list_filesystems(connection=duckdb_conn) == ["memory", "file"]
+
+
+def test_motherduck_keys_are_connect_time_config() -> None:
+    assert {
+        "motherduck_token",
+        "motherduck_session_name",
+        "motherduck_session_hint",
+    } <= get_core_config()

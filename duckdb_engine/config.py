@@ -13,7 +13,15 @@ TYPES: Dict[Type, TypeEngine] = {int: Integer(), str: String(), bool: Boolean()}
 def get_core_config() -> Set[str]:
     # List of connection string parameters that are supported by MotherDuck
     # See: https://motherduck.com/docs/key-tasks/authenticating-and-connecting-to-motherduck/authenticating-to-motherduck/
-    motherduck_config_keys = {"motherduck_token", "attach_mode", "saas_mode"}
+    motherduck_config_keys = {
+        "motherduck_token",
+        "attach_mode",
+        "saas_mode",
+        # Must be passed at connect time: a SET after the connection is
+        # established fails with "can only be set during initialization".
+        "motherduck_session_name",
+        "motherduck_session_hint",  # deprecated alias of motherduck_session_name
+    }
 
     rows = (
         duckdb.connect(":memory:")
