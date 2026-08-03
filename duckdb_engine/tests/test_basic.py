@@ -40,6 +40,7 @@ from sqlalchemy.orm import Session, relationship, sessionmaker
 
 from .. import Dialect, insert, supports_attach, supports_user_agent
 from .._supports import has_comment_support
+from ..config import get_core_config
 
 try:
     # sqlalchemy 2
@@ -706,3 +707,17 @@ def test_register_filesystem() -> None:
     with engine.connect() as conn:
         duckdb_conn = getattr(conn.connection.dbapi_connection, "_ConnectionWrapper__c")
         assert duckdb.list_filesystems(connection=duckdb_conn) == ["memory", "file"]
+
+
+def test_motherduck_keys_are_connect_time_config() -> None:
+    core = get_core_config()
+    assert {
+        "motherduck_token",
+        "motherduck_attach_mode",
+        "motherduck_saas_mode",
+        "motherduck_session_name",
+        "motherduck_session_hint",
+    } <= core
+    # The bare spellings are md: path parameters, not duckdb settings.
+    assert "attach_mode" not in core
+    assert "saas_mode" not in core

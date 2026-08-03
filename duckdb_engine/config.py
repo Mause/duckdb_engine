@@ -11,9 +11,20 @@ TYPES: Dict[Type, TypeEngine] = {int: Integer(), str: String(), bool: Boolean()}
 
 @lru_cache()
 def get_core_config() -> Set[str]:
-    # List of connection string parameters that are supported by MotherDuck
-    # See: https://motherduck.com/docs/key-tasks/authenticating-and-connecting-to-motherduck/authenticating-to-motherduck/
-    motherduck_config_keys = {"motherduck_token", "attach_mode", "saas_mode"}
+    # MotherDuck settings that must be passed to duckdb.connect() as config:
+    # applying them via SET after the connection is established either fails
+    # with "can only be set during initialization" or happens too late. As
+    # duckdb settings they carry the motherduck_ prefix; the bare
+    # attach_mode/saas_mode spellings are only valid inside the md: path
+    # itself (e.g. "md:db?attach_mode=single") and were never recognized by
+    # duckdb.connect().
+    motherduck_config_keys = {
+        "motherduck_token",
+        "motherduck_attach_mode",
+        "motherduck_saas_mode",
+        "motherduck_session_name",
+        "motherduck_session_hint",  # deprecated alias of motherduck_session_name
+    }
 
     rows = (
         duckdb.connect(":memory:")
