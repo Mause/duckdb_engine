@@ -710,8 +710,14 @@ def test_register_filesystem() -> None:
 
 
 def test_motherduck_keys_are_connect_time_config() -> None:
+    core = get_core_config()
     assert {
         "motherduck_token",
+        "motherduck_attach_mode",
+        "motherduck_saas_mode",
         "motherduck_session_name",
         "motherduck_session_hint",
-    } <= get_core_config()
+    } <= core
+    # The bare spellings are md: path parameters, not duckdb settings.
+    assert "attach_mode" not in core
+    assert "saas_mode" not in core
