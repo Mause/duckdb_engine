@@ -93,7 +93,7 @@ description = "Cross-platform colored terminal text."
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 groups = ["dev"]
-markers = "platform_system == \"Windows\" or sys_platform == \"win32\""
+markers = "sys_platform == \"win32\" or platform_system == \"Windows\""
 files = [
     {file = "colorama-0.4.4-py2.py3-none-any.whl", hash = "sha256:9f47eda37229f68eee03b24b9748937c7dc3868f906e8ba69fbcbdd3bc5dc3e2"},
     {file = "colorama-0.4.4.tar.gz", hash = "sha256:5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b"},
@@ -1123,19 +1123,19 @@ testing = ["fields", "hunter", "process-tests", "pytest-xdist", "virtualenv"]
 
 [[package]]
 name = "pytest-remotedata"
-version = "0.4.1"
+version = "0.4.2"
 description = "Pytest plugin for controlling remote data access."
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "pytest-remotedata-0.4.1.tar.gz", hash = "sha256:05c08bf638cdd1ed66eb01738a1647c3c714737c3ec3abe009d2c1f793b4bb59"},
-    {file = "pytest_remotedata-0.4.1-py3-none-any.whl", hash = "sha256:4e840bd8733091c2a84e52528ee2c2a98aa2d4a26376ba20448f211bccd30a35"},
+    {file = "pytest_remotedata-0.4.2-py3-none-any.whl", hash = "sha256:1f4186f7ab4fc43586af88fa12902a081d193ce722ecf74d1777d48e4b09f377"},
+    {file = "pytest_remotedata-0.4.2.tar.gz", hash = "sha256:ad3eaa2691feecc2071890764d30e06211547577f965e2e4424435c5d887278d"},
 ]
 
 [package.dependencies]
 packaging = "*"
-pytest = ">=4.6"
+pytest = ">=5.0"
 
 [[package]]
 name = "pytest-snapshot"
