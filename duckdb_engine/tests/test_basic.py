@@ -27,6 +27,7 @@ from sqlalchemy import (
     create_engine,
     func,
     inspect,
+    literal,
     select,
     text,
     types,
@@ -124,6 +125,37 @@ def test_basic(session: Session) -> None:
     frank = session.query(FakeModel).one()  # act
 
     assert frank.name == "Frank"
+
+
+@mark.parametrize("initialized", [False, True])
+@mark.parametrize(
+    "value",
+    [
+        "plain text",
+        "",
+        r"name\email",
+        r"\\server\share",
+        r"literal\nsequence",
+        "actual\nnewline",
+        "trailing\\",
+        r"C:\O'Reilly\notes",
+        "café\\'東京",
+    ],
+)
+def test_literal_binds_preserve_string_values(
+    session: Session, engine: Engine, value: str, initialized: bool
+) -> None:
+    session.add(FakeModel(name=value))
+    session.commit()
+
+    query = session.query(literal(value)).filter(FakeModel.name.in_([value]))
+    assert query.all() == [(value,)]
+
+    dialect = engine.dialect if initialized else Dialect()
+    compiled = query.statement.compile(
+        dialect=dialect, compile_kwargs={"literal_binds": True}
+    )
+    assert session.connection().execute(compiled).fetchall() == [(value,)]
 
 
 def test_foreign(session: Session) -> None:
