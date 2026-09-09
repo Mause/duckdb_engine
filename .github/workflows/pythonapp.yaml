@@ -17,7 +17,7 @@ jobs:
       FORCE_COLOR: 1
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Remove cached duckdb extensions
         run: rm -rf ~/.duckdb
       - uses: fjwillemsen/setup-nox2@v3.0.0
@@ -31,10 +31,10 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
-          junit_files: results.xml
+          files: results.xml
           comment_mode: off
           check_name:  "Test Results - ${{ join(matrix.*, ', ') }}"
-      - uses: codecov/codecov-action@v5.4.0
+      - uses: codecov/codecov-action@v5.5.1
         env:
           PYTHON: ${{matrix.python}}
           BLEEDING_EDGE: ${{matrix.bleeding_edge}}
