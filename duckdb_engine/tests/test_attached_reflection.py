@@ -37,6 +37,7 @@ def test_attached_relation_namespace(catalog: str) -> None:
                 connection, schema, ["t"], ObjectScope.DEFAULT, ObjectKind.TABLE
             )
             assert oids == [(inspector.get_table_oid("t", schema), "t")]  # type: ignore[attr-defined]
-            assert inspector.get_table_comment("t") == {"text": None}
+            # A schema without a database component means the current database.
+            assert inspector.get_table_comment("t", "main") == {"text": None}
     finally:
         engine.dispose()

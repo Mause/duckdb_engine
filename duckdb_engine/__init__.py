@@ -571,11 +571,15 @@ class Dialect(PGDialect_psycopg2):
         elif scope is ObjectScope.TEMPORARY:
             query = query.where(pg_class_table.c.relpersistence == "t")
 
-        database_name, schema_name = (
-            self.identifier_preparer._separate(schema)
-            if schema is not None
-            else (None, None)
-        )
+        if schema is None:
+            # Unqualified reflection is not scoped to the current schema: as in
+            # upstream, any visible relation outside pg_catalog is eligible.
+            return query.where(
+                pg_catalog.pg_table_is_visible(pg_class_table.c.oid),
+                namespaces.c.schema_name != "pg_catalog",
+            )
+
+        database_name, schema_name = self.identifier_preparer._separate(schema)
         database_filter = namespaces.c.database_name == (
             database_name if database_name is not None else sql.func.current_database()
         )
@@ -583,11 +587,7 @@ class Dialect(PGDialect_psycopg2):
             database_filter = sql.or_(
                 database_filter, namespaces.c.database_name == "temp"
             )
-        return query.where(
-            database_filter,
-            namespaces.c.schema_name
-            == (schema_name if schema_name is not None else sql.func.current_schema()),
-        )
+        return query.where(database_filter, namespaces.c.schema_name == schema_name)
 
     # FIXME: this method is a hack around the fact that we use a single cursor for all queries inside a connection,
     #   and this is required to fix get_multi_columns
