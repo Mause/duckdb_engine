@@ -548,21 +548,46 @@ class Dialect(PGDialect_psycopg2):
         scope: Any,
         pg_class_table: Any = None,
     ) -> Any:
-        # Don't scope by schema for now
-        if hasattr(super(), "_pg_class_filter_scope_schema"):
-            query = getattr(super(), "_pg_class_filter_scope_schema")(
-                query, schema=None, scope=scope, pg_class_table=pg_class_table
+        from sqlalchemy.dialects.postgresql import (  # type: ignore[attr-defined]
+            pg_catalog,
+        )
+        from sqlalchemy.engine.reflection import (  # type: ignore[attr-defined]
+            ObjectScope,
+        )
+
+        if pg_class_table is None:
+            pg_class_table = pg_catalog.pg_class
+        # pg_namespace only exposes the current database in MotherDuck, while
+        # pg_class contains attached relations too. Join the native namespaces
+        # by OID and retain the database component of a qualified schema.
+        namespaces = sql.func.duckdb_schemas().table_valued(
+            "oid", "database_name", "schema_name"
+        )
+        query = query.join(
+            namespaces, namespaces.c.oid == pg_class_table.c.relnamespace
+        )
+        if scope is ObjectScope.DEFAULT:
+            query = query.where(pg_class_table.c.relpersistence != "t")
+        elif scope is ObjectScope.TEMPORARY:
+            query = query.where(pg_class_table.c.relpersistence == "t")
+
+        if schema is None:
+            # Unqualified reflection is not scoped to the current schema: as in
+            # upstream, any visible relation outside pg_catalog is eligible.
+            return query.where(
+                pg_catalog.pg_table_is_visible(pg_class_table.c.oid),
+                namespaces.c.schema_name != "pg_catalog",
             )
-            if schema is not None:
-                # Now let's scope by schema, but make sure we're not adding in the database name prefix
-                # This will not work if a schema or table name is not unique!
-                _, schema_name = self.identifier_preparer._separate(schema)
-                query = query.where(
-                    text("pg_namespace.nspname = :schema_name").bindparams(
-                        schema_name=schema_name
-                    )
-                )
-            return query
+
+        database_name, schema_name = self.identifier_preparer._separate(schema)
+        database_filter = namespaces.c.database_name == (
+            database_name if database_name is not None else sql.func.current_database()
+        )
+        if database_name is None and scope is not ObjectScope.DEFAULT:
+            database_filter = sql.or_(
+                database_filter, namespaces.c.database_name == "temp"
+            )
+        return query.where(database_filter, namespaces.c.schema_name == schema_name)
 
     # FIXME: this method is a hack around the fact that we use a single cursor for all queries inside a connection,
     #   and this is required to fix get_multi_columns
