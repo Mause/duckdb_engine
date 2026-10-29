@@ -8,6 +8,7 @@ Basic SQLAlchemy driver for [DuckDB](https://duckdb.org/)
 - [duckdb\_engine](#duckdb_engine)
   - [Installation](#installation)
   - [Usage](#usage)
+    - [Usage with SQLModel](#usage-with-sqlmodel)
   - [Usage in IPython/Jupyter](#usage-in-ipythonjupyter)
   - [Configuration](#configuration)
   - [How to register a pandas DataFrame](#how-to-register-a-pandas-dataframe)
@@ -61,6 +62,37 @@ session.commit()
 frank = session.query(FakeModel).one()
 
 assert frank.name == "Frank"
+```
+
+### Usage with SQLModel
+
+```python
+from typing import Optional
+
+from sqlalchemy import Sequence
+from sqlmodel import Field, Session, SQLModel, create_engine
+
+
+class Hero(SQLModel, table=True):
+    id: Optional[int] = Field(
+        default=None,
+        primary_key=True,
+        sa_column_args=[Sequence("hero_id_sequence")],
+    )
+    name: str
+    secret_name: str
+
+
+engine = create_engine("duckdb:///:memory:")
+SQLModel.metadata.create_all(engine)
+
+hero = Hero(name="Deadpond", secret_name="Dive Wilson")
+with Session(engine) as session:
+    session.add(hero)
+    session.commit()
+    session.refresh(hero)
+
+    assert hero.id is not None
 ```
 
 ## Usage in IPython/Jupyter
